@@ -61,11 +61,42 @@ There is no dedicated test framework yet. For now, the minimum verification set 
 
 When tests are added, place them near the feature they cover or in a feature-local `__tests__/` folder.
 
-## Commit & Pull Request Guidelines
+## Git 工作流（严格模式）
 
-**每个独立任务完成后，必须自动执行 git commit。** 完成顺序：`typecheck` → `lint` → `git add` → `git commit`。不要等待用户显式要求提交。
+**Remote**: `origin` → `https://github.com/xkhanhan/ai-writer.git`
 
-Follow the existing documented convention:
+### 分支策略
+
+- `master` — 生产分支，仅通过 PR 合并，**禁止直接 push**
+- `feature/*` — 功能开发分支，从 master 切出，完成后通过 PR 合回 master
+- `fix/*` — 紧急修复分支，从 master 切出
+- `docs/*` — 纯文档变更分支
+
+### 分支命名规范
+
+```
+feature/简短功能描述     例: feature/creation-zone
+fix/问题简述            例: fix/scroll-overflow
+docs/文档变更简述        例: docs/update-agents
+```
+
+### 禁止事项
+
+- **禁止**直接向 `master` push 代码
+- **禁止**在 master 上直接修改文件
+- **禁止**跳过 PR 流程合并代码
+- **禁止**合并未通过 typecheck + lint 的代码
+
+### 提交流程
+
+1. 从 `master` 切出功能分支：`git checkout -b feature/xxx master`
+2. 开发过程中，每个独立任务完成后自动提交：
+   `typecheck` → `lint` → `git add` → `git commit`
+3. 开发完成后推送分支：`git push -u origin feature/xxx`
+4. 创建 PR，填写规范的标题和描述
+5. 等待 review 通过后合并
+
+### Commit 规范
 
 - `feat(scope): summary`
 - `fix(scope): summary`
@@ -74,12 +105,22 @@ Follow the existing documented convention:
 
 Examples: `feat(home): add ai test panel`, `fix(ai): validate empty prompt`.
 
-PRs should include:
+### PR 要求
 
-- a short description of the user-facing or architectural change
-- any affected paths, such as `app/pages/books/` or `shared/ui/`
-- screenshots for UI changes
-- the exact verification commands you ran
+PR 标题必须包含模块名和变更摘要，例如：
+
+```
+feat(books): 新增创作区四层大纲结构
+fix(world-rules): 修复规则编辑弹窗表单重置问题
+docs(standards): 更新 SplitPanel 组件规范
+```
+
+PR 描述必须包含：
+
+- 变更内容的简要说明
+- 影响的文件路径
+- UI 变更的截图
+- 验证命令及结果（typecheck / lint / build）
 
 ## Architecture Rules
 
