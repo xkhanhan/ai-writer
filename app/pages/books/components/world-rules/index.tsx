@@ -212,6 +212,8 @@ export default function WorldRules({ book }: WorldRulesProps) {
               onChange={(e) => setFormContent(e.target.value)}
               placeholder="描述这条世界规则的具体内容"
               rows={6}
+              maxLength={2000}
+              showCount
             />
           </div>
         </div>

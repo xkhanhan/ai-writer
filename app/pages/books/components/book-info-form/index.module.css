@@ -31,6 +31,10 @@
   color: var(--text-primary);
   letter-spacing: -0.3px;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .dashTags {
@@ -142,6 +146,10 @@
   font-size: 12px;
   color: var(--text-primary);
   line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .infoValHighlight {

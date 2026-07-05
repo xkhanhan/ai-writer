@@ -355,7 +355,8 @@ export default function HomePage({
             <Input.TextArea
               value={createDescription}
               onChange={(event) => setCreateDescription(event.target.value)}
-              maxLength={500}
+              maxLength={2000}
+              showCount
               rows={4}
             />
           </Form.Item>
@@ -402,7 +403,8 @@ export default function HomePage({
             <Input.TextArea
               value={editDescription}
               onChange={(event) => setEditDescription(event.target.value)}
-              maxLength={500}
+              maxLength={2000}
+              showCount
               rows={4}
             />
           </Form.Item>

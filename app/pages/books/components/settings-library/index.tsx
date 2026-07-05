@@ -373,11 +373,11 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
             </div>
             <div className={styles.formField}>
               <label className={styles.formLabel}>性格</label>
-              <Input placeholder="描述角色性格特征" />
+              <Input placeholder="描述角色性格特征" maxLength={200} />
             </div>
             <div className={styles.formField}>
               <label className={styles.formLabel}>特点/癖好</label>
-              <Input placeholder="描述角色特点或癖好" />
+              <Input placeholder="描述角色特点或癖好" maxLength={200} />
             </div>
           </>
         )}
@@ -388,6 +388,8 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
             onChange={(e) => setFormDescription(e.target.value)}
             placeholder="详细描述"
             rows={6}
+            maxLength={2000}
+            showCount
           />
         </div>
         {modalMode === "edit" && (

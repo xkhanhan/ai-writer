@@ -38,6 +38,7 @@ export function CreateFolderModal({ onClose, onSubmit }: CreateFolderModalProps)
             placeholder="例如：境界体系"
             autoFocus
             onPressEnter={handleSubmit}
+            maxLength={60}
             prefix={<FolderOutlined style={{ color: "var(--text-light)" }} />}
           />
         </Form.Item>
@@ -92,6 +93,7 @@ export function CreateFileModal({ folder, onClose, onSubmit }: CreateFileModalPr
             placeholder="例如：修真境界体系"
             autoFocus
             onPressEnter={handleSubmit}
+            maxLength={60}
           />
         </Form.Item>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24, paddingTop: 16 }}>

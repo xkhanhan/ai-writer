@@ -582,7 +582,7 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
         </div>
 
         <Form.Item name="tags" label="标签" tooltip="输入标签后按回车添加">
-          <Select mode="tags" placeholder="输入标签，按回车添加" />
+          <Select mode="tags" maxCount={10} placeholder="输入标签，按回车添加" />
         </Form.Item>
 
         <Form.Item name="writingStyle" label="文笔文风" rules={[{ required: true, message: "请选择文笔文风" }]}>
@@ -599,15 +599,15 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
         </div>
 
         <Form.Item name="referenceWorks" label="参考作品">
-          <Input placeholder="如：凡人修仙传、斗破苍穹" />
+          <Input placeholder="如：凡人修仙传、斗破苍穹" maxLength={200} />
         </Form.Item>
 
         <Form.Item name="sellingPoint" label="核心卖点" extra="影响 AI 生成重心">
-          <Input placeholder="这本书的核心吸引力" />
+          <Input placeholder="这本书的核心吸引力" maxLength={200} />
         </Form.Item>
 
         <Form.Item name="description" label="简介" rules={[{ required: true, message: "请输入简介" }]}>
-          <Input.TextArea rows={4} maxLength={300} showCount placeholder="请输入书籍简介（300 字以内）" />
+          <Input.TextArea rows={4} maxLength={2000} showCount placeholder="请输入书籍简介" />
         </Form.Item>
       </Form>
     </Modal>

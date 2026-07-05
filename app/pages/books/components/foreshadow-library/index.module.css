@@ -120,6 +120,11 @@
 }
 
 .itemName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 14px;
   font-family: var(--font-body);
   color: var(--text);
@@ -136,6 +141,7 @@
   color: var(--ink-tertiary);
   font-family: var(--font-body);
   line-height: 1.6;
+  word-break: break-word;
 }
 
 /* ===== 状态标签 ===== */
