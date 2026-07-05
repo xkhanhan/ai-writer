@@ -2,13 +2,35 @@ node_modules
 .next
 out
 dist
+coverage
+.npm-cache
+stitch/
+
+# 环境变量
 .env
 .env*.local
+
+# 运行时数据
 data/ai-config.json
+data/books.json
+data/folders.json
+data/book-options.json
+data/book-options-check.bin
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# 构建产物
+tsconfig.tsbuildinfo
+
+# 日志
+*.log
+dev-server.err.log
+dev-server.out.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-coverage
-.npm-cache
-stitch/
+
+# 脑暴工具临时文件
+.superpowers/
