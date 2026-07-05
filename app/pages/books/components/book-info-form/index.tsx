@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Modal, Form, Input, InputNumber, Select, Button, Spin } from "antd";
+import { Modal, Form, Input, InputNumber, Select, Button, Spin, Descriptions, Tag, Typography, Tooltip } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import { client } from "@/app/api-client";
 import { BOOK_GENRES, BOOK_PLATFORMS } from "@/app/constants";
@@ -161,26 +161,52 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
           {/* 书籍信息 */}
           <div className={styles.dashCard}>
             <div className={styles.dashCardTitle}>书籍信息</div>
-            <div className={styles.infoGrid}>
-              <InfoItem label="题材" value={book.genre && book.subGenre ? `${book.genre} · ${book.subGenre}` : book.genre || "—"} />
-              <InfoItem label="平台" value={book.platform || "—"} />
-              <InfoItem label="文笔文风" value={book.writingStyle || "—"} />
-              <InfoItem label="每章字数" value={book.targetWordCount ? `${book.targetWordCount.toLocaleString()} 字` : "—"} />
-              <InfoItem label="核心卖点" value={book.sellingPoint || "—"} highlight />
-              <InfoItem label="参考作品" value={book.referenceWorks || "—"} />
-              <InfoItem label="受众" value={book.targetAudience || "—"} />
-              <InfoItem label="标签" />
-              {tags.length > 0 && (
-                <div className={styles.infoTagsWrap}>
-                  {tags.map((t) => (
-                    <span key={t} className={styles.infoTag}>{t}</span>
-                  ))}
-                </div>
-              )}
+            <Descriptions column={{ xs: 1, sm: 2, md: 3 }} size="small" bordered>
+              <Descriptions.Item label="题材">
+                <InfoTruncate text={book.genre && book.subGenre ? `${book.genre} · ${book.subGenre}` : book.genre} />
+              </Descriptions.Item>
+              <Descriptions.Item label="平台">
+                <InfoTruncate text={book.platform} />
+              </Descriptions.Item>
+              <Descriptions.Item label="文笔文风">
+                <InfoTruncate text={book.writingStyle} />
+              </Descriptions.Item>
+              <Descriptions.Item label="每章字数">
+                <InfoTruncate text={book.targetWordCount ? `${book.targetWordCount.toLocaleString()} 字` : undefined} />
+              </Descriptions.Item>
+              <Descriptions.Item label="核心卖点">
+                <Typography.Text type="success" strong>
+                  <InfoTruncate text={book.sellingPoint} />
+                </Typography.Text>
+              </Descriptions.Item>
+              <Descriptions.Item label="参考作品">
+                <InfoTruncate text={book.referenceWorks} />
+              </Descriptions.Item>
+              <Descriptions.Item label="受众">
+                <InfoTruncate text={book.targetAudience} />
+              </Descriptions.Item>
+              <Descriptions.Item label="标签" span={tags.length > 0 ? { xs: 1, sm: 2, md: 3 } : 1}>
+                {tags.length > 0 ? (
+                  <div className={styles.infoTagsWrap}>
+                    {tags.map((t) => (
+                      <Tooltip key={t} title={t.length > 20 ? t : undefined}>
+                        <Tag color="green" className={styles.infoTagItem}>{t}</Tag>
+                      </Tooltip>
+                    ))}
+                  </div>
+                ) : <span style={{ color: "var(--text-light)" }}>—</span>}
+              </Descriptions.Item>
               {book.description && (
-                <div className={styles.infoDesc}>{book.description}</div>
+                <Descriptions.Item label="简介" span={{ xs: 1, sm: 2, md: 3 }}>
+                  <Typography.Paragraph
+                    ellipsis={{ rows: 2, tooltip: book.description }}
+                    style={{ marginBottom: 0, fontSize: 12 }}
+                  >
+                    {book.description}
+                  </Typography.Paragraph>
+                </Descriptions.Item>
               )}
-            </div>
+            </Descriptions>
           </div>
 
           {/* 7天趋势 + 写作进度 */}
@@ -250,14 +276,12 @@ function StatCell({ value, unit, label }: { value: string; unit: string; label: 
   );
 }
 
-function InfoItem({ label, value, highlight }: { label: string; value?: string; highlight?: boolean }) {
+function InfoTruncate({ text }: { text?: string }) {
+  if (!text) return <span style={{ color: "var(--text-light)" }}>—</span>;
   return (
-    <div className={styles.infoItem}>
-      <div className={styles.infoLabel}>{label}</div>
-      <div className={`${styles.infoVal} ${highlight ? styles.infoValHighlight : ""}`}>
-        {value || ""}
-      </div>
-    </div>
+    <Tooltip title={text} placement="topLeft">
+      <span className={styles.infoTruncate}>{text}</span>
+    </Tooltip>
   );
 }
 
