@@ -25,6 +25,12 @@
   gap: 16px;
 }
 
+.dashTitleWrap {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .dashTitle {
   font-size: 22px;
   font-weight: 600;

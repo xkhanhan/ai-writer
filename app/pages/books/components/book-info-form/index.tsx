@@ -127,7 +127,7 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
     <div className={styles.dash}>
       {/* 标题栏 */}
       <div className={styles.dashTop}>
-        <div>
+        <div className={styles.dashTitleWrap}>
           <h1 className={styles.dashTitle}>{book.title}</h1>
           <div className={styles.dashTags}>
             {book.genre && <span className={styles.dashTag}>{book.genre}</span>}
