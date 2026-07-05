@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createBook, listBooks } from "@/lib/storage/books";
+import { createBook, listBooks } from "@/server/storage/book-store";
 
 function jsonError(error: string, status = 400) {
   return NextResponse.json({ success: false, error }, { status });
@@ -27,12 +27,15 @@ export async function POST(request: Request) {
     typeof body === "object" && body !== null
       ? (body as Record<string, unknown>)
       : {};
+
   const title = typeof payload.title === "string" ? payload.title : "";
   const description =
     typeof payload.description === "string" ? payload.description : "";
+  const genre = typeof payload.genre === "string" ? payload.genre : "";
+  const platform = typeof payload.platform === "string" ? payload.platform : "";
 
   try {
-    const book = await createBook({ title, description });
+    const book = await createBook({ title, description, genre, platform });
     return NextResponse.json({ success: true, book }, { status: 201 });
   } catch (error) {
     if (error instanceof Error) {

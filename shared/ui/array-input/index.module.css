@@ -1,0 +1,57 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+.tagClose {
+  font-size: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tagClose:hover {
+  color: var(--color-danger);
+}
+.inputRow {
+  display: flex;
+  gap: 4px;
+}
+.input {
+  flex: 1;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  outline: none;
+}
+.input:focus {
+  border-color: var(--color-primary);
+}
+.addButton {
+  width: 28px;
+  height: 28px;
+  border: 1px dashed var(--color-primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

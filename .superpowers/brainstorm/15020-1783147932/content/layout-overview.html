@@ -1,0 +1,423 @@
+<h2>书籍工作台 — 布局容器总览</h2>
+<p class="subtitle">整体页面结构、区域划分与统一风格规范</p>
+
+<!-- Section 1: Overall Architecture -->
+<div class="section">
+  <h3>页面层级架构</h3>
+  <div class="mockup">
+    <div class="mockup-header">App Shell → Workspace → Panel 三层嵌套</div>
+    <div class="mockup-body" style="padding: 0; overflow: hidden; border-radius: 8px;">
+
+      <!-- Full app shell representation -->
+      <div style="display: flex; flex-direction: column; height: 520px; font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+
+        <!-- Topbar -->
+        <div style="height: 48px; min-height: 48px; background: #fff; border-bottom: 1px solid #e0e2eb; display: flex; align-items: center; padding: 0 20px; gap: 12px;">
+          <span style="font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 600; color: #181c22; letter-spacing: 0.05em;">AI Writer</span>
+          <div style="width: 1px; height: 14px; background: #e0e2eb;"></div>
+          <span style="font-size: 12px; color: #717785;">小说创作工具</span>
+          <div style="flex: 1;"></div>
+          <span style="font-size: 12px; color: #717785;">⚙ 设置</span>
+        </div>
+
+        <!-- Main area -->
+        <div style="flex: 1; display: flex; overflow: hidden;">
+
+          <!-- ActivityBar -->
+          <div style="width: 52px; min-width: 52px; background: #e6e8f1; border-right: 1px solid #e0e2eb; display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 3px;">
+            <div style="width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #717785; font-size: 14px; cursor: pointer;">←</div>
+            <div style="width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: #fff; color: #2F5D50; font-size: 14px; box-shadow: 0 1px 3px rgba(24,28,34,0.08); position: relative;">
+              <div style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; background: #2F5D50; border-radius: 0 2px 2px 0;"></div>
+              📖
+            </div>
+            <div style="width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #717785; font-size: 14px;">🌍</div>
+            <div style="width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #717785; font-size: 14px;">⚙</div>
+            <div style="width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #717785; font-size: 14px;">✍</div>
+            <div style="width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #717785; font-size: 14px;">📚</div>
+          </div>
+
+          <!-- Content Area -->
+          <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f5f1e8;">
+
+            <!-- Breadcrumb -->
+            <div style="flex-shrink: 0; padding: 10px 24px; border-bottom: 1px solid #e0e2eb; background: #fff; font-size: 13px; color: #717785;">
+              <span style="color: #2F5D50; cursor: pointer;">🏠 《仙路漫漫》</span>
+              <span style="margin: 0 8px;">/</span>
+              <span style="color: #181c22;">书籍信息</span>
+            </div>
+
+            <!-- Content Body - Panel Area -->
+            <div style="flex: 1; overflow: hidden;">
+
+              <!-- Panel Content -->
+              <div style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+
+                <!-- Panel Title -->
+                <div style="flex-shrink: 0; font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 600; color: #181c22; padding: 20px 44px 14px; border-bottom: 1px solid #e0e2eb; letter-spacing: 0.05em;">
+                  书籍信息
+                </div>
+
+                <!-- Scrollable Form Body -->
+                <div style="flex: 1; overflow-y: auto; padding: 0 44px;">
+                  <div style="max-width: 680px; margin: 0 auto; padding: 16px 0 24px;">
+
+                    <!-- Section Divider -->
+                    <div style="display: flex; align-items: center; gap: 12px; margin: 20px 0 16px;">
+                      <div style="width: 3px; height: 16px; background: #2F5D50; border-radius: 2px;"></div>
+                      <span style="font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 600; color: #2F5D50; letter-spacing: 0.03em;">基础信息</span>
+                      <div style="flex: 1; height: 1px; background: #e0e2eb;"></div>
+                    </div>
+
+                    <!-- Form Field Mock -->
+                    <div style="margin-bottom: 16px;">
+                      <div style="font-size: 13px; color: #414753; margin-bottom: 6px; font-weight: 500;">书名 <span style="color: #ba1a1a;">*</span></div>
+                      <div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px; color: #181c22;">仙路漫漫</div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                      <div style="font-size: 13px; color: #414753; margin-bottom: 6px; font-weight: 500;">题材 <span style="color: #ba1a1a;">*</span></div>
+                      <div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px; color: #181c22;">修真仙侠 / 凡人流</div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                      <div style="font-size: 13px; color: #414753; margin-bottom: 6px; font-weight: 500;">简介</div>
+                      <div style="height: 80px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; padding: 10px 12px; font-size: 14px; color: #181c22; line-height: 1.6;">山村少年偶入仙门，资质平庸却心志坚韧，以凡人之躯踏上漫漫修仙路……</div>
+                    </div>
+
+                    <!-- Another Section -->
+                    <div style="display: flex; align-items: center; gap: 12px; margin: 24px 0 16px;">
+                      <div style="width: 3px; height: 16px; background: #964400; border-radius: 2px;"></div>
+                      <span style="font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 600; color: #964400; letter-spacing: 0.03em;">创作风格</span>
+                      <div style="flex: 1; height: 1px; background: #e0e2eb;"></div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                      <div>
+                        <div style="font-size: 13px; color: #414753; margin-bottom: 6px; font-weight: 500;">写作风格</div>
+                        <div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px; color: #181c22;">细腻写实</div>
+                      </div>
+                      <div>
+                        <div style="font-size: 13px; color: #414753; margin-bottom: 6px; font-weight: 500;">叙事人称</div>
+                        <div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px; color: #181c22;">第三人称</div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div style="flex-shrink: 0; display: flex; gap: 10px; justify-content: flex-end; padding: 10px 44px; border-top: 1px solid #e0e2eb; background: #fff;">
+                  <div style="padding: 6px 18px; border: 1px solid #e0e2eb; border-radius: 6px; font-size: 13px; color: #414753; background: #fff; cursor: pointer;">取消</div>
+                  <div style="padding: 6px 18px; border: none; border-radius: 6px; font-size: 13px; color: #fff; background: #2F5D50; cursor: pointer;">保存修改</div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footerbar -->
+        <div style="height: 28px; min-height: 28px; background: #fff; border-top: 1px solid #e0e2eb; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 11px; color: #717785;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span>● AI 已配置</span>
+            <span>共 1 本书</span>
+          </div>
+          <span>v0.1.0</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 2: Panel Layout Variants -->
+<div class="section">
+  <h3>各面板布局模式</h3>
+  <p class="subtitle">五种面板采用三种布局模式</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-image" style="background: #f8f6f0; padding: 16px;">
+        <div style="font-size: 11px; color: #717785; text-align: center; margin-bottom: 8px;">书籍信息 / AI 设置</div>
+        <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 8px; overflow: hidden; height: 160px; display: flex; flex-direction: column;">
+          <div style="height: 28px; background: #fff; border-bottom: 1px solid #e0e2eb; display: flex; align-items: center; padding: 0 12px;">
+            <span style="font-size: 11px; font-weight: 600; color: #181c22;">表单标题</span>
+          </div>
+          <div style="flex: 1; padding: 8px 12px; overflow: hidden;">
+            <div style="height: 6px; background: #2F5D50; width: 24px; border-radius: 2px; margin-bottom: 6px;"></div>
+            <div style="height: 8px; background: #e0e2eb; border-radius: 4px; margin-bottom: 5px;"></div>
+            <div style="height: 8px; background: #e0e2eb; border-radius: 4px; width: 70%; margin-bottom: 5px;"></div>
+            <div style="height: 20px; background: #f5f1e8; border: 1px solid #e0e2eb; border-radius: 4px; margin-bottom: 6px;"></div>
+            <div style="height: 8px; background: #e0e2eb; border-radius: 4px; margin-bottom: 5px;"></div>
+            <div style="height: 8px; background: #e0e2eb; border-radius: 4px; width: 60%;"></div>
+          </div>
+          <div style="height: 28px; border-top: 1px solid #e0e2eb; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; gap: 6px;">
+            <div style="width: 40px; height: 14px; border: 1px solid #e0e2eb; border-radius: 3px;"></div>
+            <div style="width: 48px; height: 14px; background: #2F5D50; border-radius: 3px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h3>布局 A: 单栏表单</h3>
+        <p>居中表单区域 + 上下操作栏，最大宽度 720px</p>
+        <div style="margin-top: 8px;"><span class="label">适用面板</span> 书籍信息、AI 设置</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-image" style="background: #f8f6f0; padding: 16px;">
+        <div style="font-size: 11px; color: #717785; text-align: center; margin-bottom: 8px;">世界规则 / 设定库</div>
+        <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 8px; overflow: hidden; height: 160px; display: flex;">
+          <div style="width: 80px; border-right: 1px solid #e0e2eb; display: flex; flex-direction: column;">
+            <div style="padding: 6px 8px; border-bottom: 1px solid #e0e2eb; font-size: 9px; font-weight: 600; color: #181c22;">文件夹</div>
+            <div style="flex: 1; padding: 4px;">
+              <div style="height: 6px; background: #e0e2eb; border-radius: 3px; margin-bottom: 3px;"></div>
+              <div style="height: 6px; background: #f5f1e8; border-radius: 3px; margin-bottom: 3px; border-left: 2px solid #2F5D50; padding-left: 4px;"></div>
+              <div style="height: 6px; background: #e0e2eb; border-radius: 3px; margin-bottom: 3px;"></div>
+              <div style="height: 6px; background: #e0e2eb; border-radius: 3px;"></div>
+            </div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <div style="height: 24px; border-bottom: 1px solid #e0e2eb; display: flex; align-items: center; justify-content: space-between; padding: 0 8px;">
+              <span style="font-size: 9px; color: #181c22;">文件名</span>
+              <span style="font-size: 8px; color: #2E8B57;">已保存</span>
+            </div>
+            <div style="flex: 1; padding: 6px 8px;">
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; margin-bottom: 3px;"></div>
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; width: 80%; margin-bottom: 3px;"></div>
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; width: 60%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h3>布局 B: 侧边栏 + 编辑区</h3>
+        <p>左侧 280px 导航 + 右侧内容区</p>
+        <div style="margin-top: 8px;"><span class="label">适用面板</span> 世界规则、设定库</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-image" style="background: #f8f6f0; padding: 16px;">
+        <div style="font-size: 11px; color: #717785; text-align: center; margin-bottom: 8px;">创作区</div>
+        <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 8px; overflow: hidden; height: 160px; display: flex;">
+          <div style="width: 80px; border-right: 1px solid #e0e2eb; display: flex; flex-direction: column;">
+            <div style="padding: 6px 6px; border-bottom: 1px solid #e0e2eb;">
+              <div style="height: 6px; background: #2F5D50; border-radius: 3px; margin-bottom: 3px;"></div>
+            </div>
+            <div style="flex: 1; padding: 4px;">
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; margin-bottom: 2px;"></div>
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; margin-bottom: 2px; padding-left: 6px;"></div>
+              <div style="height: 5px; background: #964400; border-radius: 2px; margin-bottom: 2px; padding-left: 6px;"></div>
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; margin-bottom: 2px;"></div>
+              <div style="height: 5px; background: #2E8B57; border-radius: 2px; padding-left: 6px;"></div>
+            </div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <div style="height: 28px; border-bottom: 1px solid #e0e2eb; display: flex; align-items: center; padding: 0 10px; gap: 6px;">
+              <div style="width: 6px; height: 6px; border-radius: 50%; background: #964400;"></div>
+              <span style="font-size: 9px; color: #181c22;">第三章 · 炼气</span>
+            </div>
+            <div style="flex: 1; padding: 8px 10px;">
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; margin-bottom: 3px;"></div>
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; width: 90%; margin-bottom: 3px;"></div>
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; width: 75%; margin-bottom: 3px;"></div>
+              <div style="height: 5px; background: #e0e2eb; border-radius: 2px; width: 85%;"></div>
+            </div>
+            <div style="height: 20px; border-top: 1px solid #e0e2eb; display: flex; align-items: center; padding: 0 10px; font-size: 8px; color: #717785; gap: 8px;">
+              <span>1,234 字</span>
+              <span>目标: 30%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h3>布局 C: 导航树 + 多视图内容</h3>
+        <p>左侧 280px 导航树 + 右侧视图切换（7 种状态）</p>
+        <div style="margin-top: 8px;"><span class="label">适用面板</span> 创作区</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-image" style="background: #f8f6f0; padding: 16px;">
+        <div style="font-size: 11px; color: #717785; text-align: center; margin-bottom: 8px;">正文库</div>
+        <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 8px; overflow: hidden; height: 160px; display: flex; flex-direction: column;">
+          <div style="height: 28px; border-bottom: 1px solid #e0e2eb; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;">
+            <span style="font-size: 9px; color: #717785;">共 12 章 · 36,000 字</span>
+          </div>
+          <div style="flex: 1; padding: 6px 10px; overflow: hidden;">
+            <div style="display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 4px; border: 1px solid #e0e2eb; margin-bottom: 4px; background: #f8f6f0;">
+              <span style="font-size: 8px; color: #2F5D50; font-weight: 600;">01</span>
+              <span style="font-size: 9px; color: #181c22; flex: 1;">山村少年</span>
+              <span style="font-size: 8px; color: #717785;">3,200字</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 4px; border: 1px solid #e0e2eb; margin-bottom: 4px;">
+              <span style="font-size: 8px; color: #2F5D50; font-weight: 600;">02</span>
+              <span style="font-size: 9px; color: #181c22; flex: 1;">初入仙门</span>
+              <span style="font-size: 8px; color: #717785;">2,800字</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 4px; border: 1px solid #e0e2eb; margin-bottom: 4px;">
+              <span style="font-size: 8px; color: #2F5D50; font-weight: 600;">03</span>
+              <span style="font-size: 9px; color: #181c22; flex: 1;">炼气之法</span>
+              <span style="font-size: 8px; color: #717785;">3,100字</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 4px; border: 1px solid #e0e2eb;">
+              <span style="font-size: 8px; color: #2F5D50; font-weight: 600;">04</span>
+              <span style="font-size: 9px; color: #181c22; flex: 1;">灵药采集</span>
+              <span style="font-size: 8px; color: #717785;">2,900字</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h3>布局 D: 纯列表</h3>
+        <p>顶部汇总 + 列表展示，弹窗预览</p>
+        <div style="margin-top: 8px;"><span class="label">适用面板</span> 正文库</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 3: Style Tokens -->
+<div class="section">
+  <h3>统一样式规范</h3>
+  <p class="subtitle">色彩、字体、间距、圆角、阴影的设计令牌</p>
+
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">色彩系统</div>
+      <div class="mockup-body" style="padding: 20px;">
+        <div style="margin-bottom: 16px;">
+          <div class="label">主色</div>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <div style="text-align: center;">
+              <div style="width: 48px; height: 48px; border-radius: 8px; background: #2F5D50; border: 1px solid rgba(0,0,0,0.1);"></div>
+              <div style="font-size: 10px; color: #717785; margin-top: 4px;">Primary</div>
+              <div style="font-size: 9px; color: #414753;">#2F5D50</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(47,93,80,0.10); border: 1px solid rgba(47,93,80,0.20);"></div>
+              <div style="font-size: 10px; color: #717785; margin-top: 4px;">Primary BG</div>
+              <div style="font-size: 9px; color: #414753;">10%</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div class="label">背景</div>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <div style="text-align: center;">
+              <div style="width: 48px; height: 48px; border-radius: 8px; background: #f5f1e8; border: 1px solid #e0e2eb;"></div>
+              <div style="font-size: 10px; color: #717785; margin-top: 4px;">Page</div>
+              <div style="font-size: 9px; color: #414753;">宣纸</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="width: 48px; height: 48px; border-radius: 8px; background: #fff; border: 1px solid #e0e2eb;"></div>
+              <div style="font-size: 10px; color: #717785; margin-top: 4px;">Elevated</div>
+              <div style="font-size: 9px; color: #414753;">白色</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="width: 48px; height: 48px; border-radius: 8px; background: #f1f3fc; border: 1px solid #e0e2eb;"></div>
+              <div style="font-size: 10px; color: #717785; margin-top: 4px;">Muted</div>
+              <div style="font-size: 9px; color: #414753;">浅灰蓝</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="width: 48px; height: 48px; border-radius: 8px; background: #e6e8f1; border: 1px solid #e0e2eb;"></div>
+              <div style="font-size: 10px; color: #717785; margin-top: 4px;">Strong</div>
+              <div style="font-size: 9px; color: #414753;">深灰蓝</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="label">文字</div>
+          <div style="display: flex; gap: 12px; margin-top: 8px; align-items: center;">
+            <div style="font-size: 14px; color: #181c22;">主文字</div>
+            <div style="font-size: 14px; color: #414753;">次要</div>
+            <div style="font-size: 14px; color: #717785;">辅助</div>
+            <div style="font-size: 14px; color: #c1c6d5;">浅色</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">字体 · 间距 · 圆角 · 阴影</div>
+      <div class="mockup-body" style="padding: 20px;">
+        <div style="margin-bottom: 14px;">
+          <div class="label">字体</div>
+          <div style="margin-top: 6px;">
+            <div style="font-family: 'Noto Serif SC', serif; font-size: 18px; color: #181c22; margin-bottom: 2px;">Noto Serif SC — 标题衬线</div>
+            <div style="font-size: 13px; color: #414753; margin-bottom: 2px;">Inter / Noto Sans SC — 正文无衬线</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #717785;">JetBrains Mono — 等宽代码</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <div class="label">间距 (4px 基准)</div>
+          <div style="display: flex; gap: 6px; margin-top: 6px; align-items: flex-end;">
+            <div style="text-align: center;"><div style="width: 12px; height: 4px; background: #2F5D50; border-radius: 2px;"></div><div style="font-size: 8px; color: #717785; margin-top: 2px;">4</div></div>
+            <div style="text-align: center;"><div style="width: 12px; height: 8px; background: #2F5D50; border-radius: 2px;"></div><div style="font-size: 8px; color: #717785; margin-top: 2px;">8</div></div>
+            <div style="text-align: center;"><div style="width: 12px; height: 12px; background: #2F5D50; border-radius: 2px;"></div><div style="font-size: 8px; color: #717785; margin-top: 2px;">12</div></div>
+            <div style="text-align: center;"><div style="width: 12px; height: 16px; background: #2F5D50; border-radius: 2px;"></div><div style="font-size: 8px; color: #717785; margin-top: 2px;">16</div></div>
+            <div style="text-align: center;"><div style="width: 12px; height: 20px; background: #2F5D50; border-radius: 2px;"></div><div style="font-size: 8px; color: #717785; margin-top: 2px;">20</div></div>
+            <div style="text-align: center;"><div style="width: 12px; height: 24px; background: #2F5D50; border-radius: 2px;"></div><div style="font-size: 8px; color: #717785; margin-top: 2px;">24</div></div>
+            <div style="text-align: center;"><div style="width: 12px; height: 32px; background: #2F5D50; border-radius: 2px;"></div><div style="font-size: 8px; color: #717785; margin-top: 2px;">32</div></div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <div class="label">圆角</div>
+          <div style="display: flex; gap: 8px; margin-top: 6px; align-items: center;">
+            <div style="width: 32px; height: 32px; border: 2px solid #2F5D50; border-radius: 4px;"></div>
+            <div style="font-size: 10px; color: #717785;">sm 4px</div>
+            <div style="width: 32px; height: 32px; border: 2px solid #2F5D50; border-radius: 6px;"></div>
+            <div style="font-size: 10px; color: #717785;">md 6px</div>
+            <div style="width: 32px; height: 32px; border: 2px solid #2F5D50; border-radius: 8px;"></div>
+            <div style="font-size: 10px; color: #717785;">lg 8px</div>
+            <div style="width: 32px; height: 32px; border: 2px solid #2F5D50; border-radius: 12px;"></div>
+            <div style="font-size: 10px; color: #717785;">xl 12px</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="label">阴影</div>
+          <div style="display: flex; gap: 12px; margin-top: 6px;">
+            <div style="width: 60px; height: 40px; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(24,28,34,0.08); display: flex; align-items: center; justify-content: center; font-size: 9px; color: #717785;">Shadow</div>
+            <div style="width: 60px; height: 40px; background: #fff; border-radius: 6px; box-shadow: 0 4px 12px rgba(24,28,34,0.12); display: flex; align-items: center; justify-content: center; font-size: 9px; color: #717785;">Shadow MD</div>
+            <div style="width: 60px; height: 40px; background: #fff; border-radius: 6px; box-shadow: 0 8px 24px rgba(24,28,34,0.16); display: flex; align-items: center; justify-content: center; font-size: 9px; color: #717785;">Shadow LG</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 4: Key Issues -->
+<div class="section">
+  <h3>当前问题与改造方向</h3>
+
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="inline" onclick="toggleSelect(this)">
+      <div class="letter">!</div>
+      <div class="content">
+        <h3>内联样式泛滥</h3>
+        <p>创作区 7 个子组件（OutlineEditor、VolumeView、VolumeForm、ChapterView、ChapterForm、ContentEditor、MarkdownEditor）大量使用内联 style 而非 CSS Modules，导致样式难以统一维护。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="tokens" onclick="toggleSelect(this)">
+      <div class="letter">!</div>
+      <div class="content">
+        <h3>设计令牌未完全落地</h3>
+        <p>globals.css 定义了完整 token 系统，但 CSS Module 中大量使用硬编码像素值（如 padding: 48px）而非变量引用。两套变量名（语义化 + 别名）并存增加认知负担。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="consistency" onclick="toggleSelect(this)">
+      <div class="letter">!</div>
+      <div class="content">
+        <h3>面板间布局不统一</h3>
+        <p>各面板的标题区、内容区、操作栏的 padding/margin/字体大小缺乏统一约束。BookInfoForm 用 48px padding，FolderFileEditor 用 24px，CreationZone 用 20px。</p>
+      </div>
+    </div>
+  </div>
+</div>

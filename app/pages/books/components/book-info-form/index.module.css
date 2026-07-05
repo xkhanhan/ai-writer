@@ -1,0 +1,515 @@
+/* ===== 仪表盘布局 ===== */
+
+.dash {
+  height: 100%;
+  overflow-y: auto;
+  padding: 28px 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--panel);
+}
+
+.dashLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+/* 标题栏 */
+.dashTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.dashTags {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.dashTag {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  background: var(--panel-soft);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+.dashEditBtn {
+  color: var(--accent) !important;
+  border-color: var(--line) !important;
+  flex-shrink: 0;
+}
+
+.dashEditBtn:hover {
+  border-color: var(--accent) !important;
+  background: rgba(47, 93, 80, 0.04) !important;
+}
+
+/* 卡片通用 */
+.dashCard {
+  background: var(--panel-soft);
+  border-radius: 10px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-light);
+}
+
+.dashCardTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+
+/* 统计条 */
+.statBar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.statCell {
+  background: var(--panel);
+  padding: 16px 20px;
+  text-align: center;
+}
+
+.statCell:first-child { border-radius: 10px 0 0 10px; }
+.statCell:last-child { border-radius: 0 10px 10px 0; }
+
+.statNum {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.statUnit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-light);
+  margin-left: 2px;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 3px;
+}
+
+/* 双列网格 */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* 书籍信息网格 */
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 24px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoLabel {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 2px;
+}
+
+.infoVal {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.infoValHighlight {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.infoTagsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.infoTag {
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(47, 93, 80, 0.06);
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+
+.infoDesc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+/* ===== 柱状图 ===== */
+
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 100px;
+}
+
+.barCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--accent), rgba(47, 93, 80, 0.6));
+  min-height: 2px;
+}
+
+.barLabel {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.barValue {
+  font-size: 9px;
+  color: var(--text-tertiary);
+}
+
+/* ===== 进度条 ===== */
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.progressLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--text-light);
+  transition: width 0.3s ease;
+}
+
+.progressFillAccent {
+  background: var(--accent);
+}
+
+.progressCount {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ===== 活动时间线 ===== */
+
+.emptyHint {
+  font-size: 12px;
+  color: var(--text-light);
+  text-align: center;
+  padding: 20px 0;
+}
+
+.tlList {
+  display: flex;
+  flex-direction: column;
+}
+
+.tlItem {
+  display: flex;
+  gap: 10px;
+  padding: 7px 0;
+  position: relative;
+}
+
+.tlItem:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 22px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--border-light);
+}
+
+.tlDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  margin-top: 4px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.tlDotOn {
+  background: var(--accent);
+}
+
+.tlContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.tlText {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tlText b {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.tlTime {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+/* ===== 章节长度分布 ===== */
+
+.distRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+}
+
+.distLabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  width: 52px;
+  flex-shrink: 0;
+}
+
+.distTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.distFill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), rgba(47, 93, 80, 0.6));
+}
+
+.distCount {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ===== GitHub 风格热力图 ===== */
+
+.ghHeader {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.ghStats {
+  display: flex;
+  gap: 20px;
+}
+
+.ghStat {
+  text-align: center;
+}
+
+.ghStatNum {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ghStatLabel {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.ghBody {
+  display: flex;
+  gap: 6px;
+}
+
+.ghYLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 18px;
+  justify-content: space-between;
+}
+
+.ghYLabels span {
+  font-size: 9px;
+  color: var(--text-light);
+  height: 13px;
+  line-height: 13px;
+}
+
+.ghMain {
+  flex: 1;
+  overflow: hidden;
+}
+
+.ghMonths {
+  display: flex;
+  margin-bottom: 4px;
+  height: 14px;
+}
+
+.ghMonth {
+  font-size: 9px;
+  color: var(--text-light);
+  display: inline-block;
+}
+
+.ghGrid {
+  display: flex;
+  gap: 3px;
+}
+
+.ghWeek {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ghCell {
+  width: 13px;
+  height: 13px;
+  border-radius: 2px;
+  background: var(--border-light);
+}
+
+.heat1 { background: rgba(47, 93, 80, 0.15); }
+.heat2 { background: rgba(47, 93, 80, 0.35); }
+.heat3 { background: rgba(47, 93, 80, 0.6); }
+.heat4 { background: var(--accent); }
+
+.ghLegend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.ghLegendCell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+}
+
+/* ===== 编辑弹窗表单 ===== */
+
+.formRow {
+  display: flex;
+  gap: 16px;
+}
+
+.halfWidth {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ===== 响应式 ===== */
+
+@media (max-width: 768px) {
+  .dash {
+    padding: 20px 24px 40px;
+  }
+
+  .statBar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statCell:first-child { border-radius: 10px 0 0 0; }
+  .statCell:nth-child(2) { border-radius: 0 10px 0 0; }
+  .statCell:nth-child(3) { border-radius: 0 0 0 10px; }
+  .statCell:last-child { border-radius: 0 0 10px 0; }
+
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+
+  .infoGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .formRow {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash {
+    padding: 16px 16px 32px;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}

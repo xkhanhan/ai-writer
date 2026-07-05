@@ -1,0 +1,27 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--color-primary);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--color-primary);
+  background: white;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.trigger:hover {
+  background: rgba(47, 93, 80, 0.05);
+}
+.arrow {
+  font-size: 10px;
+  margin-left: 2px;
+}
+.menuItem {
+  font-size: 12px;
+}
+.menuItemDisabled {
+  font-size: 12px;
+  color: #ccc;
+}

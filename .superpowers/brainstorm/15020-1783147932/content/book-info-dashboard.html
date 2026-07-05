@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>书籍信息 — 创作看板</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'PingFang SC', 'Noto Sans SC', 'Helvetica Neue', sans-serif; background: #f7f8fa; color: #1d2129; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 860px; margin: 0 auto; padding: 40px 32px 60px; }
+
+  /* 顶部标题 */
+  .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .top-left h1 { font-size: 22px; font-weight: 600; color: #1d2129; letter-spacing: -0.3px; }
+  .top .tags { display: flex; gap: 6px; margin-top: 6px; }
+  .top .tag { font-size: 12px; color: #86909c; background: #f2f3f5; padding: 2px 10px; border-radius: 10px; }
+  .top-right .edit-btn { font-size: 13px; color: #2F5D50; background: none; border: 1px solid #d9e8e4; padding: 5px 14px; border-radius: 6px; cursor: pointer; }
+  .top-right .edit-btn:hover { background: rgba(47,93,80,0.04); }
+
+  /* 四格统计条 */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e5e6eb; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  .stat { background: #fff; padding: 16px 20px; text-align: center; }
+  .stat:first-child { border-radius: 10px 0 0 10px; }
+  .stat:last-child { border-radius: 0 10px 10px 0; }
+  .stat-num { font-size: 26px; font-weight: 600; color: #1d2129; letter-spacing: -0.5px; }
+  .stat-num .unit { font-size: 12px; font-weight: 400; color: #c9cdd4; margin-left: 2px; }
+  .stat-label { font-size: 11px; color: #86909c; margin-top: 3px; }
+
+  /* 网格 */
+  .grid23 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .grid32 { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 12px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .grid1 { margin-bottom: 12px; }
+  .card { background: #fff; border-radius: 10px; padding: 18px 20px; }
+  .card-title { font-size: 13px; font-weight: 500; color: #1d2129; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .card-title .link { font-size: 12px; color: #2F5D50; cursor: pointer; font-weight: 400; }
+
+  /* 书籍信息 */
+  .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 24px; }
+  .info-item { display: flex; flex-direction: column; }
+  .info-label { font-size: 11px; color: #c9cdd4; margin-bottom: 2px; }
+  .info-val { font-size: 12px; color: #1d2129; line-height: 1.5; }
+  .info-val.highlight { color: #2F5D50; font-weight: 500; }
+  .info-desc { font-size: 12px; color: #86909c; line-height: 1.7; grid-column: 1 / -1; margin-top: 4px; }
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .info-tag { font-size: 11px; color: #2F5D50; background: rgba(47,93,80,0.06); padding: 1px 8px; border-radius: 10px; }
+
+  /* 柱状图 */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, #2F5D50, #3d7a6a); min-height: 2px; }
+  .bar-label { font-size: 10px; color: #c9cdd4; }
+  .bar-value { font-size: 9px; color: #86909c; }
+  .bar-chart-total { text-align: right; margin-top: 8px; font-size: 11px; color: #c9cdd4; }
+  .bar-chart-total b { color: #1d2129; font-size: 14px; font-weight: 600; }
+
+  /* 写作习惯 */
+  .habit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .habit-item { padding: 8px 0; border-bottom: 1px solid #f7f8fa; }
+  .habit-item:nth-child(odd) { padding-right: 16px; }
+  .habit-item:nth-child(even) { padding-left: 16px; border-left: 1px solid #f7f8fa; }
+  .habit-label { font-size: 11px; color: #c9cdd4; }
+  .habit-val { font-size: 15px; color: #1d2129; font-weight: 600; margin-top: 2px; }
+  .habit-val .accent { color: #2F5D50; }
+  .habit-val .unit { font-size: 11px; font-weight: 400; color: #c9cdd4; }
+
+  /* 活动时间线 */
+  .tl-item { display: flex; gap: 8px; padding: 7px 0; position: relative; }
+  .tl-item:not(:last-child)::after { content: ''; position: absolute; left: 3px; top: 20px; bottom: -2px; width: 1px; background: #f2f3f5; }
+  .tl-dot { width: 7px; height: 7px; border-radius: 50%; background: #e5e6eb; margin-top: 3px; flex-shrink: 0; position: relative; z-index: 1; }
+  .tl-dot.on { background: #2F5D50; }
+  .tl-content { flex: 1; min-width: 0; }
+  .tl-text { font-size: 12px; color: #4e5969; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tl-text b { color: #1d2129; font-weight: 500; }
+  .tl-time { font-size: 11px; color: #c9cdd4; margin-top: 2px; }
+
+  /* 章节长度 */
+  .dist-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+  .dist-label { font-size: 11px; color: #86909c; width: 52px; flex-shrink: 0; }
+  .dist-bar { flex: 1; height: 6px; background: #f2f3f5; border-radius: 3px; overflow: hidden; }
+  .dist-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #2F5D50, #3d7a6a); }
+  .dist-count { font-size: 11px; color: #86909c; width: 24px; text-align: right; flex-shrink: 0; }
+  .dist-summary { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid #f7f8fa; }
+  .dist-summary-item { text-align: center; }
+  .dist-summary-val { font-size: 16px; font-weight: 600; color: #1d2129; }
+  .dist-summary-label { font-size: 10px; color: #c9cdd4; margin-top: 1px; }
+
+  /* GitHub 风格热力图 */
+  .gh-card { padding: 20px 24px; }
+  .gh-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .gh-title { font-size: 13px; font-weight: 500; color: #1d2129; }
+  .gh-stats { display: flex; gap: 16px; }
+  .gh-stat { text-align: center; }
+  .gh-stat-num { font-size: 18px; font-weight: 600; color: #1d2129; }
+  .gh-stat-label { font-size: 10px; color: #c9cdd4; }
+  .gh-body { display: flex; gap: 6px; }
+  .gh-ylabels { display: flex; flex-direction: column; gap: 3px; padding-top: 18px; justify-content: space-between; }
+  .gh-ylabel { font-size: 9px; color: #c9cdd4; height: 13px; line-height: 13px; }
+  .gh-main { flex: 1; overflow: hidden; }
+  .gh-months { display: flex; margin-bottom: 4px; height: 14px; }
+  .gh-month { font-size: 9px; color: #c9cdd4; }
+  .gh-grid { display: flex; gap: 3px; }
+  .gh-week { display: flex; flex-direction: column; gap: 3px; }
+  .gh-cell { width: 13px; height: 13px; border-radius: 2px; background: #ebedf0; }
+  .gh-c1 { background: rgba(47,93,80,0.15); }
+  .gh-c2 { background: rgba(47,93,80,0.35); }
+  .gh-c3 { background: rgba(47,93,80,0.6); }
+  .gh-c4 { background: #2F5D50; }
+  .gh-footer { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 10px; font-size: 10px; color: #c9cdd4; }
+  .gh-legend-cell { width: 11px; height: 11px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- 顶部 -->
+  <div class="top">
+    <div class="top-left">
+      <h1>仙路漫漫</h1>
+      <div class="tags">
+        <span class="tag">修真仙侠</span>
+        <span class="tag">凡人流</span>
+        <span class="tag">起点中文网</span>
+        <span class="tag">男频 18-35</span>
+      </div>
+    </div>
+    <div class="top-right">
+      <button class="edit-btn">编辑信息</button>
+    </div>
+  </div>
+
+  <!-- 统计条 -->
+  <div class="stats">
+    <div class="stat"><div class="stat-num">128,432<span class="unit">字</span></div><div class="stat-label">总字数</div></div>
+    <div class="stat"><div class="stat-num">42<span class="unit">章</span></div><div class="stat-label">已写章节</div></div>
+    <div class="stat"><div class="stat-num">3,057<span class="unit">字</span></div><div class="stat-label">日均字数</div></div>
+    <div class="stat"><div class="stat-num">12<span class="unit">天</span></div><div class="stat-label">连续写作</div></div>
+  </div>
+
+  <!-- 书籍信息（上移） -->
+  <div class="grid1">
+    <div class="card">
+      <div class="card-title">书籍信息 <span class="link">编辑 →</span></div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">题材</div><div class="info-val">修真仙侠 · 凡人流</div></div>
+        <div class="info-item"><div class="info-label">平台</div><div class="info-val">起点中文网</div></div>
+        <div class="info-item"><div class="info-label">文笔文风</div><div class="info-val">细腻写实</div></div>
+        <div class="info-item"><div class="info-label">每章字数</div><div class="info-val">3,000 字</div></div>
+        <div class="info-item"><div class="info-label">核心卖点</div><div class="info-val highlight">凡人流修仙，苦修成仙的真实感</div></div>
+        <div class="info-item"><div class="info-label">参考作品</div><div class="info-val">凡人修仙传、仙逆</div></div>
+        <div class="info-item"><div class="info-label">标签</div><div class="tags-wrap"><span class="info-tag">修仙</span><span class="info-tag">苦修</span><span class="info-tag">凡人流</span><span class="info-tag">升级流</span></div></div>
+        <div class="info-item"><div class="info-label">受众</div><div class="info-val">男频 18-35</div></div>
+        <div class="info-desc">山村少年偶得仙缘，踏入修仙世界。没有逆天血脉，没有绝世功法，只凭一颗坚韧道心，在残酷的修仙界中步步为营，砥砺前行。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 字数趋势 + 写作习惯 -->
+  <div class="grid23">
+    <div class="card">
+      <div class="card-title">近 7 天字数</div>
+      <div class="bar-chart">
+        <div class="bar-col"><div class="bar-value">2.8k</div><div class="bar" style="height:56%"></div><div class="bar-label">周一</div></div>
+        <div class="bar-col"><div class="bar-value">3.2k</div><div class="bar" style="height:64%"></div><div class="bar-label">周二</div></div>
+        <div class="bar-col"><div class="bar-value">1.5k</div><div class="bar" style="height:30%"></div><div class="bar-label">周三</div></div>
+        <div class="bar-col"><div class="bar-value">4.1k</div><div class="bar" style="height:82%"></div><div class="bar-label">周四</div></div>
+        <div class="bar-col"><div class="bar-value">3.8k</div><div class="bar" style="height:76%"></div><div class="bar-label">周五</div></div>
+        <div class="bar-col"><div class="bar-value">5.0k</div><div class="bar" style="height:100%"></div><div class="bar-label">周六</div></div>
+        <div class="bar-col"><div class="bar-value">—</div><div class="bar" style="height:2%"></div><div class="bar-label">周日</div></div>
+      </div>
+      <div class="bar-chart-total">本周合计 <b>20,400</b> 字</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">写作习惯</div>
+      <div class="habit-grid">
+        <div class="habit-item"><div class="habit-label">日均字数</div><div class="habit-val"><span class="accent">3,057</span> <span class="unit">字</span></div></div>
+        <div class="habit-item"><div class="habit-label">周均字数</div><div class="habit-val">21,399 <span class="unit">字</span></div></div>
+        <div class="habit-item"><div class="habit-label">单章均字数</div><div class="habit-val">3,058 <span class="unit">字</span></div></div>
+        <div class="habit-item"><div class="habit-label">最高日产出</div><div class="habit-val">5,230 <span class="unit">字</span></div></div>
+        <div class="habit-item" style="grid-column:1/-1;border-bottom:none;border-left:none;padding-left:0;"><div class="habit-label">最活跃时段</div><div class="habit-val">20:00 — 23:00</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 最近活动 + 章节长度分布 -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">最近活动</div>
+      <div class="tl-item">
+        <div class="tl-dot on"></div>
+        <div class="tl-content">
+          <div class="tl-text">编辑了 <b>第42章 · 灵药采集</b></div>
+          <div class="tl-time">今天 14:30</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot on"></div>
+        <div class="tl-content">
+          <div class="tl-text">过审了 <b>第41章 · 入门考验</b></div>
+          <div class="tl-time">昨天 21:15</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <div class="tl-text">新建了 <b>第二卷 · 宗门风云</b></div>
+          <div class="tl-time">前天 19:40</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <div class="tl-text">更新了规则 <b>修真境界体系</b></div>
+          <div class="tl-time">3 天前</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <div class="tl-text">生成了 <b>第40章</b> 正文</div>
+          <div class="tl-time">4 天前</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">章节长度分布</div>
+      <div class="dist-row"><div class="dist-label">2k 以下</div><div class="dist-bar"><div class="dist-fill" style="width:5%"></div></div><div class="dist-count">2</div></div>
+      <div class="dist-row"><div class="dist-label">2k — 3k</div><div class="dist-bar"><div class="dist-fill" style="width:24%"></div></div><div class="dist-count">10</div></div>
+      <div class="dist-row"><div class="dist-label">3k — 4k</div><div class="dist-bar"><div class="dist-fill" style="width:67%"></div></div><div class="dist-count">28</div></div>
+      <div class="dist-row"><div class="dist-label">4k — 5k</div><div class="dist-bar"><div class="dist-fill" style="width:5%"></div></div><div class="dist-count">2</div></div>
+      <div class="dist-row"><div class="dist-label">5k 以上</div><div class="dist-bar"><div class="dist-fill" style="width:0%"></div></div><div class="dist-count">0</div></div>
+      <div class="dist-summary">
+        <div class="dist-summary-item"><div class="dist-summary-val">42</div><div class="dist-summary-label">总章节</div></div>
+        <div class="dist-summary-item"><div class="dist-summary-val">3,058</div><div class="dist-summary-label">平均字数</div></div>
+        <div class="dist-summary-item"><div class="dist-summary-val">5,230</div><div class="dist-summary-label">最长章节</div></div>
+        <div class="dist-summary-item"><div class="dist-summary-val">1,820</div><div class="dist-summary-label">最短章节</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GitHub 风格热力图（底部通栏） -->
+  <div class="grid1">
+    <div class="card gh-card">
+      <div class="gh-header">
+        <div class="gh-title">创作热力图</div>
+        <div class="gh-stats">
+          <div class="gh-stat"><div class="gh-stat-num">256</div><div class="gh-stat-label">写作天数</div></div>
+          <div class="gh-stat"><div class="gh-stat-num">12</div><div class="gh-stat-label">连续天数</div></div>
+          <div class="gh-stat"><div class="gh-stat-num">5,230</div><div class="gh-stat-label">最高日产出</div></div>
+        </div>
+      </div>
+      <div class="gh-body">
+        <div class="gh-ylabels">
+          <div class="gh-ylabel"></div>
+          <div class="gh-ylabel">一</div>
+          <div class="gh-ylabel"></div>
+          <div class="gh-ylabel">三</div>
+          <div class="gh-ylabel"></div>
+          <div class="gh-ylabel">五</div>
+          <div class="gh-ylabel"></div>
+        </div>
+        <div class="gh-main">
+          <div class="gh-months" id="gh-months"></div>
+          <div class="gh-grid" id="gh-grid"></div>
+        </div>
+      </div>
+      <div class="gh-footer">
+        <span>少</span>
+        <div class="gh-legend-cell" style="background:#ebedf0"></div>
+        <div class="gh-legend-cell" style="background:rgba(47,93,80,0.15)"></div>
+        <div class="gh-legend-cell" style="background:rgba(47,93,80,0.35)"></div>
+        <div class="gh-legend-cell" style="background:rgba(47,93,80,0.6)"></div>
+        <div class="gh-legend-cell" style="background:#2F5D50"></div>
+        <span>多</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// 生成 GitHub 风格热力图（52周 × 7天）
+(function() {
+  const grid = document.getElementById('gh-grid');
+  const months = document.getElementById('gh-months');
+  const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+  // 模拟数据：过去365天的写作字数
+  // 前120天很少写，中间开始写，最近60天密集写
+  function getWordsForDay(dayIndex) {
+    // dayIndex 0 = 365天前, 364 = 昨天
+    if (dayIndex < 120) return Math.random() < 0.15 ? Math.floor(Math.random() * 2000) : 0;
+    if (dayIndex < 200) return Math.random() < 0.4 ? Math.floor(Math.random() * 3500 + 500) : (Math.random() < 0.2 ? Math.floor(Math.random() * 1500) : 0);
+    if (dayIndex < 300) return Math.random() < 0.7 ? Math.floor(Math.random() * 4500 + 1000) : (Math.random() < 0.3 ? Math.floor(Math.random() * 2000) : 0);
+    // 最近65天：高密度
+    return Math.random() < 0.88 ? Math.floor(Math.random() * 5000 + 1500) : (Math.random() < 0.5 ? Math.floor(Math.random() * 1500) : 0);
+  }
+
+  function getLevel(words) {
+    if (words === 0) return '';
+    if (words < 1000) return 'gh-c1';
+    if (words < 2500) return 'gh-c2';
+    if (words < 4000) return 'gh-c3';
+    return 'gh-c4';
+  }
+
+  // 从今天往前推 365 天，对齐到周一
+  const today = new Date(2026, 6, 4); // 2026-07-04 Saturday
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - 364);
+  // 对齐到周一
+  const dayOfWeek = startDate.getDay(); // 0=Sun
+  const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  startDate.setDate(startDate.getDate() - offset);
+
+  const totalWeeks = 53;
+  let monthPositions = [];
+  let lastMonth = -1;
+
+  for (let w = 0; w < totalWeeks; w++) {
+    const weekDiv = document.createElement('div');
+    weekDiv.className = 'gh-week';
+
+    for (let d = 0; d < 7; d++) {
+      const cellDate = new Date(startDate);
+      cellDate.setDate(cellDate.getDate() + w * 7 + d);
+
+      const cell = document.createElement('div');
+      cell.className = 'gh-cell';
+
+      if (cellDate <= today && cellDate >= new Date(startDate.getTime() + offset * 86400000)) {
+        // 计算距今天数
+        const diffDays = Math.floor((today - cellDate) / 86400000);
+        const dayIndex = 364 - diffDays;
+        const words = getWordsForDay(dayIndex);
+        const level = getLevel(words);
+        if (level) cell.classList.add(level);
+        cell.title = cellDate.getMonth() + 1 + '月' + cellDate.getDate() + '日：' + words.toLocaleString() + ' 字';
+      }
+
+      // 记录月份变化
+      if (d === 0) {
+        const m = cellDate.getMonth();
+        if (m !== lastMonth && cellDate <= today) {
+          monthPositions.push({ week: w, month: m });
+          lastMonth = m;
+        }
+      }
+
+      weekDiv.appendChild(cell);
+    }
+    grid.appendChild(weekDiv);
+  }
+
+  // 渲染月份标签
+  let monthHtml = '';
+  for (let i = 0; i < monthPositions.length; i++) {
+    const pos = monthPositions[i];
+    const nextPos = monthPositions[i + 1];
+    const width = nextPos ? (nextPos.week - pos.week) * 16 : (totalWeeks - pos.week) * 16;
+    monthHtml += '<span class="gh-month" style="width:' + width + 'px;display:inline-block;">' + monthNames[pos.month] + '</span>';
+  }
+  months.innerHTML = monthHtml;
+})();
+</script>
+</body>
+</html>

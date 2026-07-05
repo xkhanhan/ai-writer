@@ -1,45 +1,52 @@
 import { NextResponse } from "next/server";
-import { getPublicAiConfig, saveAiConfig } from "@/lib/ai/config";
-
-function jsonError(error: string, status = 400) {
-  return NextResponse.json({ success: false, error }, { status });
-}
+import { loadPublicAiConfig, saveAiConfig } from "@/server/ai/ai-config-store";
+import { sanitizeAdvancedConfig } from "@/shared/ai/config-contracts";
 
 export async function GET() {
-  try {
-    const config = await getPublicAiConfig();
-    return NextResponse.json({ success: true, config });
-  } catch {
-    return jsonError("AI 配置读取失败。", 500);
-  }
+  const config = loadPublicAiConfig();
+  return NextResponse.json({ success: true, config });
 }
 
 export async function POST(request: Request) {
-  let body: unknown;
-
   try {
-    body = await request.json();
-  } catch {
-    return jsonError("请求体必须是 JSON。");
-  }
+    const rawBody = (await request.json()) as Record<string, unknown>;
+    const dangerousTopKeys = ["__proto__", "constructor", "prototype"];
+    const body: Record<string, unknown> = {};
 
-  const payload =
-    typeof body === "object" && body !== null
-      ? (body as Record<string, unknown>)
-      : {};
+    for (const key of Object.keys(rawBody)) {
+      if (dangerousTopKeys.includes(key)) {
+        continue;
+      }
 
-  const apiKey = typeof payload.apiKey === "string" ? payload.apiKey : "";
-  const baseUrl = typeof payload.baseUrl === "string" ? payload.baseUrl : "";
-  const model = typeof payload.model === "string" ? payload.model : "";
-
-  try {
-    await saveAiConfig({ apiKey, baseUrl, model });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    if (error instanceof Error) {
-      return jsonError(error.message);
+      body[key] = rawBody[key];
     }
 
-    return jsonError("AI 配置保存失败。", 500);
+    const { providerId, apiKey, baseUrl, model, contextSize, temperature, advancedConfig } = body as {
+      providerId?: string;
+      apiKey?: string;
+      baseUrl?: string;
+      model?: string;
+      contextSize?: number;
+      temperature?: number;
+      advancedConfig?: Record<string, unknown>;
+    };
+
+    const result = saveAiConfig({
+      providerId,
+      apiKey,
+      baseUrl,
+      model,
+      contextSize: contextSize ? Number(contextSize) : undefined,
+      temperature: temperature ? Number(temperature) : undefined,
+      advancedConfig: advancedConfig ? sanitizeAdvancedConfig(advancedConfig) : undefined,
+    });
+
+    return NextResponse.json({ success: true, config: result });
+  } catch (error) {
+    console.error("Failed to save AI config:", error);
+    return NextResponse.json(
+      { success: false, error: "配置保存失败，请检查输入参数" },
+      { status: 500 }
+    );
   }
 }

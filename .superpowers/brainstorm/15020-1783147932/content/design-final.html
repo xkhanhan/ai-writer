@@ -1,0 +1,718 @@
+<h2>书籍工作台 — 完整设计稿 v4</h2>
+<p class="subtitle">按页面功能划分 · 含所有状态（空状态/新建/编辑/查看）</p>
+
+<!-- ===== 0. 全局规范 ===== -->
+<div class="section">
+  <h3>0. 全局规范</h3>
+  <p class="subtitle">内容简约 · 复杂操作折叠/收拢 · AI 功能统一入口</p>
+
+  <!-- AI 下拉按钮规范 -->
+  <div class="mockup" style="margin-bottom: 16px;">
+    <div class="mockup-header">AI 下拉按钮 — 统一入口规范</div>
+    <div class="mockup-body" style="padding: 16px; font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+      <div style="display: flex; gap: 32px; align-items: flex-start;">
+        <!-- 左：原则说明 -->
+        <div style="flex: 1; font-size: 12px; color: #414753; line-height: 2;">
+          <div style="font-weight: 600; color: #181c22; margin-bottom: 4px;">设计原则</div>
+          <div>主区域内容保持简约，不堆叠过多按钮</div>
+          <div>AI 相关功能统一收拢在一个 <code>AI ▾</code> 下拉按钮中</div>
+          <div>按钮状态根据上下文动态变化（如无内容时禁用润色）</div>
+          <div style="margin-top: 8px; font-weight: 600; color: #181c22; margin-bottom: 4px;">通用规则</div>
+          <div>所有面板的删除操作 → 二次确认弹窗</div>
+          <div>面包屑导航使用 antd Outlined 图标</div>
+          <div>空状态统一：32px 灰色图标 + 提示 + 引导按钮</div>
+        </div>
+        <!-- 右：AI 按钮交互演示 -->
+        <div style="width: 220px;">
+          <div style="font-size: 11px; font-weight: 600; color: #181c22; margin-bottom: 6px;">AI 下拉按钮样式</div>
+          <!-- 正常态 -->
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div>
+              <div style="font-size: 10px; color: #717785; margin-bottom: 4px;">默认态</div>
+              <div style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid #2F5D50; border-radius: 4px; font-size: 11px; color: #2F5D50; cursor: pointer; background: white;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg>
+                AI <span style="font-size: 8px;">▾</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 10px; color: #717785; margin-bottom: 4px;">展开态</div>
+              <div style="background: white; border: 1px solid #e0e2eb; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; width: 160px;">
+                <div style="padding: 6px 10px; font-size: 11px; color: #2F5D50; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg>
+                  生成内容
+                </div>
+                <div style="height: 1px; background: #ebedf7;"></div>
+                <div style="padding: 6px 10px; font-size: 11px; color: #181c22; cursor: pointer;">去除 AI 味</div>
+                <div style="padding: 6px 10px; font-size: 11px; color: #181c22; cursor: pointer;">润色</div>
+                <div style="padding: 6px 10px; font-size: 11px; color: #181c22; cursor: pointer;">扩写</div>
+              </div>
+            </div>
+          </div>
+          <!-- 条件说明 -->
+          <div style="margin-top: 10px; font-size: 10px; color: #717785; line-height: 1.8;">
+            <div style="color: #964400; font-weight: 500;">条件控制：</div>
+            <div>「生成内容」— 始终可用</div>
+            <div>「去除AI味」— 仅生成后可用</div>
+            <div>「润色」「扩写」— 仅有内容时可用</div>
+            <div style="color: #ba1a1a;">不可用时菜单项灰置，不隐藏</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="split">
+    <!-- 面包屑 -->
+    <div class="mockup">
+      <div class="mockup-header">面包屑导航 + antd 图标</div>
+      <div class="mockup-body" style="padding: 16px; font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+        <div style="padding: 10px 16px; border-bottom: 1px solid #e0e2eb; background: #fff; border-radius: 6px; font-size: 13px; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          <span style="color: #2F5D50; cursor: pointer;">《仙路漫漫》</span>
+          <span style="color: #c1c6d5;">/</span>
+          <span style="color: #181c22; font-weight: 500;">书籍信息</span>
+        </div>
+        <div style="font-size: 12px; color: #414753; line-height: 1.8;">
+          <div style="margin-bottom: 6px;"><strong>面板图标（antd Outlined）：</strong></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 11px;">
+            <div>书籍信息 → <code>ReadOutlined</code></div>
+            <div>世界规则 → <code>LayersOutlined</code></div>
+            <div>设定库 → <code>FileTextOutlined</code></div>
+            <div>标签库 → <code>TagsOutlined</code></div>
+            <div>创作区 → <code>EditOutlined</code></div>
+            <div>伏笔库 → <code>PushpinOutlined</code></div>
+            <div>正文库 → <code>BookOutlined</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认 -->
+    <div class="mockup">
+      <div class="mockup-header">全局删除二次确认</div>
+      <div class="mockup-body" style="padding: 0;">
+        <div style="display: flex; align-items: center; justify-content: center; height: 160px; background: rgba(24,28,34,0.3); position: relative;">
+          <div style="width: 340px; background: #fff; border-radius: 10px; box-shadow: 0 8px 32px rgba(24,28,34,0.2); overflow: hidden;">
+            <div style="padding: 18px 20px 12px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ba1a1a" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <span style="font-size: 14px; font-weight: 600; color: #181c22;">确认删除</span>
+              </div>
+              <p style="margin: 0; font-size: 12px; color: #414753;">确定要删除「<strong>修真境界体系</strong>」吗？此操作不可撤销。</p>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; padding: 10px 20px; border-top: 1px solid #ebedf7;">
+              <div style="padding: 5px 16px; border: 1px solid #e0e2eb; border-radius: 6px; font-size: 12px; color: #414753; cursor: pointer;">取消</div>
+              <div style="padding: 5px 16px; border: none; border-radius: 6px; font-size: 12px; color: #fff; background: #ba1a1a; cursor: pointer;">删除</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 1. 书籍信息 ===== -->
+<div class="section">
+  <h3>1. 书籍信息</h3>
+  <p class="subtitle">书籍元数据，不耦合剧情，作为 AI 生成参考</p>
+
+  <div class="mockup">
+    <div class="mockup-header">书籍信息 — 编辑模式（完整字段）</div>
+    <div class="mockup-body" style="padding: 0; overflow: hidden; border-radius: 8px;">
+      <div style="height: 500px; overflow-y: auto; padding: 24px 32px; font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+        <div style="max-width: 680px; margin: 0 auto;">
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">书名 <span style="color: #ba1a1a;">*</span></div>
+            <div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px; color: #181c22;">仙路漫漫</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div><div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">题材 <span style="color: #ba1a1a;">*</span></div><div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px;">修真仙侠 ▾</div></div>
+            <div><div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">子题材 <span style="color: #ba1a1a;">*</span></div><div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px;">凡人流 ▾</div></div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div><div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">发布平台 <span style="color: #ba1a1a;">*</span></div><div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px;">起点中文网 ▾</div></div>
+            <div><div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">目标受众 <span style="color: #ba1a1a;">*</span></div><div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px;">男频 · 18-35岁 ▾</div></div>
+          </div>
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">标签 <span style="font-size: 12px; color: #717785;">（从标签库选取）</span></div>
+            <div style="min-height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; gap: 6px; flex-wrap: wrap;">
+              <span style="background: rgba(47,93,80,0.10); color: #2F5D50; padding: 3px 10px; border-radius: 4px; font-size: 11px;">凡人流 ✕</span>
+              <span style="background: rgba(47,93,80,0.10); color: #2F5D50; padding: 3px 10px; border-radius: 4px; font-size: 11px;">苦修 ✕</span>
+              <span style="color: #2F5D50; font-size: 11px; cursor: pointer;">+ 选择</span>
+            </div>
+          </div>
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">文笔文风 <span style="color: #ba1a1a;">*</span></div>
+            <div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px;">细腻写实 · 慢热沉稳 ▾</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div><div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">预计每章字数 <span style="color: #ba1a1a;">*</span></div><div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px;">3,000 字</div></div>
+            <div><div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">预计总字数</div><div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px;">200 万字</div></div>
+          </div>
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">参考作品</div>
+            <div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px;">凡人修仙传、仙逆</div>
+          </div>
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">核心卖点 <span style="font-size: 12px; color: #717785;">（影响 AI 生成重心）</span></div>
+            <div style="height: 36px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; display: flex; align-items: center; padding: 0 12px; font-size: 14px;">真实苦修 + 悬念伏笔层层递进</div>
+          </div>
+          <div>
+            <div style="font-size: 13px; font-weight: 500; color: #181c22; margin-bottom: 5px;">书籍简介 <span style="color: #ba1a1a;">*</span></div>
+            <div style="min-height: 88px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; padding: 10px 12px; font-size: 14px; color: #181c22; line-height: 1.7;">山村少年偶入仙门，资质平庸却心志坚韧。没有逆天血脉，唯有苦修与机缘。</div>
+            <div style="font-size: 11px; color: #717785; margin-top: 4px;">此简介为 AI 生成核心参考，请尽量具体 · 78/300</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 2. 世界规则 ===== -->
+<div class="section">
+  <h3>2. 世界规则</h3>
+  <p class="subtitle">平铺规则列表，每条含名称+等级+内容</p>
+
+  <div class="cards" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 16px;">
+    <!-- 空状态 -->
+    <div class="card">
+      <div class="card-image" style="background: #fafaf6; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c1c6d5" stroke-width="1"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <div style="font-size: 13px; color: #717785; margin-top: 8px;">还没有世界规则</div>
+        <div style="padding: 5px 14px; border: 1px dashed #2F5D50; border-radius: 6px; font-size: 12px; color: #2F5D50; cursor: pointer; margin-top: 8px;">+ 新建第一条规则</div>
+      </div>
+      <div class="card-body"><h3>空状态</h3><p>首次进入无数据时展示引导</p></div>
+    </div>
+
+    <!-- 列表 -->
+    <div class="card">
+      <div class="card-image" style="background: #fff; padding: 0; overflow: hidden; min-height: 140px; border: 1px solid #e0e2eb; border-radius: 8px;">
+        <div style="padding: 10px 12px; border-bottom: 1px solid #e0e2eb; display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 12px; font-weight: 600; color: #181c22;">规则列表</span><span style="font-size: 10px; color: #2F5D50; cursor: pointer;">+ 新建</span></div>
+        <div style="padding: 6px 8px;">
+          <div style="padding: 6px 8px; border-radius: 4px; background: rgba(47,93,80,0.05); border-left: 3px solid #2F5D50; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; font-size: 11px;"><span style="color: #2F5D50; font-weight: 500;">修真境界体系</span><span style="font-size: 9px; background: #2F5D50; color: #fff; padding: 1px 4px; border-radius: 2px;">核心</span></div>
+          <div style="padding: 6px 8px; border-radius: 4px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; font-size: 11px;"><span style="color: #181c22;">灵根资质</span><span style="font-size: 9px; background: #964400; color: #fff; padding: 1px 4px; border-radius: 2px;">重要</span></div>
+          <div style="padding: 6px 8px; border-radius: 4px; display: flex; align-items: center; gap: 6px; font-size: 11px;"><span style="color: #181c22;">功法品级</span><span style="font-size: 9px; background: #e0e2eb; color: #414753; padding: 1px 4px; border-radius: 2px;">一般</span></div>
+        </div>
+      </div>
+      <div class="card-body"><h3>列表状态</h3><p>平铺规则 + 等级 Tag 颜色</p></div>
+    </div>
+
+    <!-- 新建/编辑 -->
+    <div class="card">
+      <div class="card-image" style="background: #fff; padding: 12px; overflow: hidden; min-height: 140px; border: 1px solid #e0e2eb; border-radius: 8px; font-size: 10px;">
+        <div style="margin-bottom: 6px;"><span style="color: #181c22; font-weight: 500;">规则名称 *</span><div style="height: 20px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 2px;"></div></div>
+        <div style="margin-bottom: 6px;"><span style="color: #181c22; font-weight: 500;">规则等级 *</span><div style="height: 20px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 2px;">核心 ▾</div></div>
+        <div><span style="color: #181c22; font-weight: 500;">规则内容 *</span><div style="min-height: 48px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 2px; padding: 4px;"></div></div>
+      </div>
+      <div class="card-body"><h3>新建/编辑</h3><p>3 个必填字段</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3. 设定库 ===== -->
+<div class="section">
+  <h3>3. 设定库</h3>
+  <p class="subtitle">固定分类（人物/物品/地点/势力/其他） · 编辑无状态区 · 查看有状态区</p>
+
+  <div class="cards" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 16px;">
+    <!-- 空状态 -->
+    <div class="card">
+      <div class="card-image" style="background: #fafaf6; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c1c6d5" stroke-width="1"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <div style="font-size: 13px; color: #717785; margin-top: 8px;">还没有设定数据</div>
+        <div style="padding: 5px 14px; border: 1px dashed #2F5D50; border-radius: 6px; font-size: 12px; color: #2F5D50; cursor: pointer; margin-top: 8px;">+ 新建设定</div>
+      </div>
+      <div class="card-body"><h3>空状态</h3><p>引导新建第一个设定</p></div>
+    </div>
+
+    <!-- 编辑（无状态区） -->
+    <div class="card">
+      <div class="card-image" style="background: #fff; padding: 10px; overflow: hidden; min-height: 160px; border: 1px solid #e0e2eb; border-radius: 8px; font-size: 10px;">
+        <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+          <div style="padding: 2px 8px; border: 2px solid #2F5D50; border-radius: 10px; font-size: 9px; color: #2F5D50; font-weight: 500;">人物</div>
+          <div style="padding: 2px 8px; border: 1px solid #e0e2eb; border-radius: 10px; font-size: 9px; color: #717785;">物品</div>
+          <div style="padding: 2px 8px; border: 1px solid #e0e2eb; border-radius: 10px; font-size: 9px; color: #717785;">地点</div>
+          <div style="padding: 2px 8px; border: 1px solid #e0e2eb; border-radius: 10px; font-size: 9px; color: #717785;">势力</div>
+          <div style="padding: 2px 8px; border: 1px solid #e0e2eb; border-radius: 10px; font-size: 9px; color: #717785;">其他</div>
+        </div>
+        <div style="margin-bottom: 4px;"><span style="color: #181c22; font-weight: 500;">角色名称 *</span><div style="height: 18px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 2px; padding: 0 6px; font-size: 10px;">林远</div></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px;">
+          <div><span style="color: #181c22; font-weight: 500;">性别</span><div style="height: 18px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 2px; font-size: 10px; padding: 0 6px;">男</div></div>
+          <div><span style="color: #181c22; font-weight: 500;">性格</span><div style="height: 18px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 2px; font-size: 10px; padding: 0 6px;">坚韧</div></div>
+        </div>
+        <div style="margin-bottom: 4px;"><span style="color: #181c22; font-weight: 500;">特点/癖好</span><div style="height: 18px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 2px;"></div></div>
+        <div style="margin-bottom: 4px;"><span style="color: #181c22; font-weight: 500;">标签</span><div style="height: 18px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 2px;"></div></div>
+        <div style="margin-bottom: 4px;"><span style="color: #181c22; font-weight: 500;">简介</span><div style="min-height: 24px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 2px;"></div></div>
+        <div style="padding-top: 4px; border-top: 1px solid #ebedf7; margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #ba1a1a; font-size: 9px; cursor: pointer; border: 1px dashed #ba1a1a; padding: 2px 6px; border-radius: 3px;">标记废弃</span>
+          <span style="color: #c1c6d5; font-size: 8px;">废弃后不再引用</span>
+        </div>
+      </div>
+      <div class="card-body"><h3>编辑模式</h3><p>无状态区 · 底部标记废弃按钮</p></div>
+    </div>
+
+    <!-- 查看（有状态区） -->
+    <div class="card">
+      <div class="card-image" style="background: #fff; padding: 10px; overflow: hidden; min-height: 160px; border: 1px solid #e0e2eb; border-radius: 8px; font-size: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="display: flex; gap: 4px; align-items: center;"><span style="font-weight: 600; font-size: 12px;">林远</span><span style="background: rgba(47,93,80,0.10); color: #2F5D50; padding: 1px 6px; border-radius: 3px; font-size: 9px;">人物</span></div>
+          <div style="display: flex; gap: 4px;"><span style="border: 1px solid #e0e2eb; padding: 2px 6px; border-radius: 3px; font-size: 9px; cursor: pointer;">编辑</span><span style="border: 1px solid #ba1a1a; padding: 2px 6px; border-radius: 3px; font-size: 9px; color: #ba1a1a; cursor: pointer;">删除</span></div>
+        </div>
+        <div style="margin-bottom: 4px;"><span style="color: #717785; font-size: 9px;">性别</span><div style="font-size: 10px;">男</div></div>
+        <div style="margin-bottom: 4px;"><span style="color: #717785; font-size: 9px;">性格</span><div style="font-size: 10px;">坚韧、隐忍</div></div>
+        <div style="margin-bottom: 4px;"><span style="color: #717785; font-size: 9px;">标签</span><div style="display: flex; gap: 3px;"><span style="background: rgba(47,93,80,0.10); color: #2F5D50; padding: 1px 5px; border-radius: 2px; font-size: 9px;">主角</span><span style="background: rgba(70,95,136,0.10); color: #465f88; padding: 1px 5px; border-radius: 2px; font-size: 9px;">人族</span></div></div>
+        <div style="margin-bottom: 6px;"><span style="color: #717785; font-size: 9px;">简介</span><div style="font-size: 10px; color: #414753;">16岁山村少年</div></div>
+        <div style="border: 1px dashed #c1c6d5; border-radius: 4px; padding: 6px; background: #fafaf6;">
+          <div style="font-size: 9px; color: #717785; font-weight: 600; margin-bottom: 4px;">状态区（系统自动）</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 3px;">
+            <span style="background: #fff; border: 1px solid #e0e2eb; padding: 1px 5px; border-radius: 2px; font-size: 8px;">📌 活跃</span>
+            <span style="background: #fff; border: 1px solid #e0e2eb; padding: 1px 5px; border-radius: 2px; font-size: 8px;">📖 已出场 3章</span>
+            <span style="background: #fff; border: 1px solid #e0e2eb; padding: 1px 5px; border-radius: 2px; font-size: 8px;">⚔ 练气初期</span>
+            <span style="background: #fff; border: 1px solid #e0e2eb; padding: 1px 5px; border-radius: 2px; font-size: 8px;">❤ 存活</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body"><h3>查看模式</h3><p>纯文本 + 状态区（虚线框）</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 4. 标签库 ===== -->
+<div class="section">
+  <h3>4. 标签库</h3>
+  <p class="subtitle">大类 → 细分子类层级结构 · 用户自定义分类 · 标签可写详情</p>
+
+  <div class="cards" style="grid-template-columns: 1fr 1fr; margin-bottom: 16px;">
+    <!-- 标签树 -->
+    <div class="card">
+      <div class="card-image" style="background: #fff; padding: 0; overflow: hidden; min-height: 180px; border: 1px solid #e0e2eb; border-radius: 8px; display: flex;">
+        <div style="width: 120px; border-right: 1px solid #e0e2eb; padding: 6px;">
+          <div style="font-size: 10px; font-weight: 600; color: #181c22; padding: 4px 6px; margin-bottom: 2px;">标签大类</div>
+          <div style="padding: 5px 6px; border-radius: 3px; background: rgba(47,93,80,0.05); border-left: 3px solid #2F5D50; font-size: 10px; color: #2F5D50; font-weight: 500; cursor: pointer;">种族</div>
+          <div style="padding: 5px 6px; border-radius: 3px; font-size: 10px; color: #181c22; cursor: pointer;">性格</div>
+          <div style="padding: 5px 6px; border-radius: 3px; font-size: 10px; color: #181c22; cursor: pointer;">势力类型</div>
+          <div style="padding: 5px 6px; border-radius: 3px; font-size: 10px; color: #181c22; cursor: pointer;">物品等级</div>
+          <div style="padding: 5px 6px; border-radius: 3px; font-size: 10px; color: #181c22; cursor: pointer;">文风</div>
+        </div>
+        <div style="flex: 1; padding: 8px;">
+          <div style="font-size: 11px; font-weight: 600; color: #181c22; margin-bottom: 6px;">种族</div>
+          <div style="margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 6px; border: 1px solid #e0e2eb; border-radius: 4px; margin-bottom: 2px; font-size: 10px;"><span style="color: #717785;">▾</span><span style="flex: 1; font-weight: 500;">人族</span><span style="color: #c1c6d5;">编辑</span></div>
+            <div style="padding-left: 16px; font-size: 10px; color: #414753; padding: 3px 0;">• 普通凡人</div>
+            <div style="padding-left: 16px; font-size: 10px; color: #414753; padding: 3px 0;">• 修仙者</div>
+          </div>
+          <div style="margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 6px; border: 1px solid #e0e2eb; border-radius: 4px; margin-bottom: 2px; font-size: 10px;"><span style="color: #717785;">▸</span><span style="flex: 1; font-weight: 500;">妖族</span><span style="color: #c1c6d5;">编辑</span></div>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 6px; border: 1px solid #e0e2eb; border-radius: 4px; font-size: 10px;"><span style="color: #717785;">▸</span><span style="flex: 1; font-weight: 500;">魔族</span><span style="color: #c1c6d5;">编辑</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body"><h3>标签层级树</h3><p>大类列表 + 细分子类 + 展开/折叠</p></div>
+    </div>
+
+    <!-- 标签详情 -->
+    <div class="card">
+      <div class="card-image" style="background: #f8f6f0; padding: 12px; overflow: hidden; min-height: 180px; border: 1px solid #e0e2eb; border-radius: 8px; font-size: 10px;">
+        <div style="font-size: 11px; font-weight: 600; color: #2F5D50; margin-bottom: 8px;">标签详情</div>
+        <div style="margin-bottom: 6px;"><span style="color: #717785;">标签名称</span><div style="height: 20px; border: 1px solid #e0e2eb; border-radius: 3px; background: #fff; margin-top: 2px; padding: 0 6px; display: flex; align-items: center;">妖族</div></div>
+        <div style="margin-bottom: 6px;"><span style="color: #717785;">父级标签</span><div style="height: 20px; border: 1px solid #e0e2eb; border-radius: 3px; background: #fff; margin-top: 2px; padding: 0 6px; display: flex; align-items: center; color: #717785;">无（顶级）</div></div>
+        <div style="margin-bottom: 6px;"><span style="color: #717785;">标签详情描述</span><div style="min-height: 36px; border: 1px solid #e0e2eb; border-radius: 3px; background: #fff; margin-top: 2px; padding: 4px 6px; font-size: 10px; color: #414753;">由兽类修炼化形的种族，分为海妖、陆妖等亚族。</div></div>
+        <div style="padding-top: 6px; border-top: 1px solid #e0e2eb; margin-top: 6px; display: flex; justify-content: space-between;">
+          <div style="display: flex; gap: 4px;"><span style="padding: 2px 6px; border: 1px dashed #2F5D50; border-radius: 3px; color: #2F5D50; cursor: pointer;">+ 添加子标签</span></div>
+          <span style="padding: 2px 6px; border: 1px solid #ba1a1a; border-radius: 3px; color: #ba1a1a; cursor: pointer;">删除</span>
+        </div>
+      </div>
+      <div class="card-body"><h3>标签详情编辑</h3><p>名称、父级、描述 + 添加子标签</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 5. 创作区 ===== -->
+<div class="section">
+  <h3>5. 创作区</h3>
+  <p class="subtitle">纯编辑模式 · 无观看模式 · 右上角保存按钮 · AI 操作统一收拢</p>
+
+  <!-- 空状态 -->
+  <div class="mockup">
+    <div class="mockup-header">创作区 — 空状态引导</div>
+    <div class="mockup-body" style="padding: 0;">
+      <div style="height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', 'Noto Sans SC', sans-serif; color: #717785;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c1c6d5" stroke-width="1"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        <div style="font-size: 14px; margin-top: 10px;">还没有创作内容</div>
+        <div style="font-size: 12px; margin-top: 4px;">从总纲开始，逐步构建你的故事</div>
+        <div style="padding: 6px 18px; border: 1px dashed #2F5D50; border-radius: 6px; font-size: 12px; color: #2F5D50; cursor: pointer; margin-top: 10px;">开始编写总纲 →</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="split" style="margin-top: 16px;">
+    <!-- 总纲 -->
+    <div class="mockup">
+      <div class="mockup-header">总纲编辑 — 右上角保存 + 可增删改阶段</div>
+      <div class="mockup-body" style="padding: 0; overflow: hidden;">
+        <div style="height: 340px; overflow-y: auto; padding: 16px; font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+          <!-- 顶栏：保存按钮 -->
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid #2F5D50; border-radius: 4px; font-size: 11px; color: #2F5D50; cursor: pointer;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+              保存
+            </div>
+          </div>
+          <div style="max-width: 520px; margin: 0 auto;">
+            <div style="margin-bottom: 12px;">
+              <div style="font-size: 12px; font-weight: 500; color: #181c22; margin-bottom: 4px;">整体方向</div>
+              <div style="min-height: 48px; border: 1px solid #e0e2eb; border-radius: 6px; background: #fff; padding: 8px 10px; font-size: 12px; color: #414753; line-height: 1.6;">凡人流修仙，山村少年苦修成仙。</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 12px; font-weight: 500; color: #181c22;">阶段划分</span>
+              <span style="font-size: 10px; color: #2F5D50; cursor: pointer;">+ 新增阶段</span>
+            </div>
+            <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 10px; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <div style="width: 20px; height: 20px; border-radius: 50%; background: #2F5D50; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600;">1</div>
+                <div style="flex: 1; height: 24px; border: 1px solid #e0e2eb; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 11px;">初入仙门（练气期）</div>
+                <span style="font-size: 10px; color: #c1c6d5; cursor: pointer;">✕</span>
+              </div>
+              <div style="min-height: 28px; border: 1px solid #e0e2eb; border-radius: 4px; background: #fff; padding: 5px 8px; font-size: 11px; color: #414753;">进入门派，苦修突破练气。</div>
+            </div>
+            <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 10px; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <div style="width: 20px; height: 20px; border-radius: 50%; background: #964400; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600;">2</div>
+                <div style="flex: 1; height: 24px; border: 1px solid #e0e2eb; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 11px;">宗门风云（筑基期）</div>
+                <span style="font-size: 10px; color: #c1c6d5; cursor: pointer;">✕</span>
+              </div>
+              <div style="min-height: 28px; border: 1px solid #e0e2eb; border-radius: 4px; background: #fff; padding: 5px 8px; font-size: 11px; color: #414753;">门派内斗，筑基成功。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卷纲 -->
+    <div class="mockup">
+      <div class="mockup-header">卷纲编辑 — 核心冲突 + 梗概 + 阶段划分 + 保存</div>
+      <div class="mockup-body" style="padding: 0; overflow: hidden;">
+        <div style="height: 340px; overflow-y: auto; padding: 16px; font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+          <!-- 顶栏：保存按钮 -->
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid #2F5D50; border-radius: 4px; font-size: 11px; color: #2F5D50; cursor: pointer;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+              保存
+            </div>
+          </div>
+          <div style="max-width: 520px; margin: 0 auto;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <span style="font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 600;">第一卷 · 初入仙门</span>
+              <span style="font-size: 10px; background: rgba(47,93,80,0.10); color: #2F5D50; padding: 2px 6px; border-radius: 3px;">练气期</span>
+            </div>
+            <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+              <div style="font-size: 11px; font-weight: 600; color: #2F5D50; margin-bottom: 4px;">卷核心冲突</div>
+              <div style="min-height: 32px; border: 1px solid #e0e2eb; border-radius: 4px; background: #fafaf6; padding: 6px 8px; font-size: 11px; color: #414753;">资质平庸如何在天才门派中立足？</div>
+            </div>
+            <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+              <div style="font-size: 11px; font-weight: 600; color: #2F5D50; margin-bottom: 4px;">卷梗概</div>
+              <div style="min-height: 40px; border: 1px solid #e0e2eb; border-radius: 4px; background: #fafaf6; padding: 6px 8px; font-size: 11px; color: #414753;">入门苦修、发现隐藏灵根、完成任务。</div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;"><span style="font-size: 11px; font-weight: 600; color: #2F5D50;">阶段划分</span><span style="font-size: 10px; color: #2F5D50; cursor: pointer;">+ 新增</span></div>
+              <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 8px; margin-bottom: 4px;">
+                <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; border-radius: 50%; background: #2F5D50; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 9px;">1</div><div style="flex: 1; height: 22px; border: 1px solid #e0e2eb; border-radius: 3px; display: flex; align-items: center; padding: 0 6px; font-size: 10px;">入门前的挣扎</div><span style="font-size: 9px; color: #c1c6d5;">✕</span></div>
+                <div style="min-height: 20px; border: 1px solid #e0e2eb; border-radius: 3px; background: #fff; padding: 3px 6px; font-size: 10px; color: #414753; margin-top: 3px;">山村偶遇仙人。</div>
+              </div>
+              <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; border-radius: 50%; background: #964400; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 9px;">2</div><div style="flex: 1; height: 22px; border: 1px solid #e0e2eb; border-radius: 3px; display: flex; align-items: center; padding: 0 6px; font-size: 10px;">苦修突破</div><span style="font-size: 9px; color: #c1c6d5;">✕</span></div>
+                <div style="min-height: 20px; border: 1px solid #e0e2eb; border-radius: 3px; background: #fff; padding: 3px 6px; font-size: 10px; color: #414753; margin-top: 3px;">灵根异常被察觉。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 章纲 ↔ 正文 -->
+  <div class="split" style="margin-top: 16px;">
+    <!-- 章纲编辑：精简版 -->
+    <div class="mockup">
+      <div class="mockup-header">章纲编辑 — 精简字段 · 重要前置 · 状态系统维护</div>
+      <div class="mockup-body" style="padding: 0; overflow: hidden;">
+        <div style="height: 400px; overflow-y: auto; padding: 16px; font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+          <!-- 顶栏：标题 + 保存 + AI -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <span style="font-size: 12px; font-weight: 600; color: #181c22; display: flex; align-items: center; gap: 6px;">
+              第3章
+              <span style="font-size: 10px; color: #9ca3af; font-weight: 400;">（状态由系统自动维护）</span>
+              <span style="font-size: 9px; padding: 2px 6px; border-radius: 3px; background: #fef3c7; color: #92400e;">草稿</span>
+            </span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border: 1px solid #2F5D50; border-radius: 4px; font-size: 10px; color: #2F5D50; cursor: pointer;">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg>
+                AI ▾
+              </div>
+              <div style="padding: 3px 8px; border: 1px solid #2F5D50; border-radius: 4px; font-size: 10px; color: #2F5D50; cursor: pointer;">保存</div>
+            </div>
+          </div>
+
+          <div style="max-width: 520px; margin: 0 auto; font-size: 11px;">
+            <!-- 第一排：标题 + 目标字数（重要字段前置） -->
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+              <div style="flex: 1;"><span style="color: #181c22; font-weight: 500;">章节标题 *</span><div style="height: 28px; border: 1px solid #e0e2eb; border-radius: 4px; margin-top: 3px; padding: 0 8px; display: flex; align-items: center;">炼气之法</div></div>
+              <div style="width: 80px;"><span style="color: #181c22; font-weight: 500;">目标字数 *</span><div style="height: 28px; border: 1px solid #e0e2eb; border-radius: 4px; margin-top: 3px; padding: 0 8px; display: flex; align-items: center;">3,000</div></div>
+            </div>
+            <!-- 第二排：前章衔接 + 下章悬念（重要字段前置） -->
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; gap: 8px;">
+                <div style="flex: 1;"><span style="color: #181c22; font-weight: 500;">前章衔接 <span style="font-size: 9px; color: #9ca3af;">（与上一章的承接）</span></span><div style="min-height: 28px; border: 1px solid #e0e2eb; border-radius: 4px; margin-top: 3px; padding: 4px 8px; color: #414753;">承接上章获资格，师兄带入洞府。</div></div>
+                <div style="flex: 1;"><span style="color: #181c22; font-weight: 500;">下章悬念 <span style="font-size: 9px; color: #9ca3af;">（为下一章埋钩子）</span></span><div style="min-height: 28px; border: 1px solid #e0e2eb; border-radius: 4px; margin-top: 3px; padding: 4px 8px; color: #414753;">灵根异常被长老察觉。</div></div>
+              </div>
+            </div>
+            <!-- 情节摘要 -->
+            <div style="margin-bottom: 10px;"><span style="color: #181c22; font-weight: 500;">情节摘要</span><div style="min-height: 36px; border: 1px solid #e0e2eb; border-radius: 4px; margin-top: 3px; padding: 5px 8px; color: #414753;">主角引气入体，发现灵根异常。</div></div>
+            <!-- 折叠区域：场景/人物/事件（用 Collapse 收拢次要信息） -->
+            <div style="border: 1px solid #e0e2eb; border-radius: 4px; margin-bottom: 8px;">
+              <div style="padding: 6px 10px; background: #fafaf6; border-radius: 4px; font-size: 11px; color: #414753; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <span style="color: #717785; font-size: 8px;">▸</span>
+                <span style="font-weight: 500;">更多细节</span>
+                <span style="color: #c1c6d5; font-size: 9px; margin-left: auto;">场景·人物·事件·伏笔·看点</span>
+              </div>
+            </div>
+            <!-- 以下为折叠展开后的内容 -->
+            <div style="padding-left: 8px; border-left: 2px solid #e0e2eb; margin-bottom: 10px;">
+              <div style="margin-bottom: 8px;"><div style="display: flex; justify-content: space-between;"><span style="color: #181c22; font-weight: 500;">场景</span><span style="color: #2F5D50; cursor: pointer; font-size: 10px;">+ 添加</span></div><div style="display: flex; gap: 4px; margin-top: 3px;"><span style="border: 1px solid #e0e2eb; border-radius: 3px; padding: 2px 6px;">青云峰洞府</span><span style="border: 1px solid #e0e2eb; border-radius: 3px; padding: 2px 6px;">洞府外小溪</span></div></div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div><span style="color: #181c22; font-weight: 500;">时间</span><div style="height: 24px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 3px; padding: 0 6px; display: flex; align-items: center; font-size: 10px;">深夜 → 次日清晨</div></div>
+                <div><span style="color: #181c22; font-weight: 500;">情绪基调</span><div style="height: 24px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 3px; padding: 0 6px; display: flex; align-items: center; font-size: 10px;">沉郁→微光</div></div>
+              </div>
+              <div style="margin-bottom: 8px;"><div style="display: flex; justify-content: space-between;"><span style="color: #181c22; font-weight: 500;">出场人物</span><span style="color: #2F5D50; cursor: pointer; font-size: 10px;">+ 添加</span></div><div style="display: flex; gap: 4px; margin-top: 3px;"><span style="background: rgba(47,93,80,0.10); color: #2F5D50; padding: 2px 8px; border-radius: 3px;">林远</span><span style="background: rgba(70,95,136,0.10); color: #465f88; padding: 2px 8px; border-radius: 3px;">张师兄</span></div></div>
+              <div style="margin-bottom: 8px;"><div style="display: flex; justify-content: space-between;"><span style="color: #181c22; font-weight: 500;">重大事件</span><span style="color: #2F5D50; cursor: pointer; font-size: 10px;">+ 添加</span></div><div style="display: flex; gap: 4px; margin-top: 3px;"><span style="border: 1px solid #e0e2eb; border-radius: 3px; padding: 2px 6px;">首次感应灵气</span><span style="border: 1px solid #e0e2eb; border-radius: 3px; padding: 2px 6px;">发现灵根异常</span></div></div>
+              <div style="margin-bottom: 8px;"><div style="display: flex; justify-content: space-between;"><span style="color: #181c22; font-weight: 500;">伏笔</span><span style="color: #2F5D50; cursor: pointer; font-size: 10px;">+ 添加</span></div><div style="display: flex; gap: 4px; margin-top: 3px;"><span style="background: rgba(150,68,0,0.04); border: 1px solid rgba(150,68,0,0.2); border-radius: 3px; padding: 2px 6px;">异样波动（上古血脉）</span></div></div>
+              <div style="margin-bottom: 0;"><span style="color: #181c22; font-weight: 500;">预计看点</span><div style="height: 24px; border: 1px solid #e0e2eb; border-radius: 3px; margin-top: 3px; padding: 0 6px; display: flex; align-items: center; font-size: 10px;">苦修真实感 + 灵根悬念</div></div>
+            </div>
+            <div><span style="color: #181c22; font-weight: 500;">补充说明</span><div style="min-height: 24px; border: 1px solid #e0e2eb; border-radius: 4px; margin-top: 3px; padding: 4px 8px;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 正文编辑：AI 下拉按钮在右上角 -->
+    <div class="mockup">
+      <div class="mockup-header">正文编辑 — 右上角 AI 下拉 + 保存 + 过审</div>
+      <div class="mockup-body" style="padding: 0; overflow: hidden;">
+        <div style="height: 400px; display: flex; flex-direction: column; font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+          <!-- Tab + 顶栏操作 -->
+          <div style="display: flex; border-bottom: 1px solid #e0e2eb; background: #fff; padding: 0 16px;">
+            <div style="padding: 8px 0; font-size: 12px; color: #717785; cursor: pointer; border-bottom: 2px solid transparent;">章纲</div>
+            <div style="padding: 8px 12px; font-size: 12px; color: #2F5D50; font-weight: 500; border-bottom: 2px solid #2F5D50; cursor: pointer;">正文</div>
+            <div style="flex: 1;"></div>
+            <!-- 右上角按钮组：AI 下拉 + 保存 + 过审 -->
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 0;">
+              <div style="display: inline-flex; align-items: center; gap: 3px; padding: 3px 10px; border: 1px solid #2F5D50; border-radius: 4px; font-size: 10px; color: #2F5D50; cursor: pointer;">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg>
+                AI ▾
+              </div>
+              <div style="padding: 3px 10px; border: 1px solid #e0e2eb; border-radius: 4px; font-size: 10px; color: #414753; cursor: pointer;">保存</div>
+              <div style="padding: 3px 10px; border: none; border-radius: 4px; font-size: 10px; color: #fff; background: #2F5D50; cursor: pointer;">过审</div>
+            </div>
+          </div>
+          <!-- 章纲修改提示 -->
+          <div style="padding: 5px 16px; background: rgba(150,68,0,0.06); border-bottom: 1px solid rgba(150,68,0,0.15); display: flex; align-items: center; gap: 6px; font-size: 11px;">
+            <span style="color: #964400;">●</span>
+            <span style="color: #964400; font-weight: 500;">章纲已修改</span>
+            <span style="color: #414753; font-size: 10px;">情节摘要、出场人物有变更</span>
+            <div style="margin-left: auto; display: flex; gap: 4px;">
+              <div style="padding: 2px 8px; border: 1px solid #e0e2eb; border-radius: 3px; font-size: 10px; color: #414753; cursor: pointer;">忽略</div>
+              <div style="padding: 2px 8px; border: none; border-radius: 3px; font-size: 10px; color: #fff; background: #964400; cursor: pointer;">重新生成</div>
+            </div>
+          </div>
+          <!-- Content -->
+          <div style="flex: 1; overflow-y: auto; padding: 16px;">
+            <div style="max-width: 520px; margin: 0 auto; font-size: 14px; line-height: 2; color: #181c22;">
+              <p style="text-indent: 2em; margin: 0 0 10px;">洞府之内，灵气如丝如缕，在昏暗的石壁间缓缓流转。林远盘膝而坐，按照功法所载之法，尝试感应天地灵气。</p>
+              <p style="text-indent: 2em; margin: 0 0 10px;">一夜过去，他却什么也没有感应到。</p>
+              <p style="text-indent: 2em; margin: 0; color: #c1c6d5;">|</p>
+            </div>
+          </div>
+          <!-- Bottom -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 16px; border-top: 1px solid #e0e2eb; background: #f8f6f0; font-size: 11px; color: #717785;">
+            <span>248 / 3,000 字</span>
+            <span>自动计字 · 保存状态显示</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 6. 伏笔库 ===== -->
+<div class="section">
+  <h3>6. 伏笔库</h3>
+  <p class="subtitle">状态筛选 · 未揭晓优先 · 按埋下章节排序 · 章节跳转</p>
+
+  <div class="cards" style="grid-template-columns: 1fr 1fr; margin-bottom: 16px;">
+    <!-- 空状态 -->
+    <div class="card">
+      <div class="card-image" style="background: #fafaf6; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c1c6d5" stroke-width="1"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/></svg>
+        <p style="color: #9ca3af; font-size: 13px; margin-top: 8px;">暂无伏笔</p>
+        <p style="color: #b5b9c6; font-size: 11px;">创作中埋入的伏笔会自动出现在这里</p>
+      </div>
+      <div class="card-title">空状态</div>
+    </div>
+    <!-- 有内容：清晰列表 -->
+    <div class="card">
+      <div class="card-image" style="background: #fafaf6; padding: 12px; font-size: 12px;">
+        <!-- 搜索+筛选 -->
+        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+          <div style="flex: 1; border: 1px solid #e0ddd4; border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #6b7280;">搜索伏笔…</div>
+          <div style="display: flex; gap: 3px;">
+            <span style="padding: 4px 10px; border-radius: 4px; font-size: 10px; background: var(--color-primary); color: white;">全部</span>
+            <span style="padding: 4px 10px; border-radius: 4px; font-size: 10px; background: #fff; border: 1px solid #e0e2eb; color: #555;">未揭晓</span>
+            <span style="padding: 4px 10px; border-radius: 4px; font-size: 10px; background: #fff; border: 1px solid #e0e2eb; color: #555;">已揭晓</span>
+          </div>
+        </div>
+
+        <!-- 分组：未揭晓（前置） -->
+        <div style="font-size: 10px; color: #9ca3af; font-weight: 500; margin-bottom: 6px;">未揭晓 · 3条</div>
+
+        <!-- 条目：每行一目了然 -->
+        <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 10px; margin-bottom: 6px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11px; color: var(--text-primary); font-weight: 500;">神秘玉佩</span>
+              <span style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: #fef3c7; color: #92400e;">未揭晓</span>
+            </div>
+            <span style="font-size: 10px; color: var(--color-primary); cursor: pointer;">第3章 →</span>
+          </div>
+          <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">蕴含上古传承的古玉</div>
+        </div>
+
+        <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 10px; margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11px; color: var(--text-primary); font-weight: 500;">长老的警告</span>
+              <span style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: #fef3c7; color: #92400e;">未揭晓</span>
+            </div>
+            <span style="font-size: 10px; color: var(--color-primary); cursor: pointer;">第7章 →</span>
+          </div>
+          <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">「此子灵根有异」</div>
+        </div>
+
+        <!-- 分组：已揭晓 -->
+        <div style="font-size: 10px; color: #9ca3af; font-weight: 500; margin-bottom: 6px;">已揭晓 · 1条</div>
+        <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 10px; opacity: 0.7;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11px; color: var(--text-primary); text-decoration: line-through;">师兄的秘密</span>
+              <span style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: #d1fae5; color: #065f46;">已揭晓</span>
+            </div>
+            <span style="font-size: 10px; color: var(--color-primary); cursor: pointer;">第12章 →</span>
+          </div>
+          <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">大师兄暗中与魔修勾结</div>
+        </div>
+      </div>
+      <div class="card-title">列表状态 — 未揭晓优先 + 分组</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 7. 正文库 ===== -->
+<div class="section">
+  <h3>7. 正文库</h3>
+  <p class="subtitle">过审正文存档 · 右上角 AI 下拉按钮 · 条目清晰</p>
+
+  <div class="cards" style="grid-template-columns: 1fr 1fr;">
+    <!-- 空状态 -->
+    <div class="card">
+      <div class="card-image" style="background: #fafaf6; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c1c6d5" stroke-width="1"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+        <p style="color: #9ca3af; font-size: 13px; margin-top: 8px;">暂无过审正文</p>
+        <p style="color: #b5b9c6; font-size: 11px;">创作区生成正文后点击「过审」存入此处</p>
+      </div>
+      <div class="card-title">空状态</div>
+    </div>
+    <!-- 有内容：清晰条目 -->
+    <div class="card">
+      <div class="card-image" style="background: #fafaf6; padding: 12px; font-size: 12px;">
+        <!-- 条目1 -->
+        <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 12px; color: var(--text-primary); font-weight: 500;">第3章 · 初入仙门</span>
+            <span style="font-size: 10px; color: #9ca3af;">2,843 字</span>
+          </div>
+          <!-- 正文预览 -->
+          <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">洞府之内，灵气如丝如缕，在昏暗的石壁间缓缓流转。林远盘膝而坐，按照功法所载之法，尝试感应天地灵气。一夜过去…</div>
+          <!-- 右上角操作：AI 下拉 + 查看 -->
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <div style="display: inline-flex; align-items: center; gap: 3px; padding: 3px 10px; border: 1px solid #2F5D50; border-radius: 4px; font-size: 10px; color: #2F5D50; cursor: pointer;">
+              AI ▾
+            </div>
+            <span style="font-size: 10px; color: var(--color-primary); cursor: pointer;">查看 →</span>
+          </div>
+        </div>
+        <!-- 条目2 -->
+        <div style="background: #fff; border: 1px solid #e0e2eb; border-radius: 6px; padding: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 12px; color: var(--text-primary); font-weight: 500;">第5章 · 灵药采集</span>
+            <span style="font-size: 10px; color: #9ca3af;">3,102 字</span>
+          </div>
+          <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">清晨的阳光透过洞口的藤蔓洒落，林远睁开双眼，感受着体内微弱却真实存在的灵力流转…</div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <div style="display: inline-flex; align-items: center; gap: 3px; padding: 3px 10px; border: 1px solid #2F5D50; border-radius: 4px; font-size: 10px; color: #2F5D50; cursor: pointer;">
+              AI ▾
+            </div>
+            <span style="font-size: 10px; color: var(--color-primary); cursor: pointer;">查看 →</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-title">列表状态 — 条目清晰 + AI 下拉</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 全局交互规范 ===== -->
+<div class="section">
+  <h3>附：全局交互规范</h3>
+  <p class="subtitle">跨面板统一的交互模式</p>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+    <div style="background: var(--bg-section); border-radius: 8px; padding: 16px;">
+      <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">面包屑导航</h4>
+      <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.8;">
+        所有面板使用 antd 面包屑 + Outlined 图标<br>
+        格式：`面板名 › 列表` 或 `面板名 › 列表 › 详情`<br>
+        面包屑最后一级可点击返回上一级
+      </div>
+    </div>
+    <div style="background: var(--bg-section); border-radius: 8px; padding: 16px;">
+      <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">删除确认</h4>
+      <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.8;">
+        所有删除操作使用 antd Modal.confirm<br>
+        标题：「确认删除」<br>
+        内容：「删除后无法恢复，确认要删除 [名称] 吗？」<br>
+        确认按钮红色（danger），取消按钮默认
+      </div>
+    </div>
+    <div style="background: var(--bg-section); border-radius: 8px; padding: 16px;">
+      <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">创作区保存机制</h4>
+      <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.8;">
+        创作区全部为编辑模式，无观看模式<br>
+        右上角固定显示「保存」按钮，手动保存<br>
+        不支持自动保存<br>
+        保存状态在底部状态栏显示
+      </div>
+    </div>
+    <div style="background: var(--bg-section); border-radius: 8px; padding: 16px;">
+      <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">AI 下拉按钮</h4>
+      <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.8;">
+        AI 操作统一收拢在 <code>AI ▾</code> 下拉按钮中<br>
+        菜单项：生成内容 / 去除AI味 / 润色 / 扩写<br>
+        不可用时灰置但不隐藏，保持一致性<br>
+        正文过审按钮单独放置（primary 填充）
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

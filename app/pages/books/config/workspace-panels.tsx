@@ -1,0 +1,75 @@
+import React from "react";
+import {
+  ReadOutlined,
+  AppstoreOutlined,
+  FileTextOutlined,
+  TagsOutlined,
+  EditOutlined,
+  PushpinOutlined,
+  BookOutlined,
+} from "@ant-design/icons";
+import type { ActivePanel, Book } from "@/app/types";
+import BookInfoDashboard from "../components/book-info-form";
+import WorldRules from "../components/world-rules";
+import SettingsLibrary from "../components/settings-library";
+import TagLibrary from "../components/tag-library";
+import ForeshadowLibrary from "../components/foreshadow-library";
+import { CreationZone } from "../components/creation-zone";
+import ContentLibrary from "../components/content-library";
+
+export interface WorkspacePanel {
+  key: ActivePanel;
+  title: string;
+  icon: React.ReactNode;
+  category?: string;
+  component: (book: Book) => React.ReactNode;
+}
+
+export const workspacePanels: WorkspacePanel[] = [
+  {
+    key: "info",
+    title: "书籍信息",
+    icon: <ReadOutlined />,
+    component: (book) => <BookInfoDashboard key={book.id} book={book} />,
+  },
+  {
+    key: "world-rules",
+    title: "世界规则",
+    icon: <AppstoreOutlined />,
+    category: "world-rules",
+    component: (book) => <WorldRules key={book.id} book={book} />,
+  },
+  {
+    key: "settings",
+    title: "设定库",
+    icon: <FileTextOutlined />,
+    category: "settings",
+    component: (book) => <SettingsLibrary key={book.id} book={book} />,
+  },
+  {
+    key: "tag-library",
+    title: "标签库",
+    icon: <TagsOutlined />,
+    component: (book) => <TagLibrary key={book.id} book={book} />,
+  },
+  {
+    key: "creation",
+    title: "创作区",
+    icon: <EditOutlined />,
+    category: "creation",
+    component: (book) => <CreationZone key={book.id} bookId={book.id} />,
+  },
+  {
+    key: "foreshadow",
+    title: "伏笔库",
+    icon: <PushpinOutlined />,
+    component: (book) => <ForeshadowLibrary key={book.id} book={book} />,
+  },
+  {
+    key: "archive",
+    title: "正文库",
+    icon: <BookOutlined />,
+    category: "archive",
+    component: (book) => <ContentLibrary key={book.id} book={book} />,
+  },
+];

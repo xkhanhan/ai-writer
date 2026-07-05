@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>编辑书籍信息 — 弹窗</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', 'Noto Sans SC', sans-serif; background: rgba(24,28,34,0.4); display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  :root {
+    --color-primary: #2F5D50;
+    --color-danger: #ba1a1a;
+    --border: #e0e2eb;
+    --text-primary: #181c22;
+    --text-secondary: #414753;
+    --text-muted: #717785;
+    --bg-page: #f5f1e8;
+  }
+  .modal {
+    width: 580px; max-height: 85vh; background: #fff; border-radius: 12px;
+    box-shadow: 0 16px 48px rgba(24,28,34,0.25); display: flex; flex-direction: column; overflow: hidden;
+  }
+  .modal-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+  .modal-close { width: 28px; height: 28px; border: none; background: transparent; font-size: 16px; color: var(--text-muted); cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { background: #f0f0f0; }
+  .modal-body { flex: 1; overflow-y: auto; padding: 20px; }
+  .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+  .form-label .required { color: var(--color-danger); }
+  .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .form-input { width: 100%; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; font-family: inherit; outline: none; }
+  .form-input:focus { border-color: var(--color-primary); }
+  .form-textarea { width: 100%; min-height: 60px; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; resize: vertical; }
+  .form-textarea:focus { border-color: var(--color-primary); }
+  .form-select { width: 100%; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; font-family: inherit; background: white; outline: none; appearance: auto; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .btn-default { border: 1px solid var(--border); background: white; color: var(--text-secondary); }
+  .btn-primary { border: none; background: var(--color-primary); color: white; }
+  .char-count { font-size: 11px; color: var(--text-muted); text-align: right; margin-top: 2px; }
+  .tag-container { display: flex; flex-wrap: wrap; gap: 4px; min-height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; align-items: center; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: rgba(47,93,80,0.08); color: var(--color-primary); border-radius: 4px; font-size: 12px; }
+  .tag-close { font-size: 10px; cursor: pointer; opacity: 0.6; }
+  .tag-close:hover { opacity: 1; }
+  .tag-input { border: none; outline: none; font-size: 12px; flex: 1; min-width: 80px; }
+</style>
+</head>
+<body>
+
+<div class="modal">
+  <div class="modal-header">
+    <h3>编辑书籍信息</h3>
+    <button class="modal-close">✕</button>
+  </div>
+  <div class="modal-body">
+    <!-- 书名 -->
+    <div class="form-group">
+      <label class="form-label">书名 <span class="required">*</span></label>
+      <input class="form-input" value="仙路漫漫" />
+    </div>
+
+    <!-- 题材 + 子题材 -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">题材 <span class="required">*</span></label>
+        <select class="form-select"><option>修真仙侠</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">子题材 <span class="required">*</span></label>
+        <select class="form-select"><option>凡人流</option></select>
+      </div>
+    </div>
+
+    <!-- 平台 + 受众 -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">发布平台 <span class="required">*</span></label>
+        <select class="form-select"><option>起点中文网</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">目标受众 <span class="required">*</span></label>
+        <select class="form-select"><option>男频 18-35</option></select>
+      </div>
+    </div>
+
+    <!-- 标签 -->
+    <div class="form-group">
+      <label class="form-label">标签</label>
+      <div class="tag-container">
+        <span class="tag">修仙 <span class="tag-close">✕</span></span>
+        <span class="tag">苦修 <span class="tag-close">✕</span></span>
+        <span class="tag">凡人流 <span class="tag-close">✕</span></span>
+        <input class="tag-input" placeholder="输入后回车添加" />
+      </div>
+    </div>
+
+    <!-- 文笔文风 -->
+    <div class="form-group">
+      <label class="form-label">文笔文风 <span class="required">*</span></label>
+      <select class="form-select"><option>细腻写实</option></select>
+    </div>
+
+    <!-- 每章字数 + 总字数 -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">每章字数 <span class="required">*</span></label>
+        <input class="form-input" type="number" value="3000" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">总字数（万字）</label>
+        <input class="form-input" type="number" value="200" />
+      </div>
+    </div>
+
+    <!-- 参考作品 -->
+    <div class="form-group">
+      <label class="form-label">参考作品</label>
+      <input class="form-input" value="凡人修仙传, 仙逆" />
+    </div>
+
+    <!-- 核心卖点 -->
+    <div class="form-group">
+      <label class="form-label">核心卖点</label>
+      <input class="form-input" value="凡人流修仙，苦修成仙的真实感" />
+      <div class="form-hint">影响 AI 生成重心</div>
+    </div>
+
+    <!-- 简介 -->
+    <div class="form-group">
+      <label class="form-label">简介 <span class="required">*</span></label>
+      <textarea class="form-textarea" rows="3">山村少年偶得仙缘，踏上漫漫修仙路。没有逆天金手指，没有绝世天赋，只有一颗坚定不移的向道之心。从练气到筑基，从筑基到金丹，每一步都走得艰难却踏实。</textarea>
+      <div class="char-count">96 / 300</div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-default">取消</button>
+    <button class="btn btn-primary">保存</button>
+  </div>
+</div>
+
+</body>
+</html>

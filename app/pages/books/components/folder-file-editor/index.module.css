@@ -1,0 +1,271 @@
+/* 文件夹文件编辑器样式 - 东方水墨风格 */
+
+.container {
+  display: flex;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.loading,
+.emptyEditor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--muted);
+  font-family: var(--font-body);
+}
+
+/* ===== 侧边栏 ===== */
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.sidebarTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  letter-spacing: 0.03em;
+}
+
+.treeContainer {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+}
+
+/* ===== 文件夹和文件项 ===== */
+.folderItem,
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.folderItem:hover,
+.fileItem:hover {
+  background: var(--panel-soft);
+}
+
+.fileItemActive {
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  padding-left: 9px;
+}
+
+.folderIcon,
+.fileIcon {
+  flex-shrink: 0;
+  color: var(--ink-tertiary);
+}
+
+.folderName,
+.fileName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--text);
+}
+
+.fileNameActive {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ===== 操作按钮 ===== */
+.folderActions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.folderItem:hover .folderActions,
+.fileItem:hover .folderActions {
+  opacity: 1;
+}
+
+/* ===== 编辑器区域 ===== */
+.editorArea {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.editorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+
+.editorTitle {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saveStatus {
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+  font-family: var(--font-body);
+}
+
+.saveStatusSaved {
+  color: var(--success);
+}
+
+.editorContent {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ===== 文本编辑区 ===== */
+.textarea {
+  width: 100%;
+  height: 100%;
+  border: none;
+  resize: none;
+  outline: none;
+  padding: 32px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.textarea::placeholder {
+  color: var(--ink-light);
+}
+
+/* ===== 空状态 ===== */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  height: 100%;
+}
+
+.emptyIcon {
+  margin-bottom: 16px;
+  color: var(--ink-light);
+  opacity: 0.5;
+}
+
+.emptyText {
+  margin: 0;
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--muted);
+  font-family: var(--font-body);
+}
+
+.emptyHint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--ink-light);
+  font-family: var(--font-body);
+}
+
+.emptyEditorText {
+  color: var(--muted);
+  font-size: 15px;
+  font-family: var(--font-body);
+}
+
+/* ===== 响应式适配 ===== */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .editorArea {
+    min-height: 0;
+  }
+
+  .textarea {
+    padding: 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebarHeader {
+    padding: 12px 16px;
+  }
+
+  .treeContainer {
+    padding: 6px;
+  }
+
+  .folderItem,
+  .fileItem {
+    padding: 6px 10px;
+  }
+
+  .editorHeader {
+    padding: 10px 16px;
+  }
+
+  .textarea {
+    padding: 16px;
+    line-height: 1.7;
+  }
+}

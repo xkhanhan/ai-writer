@@ -1,0 +1,18 @@
+/* 应用外壳样式 */
+
+/* 内容页包装层（首页等）- 填满 shell-main，内部自行管理滚动 */
+.wrapper {
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  overflow: hidden;
+  padding: var(--content-padding-y) var(--content-padding-x);
+}
+
+/* 全屏页包装层（工作台、设置等）- 无 padding，自行管理滚动 */
+.wrapper--fullscreen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

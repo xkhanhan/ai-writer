@@ -1,3 +1,22 @@
 {
-  "books": []
+  "books": [
+    {
+      "id": "24ce8ca3-54c2-4075-9e1d-b03160026062",
+      "title": "未命名",
+      "description": "",
+      "genre": "玄幻",
+      "platform": "起点",
+      "createdAt": "2026-07-03T02:06:25.245Z",
+      "updatedAt": "2026-07-03T02:06:25.245Z"
+    },
+    {
+      "id": "d61dcfc6-4438-4b7a-9a85-022d9d77ec6c",
+      "title": "未命名",
+      "description": "",
+      "genre": "玄幻",
+      "platform": "起点",
+      "createdAt": "2026-07-03T01:22:22.866Z",
+      "updatedAt": "2026-07-03T01:22:22.866Z"
+    }
+  ]
 }

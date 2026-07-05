@@ -1,0 +1,57 @@
+.trigger {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.trigger:hover {
+  background: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.themeItem {
+  padding: 2px 0;
+  min-width: 180px;
+}
+
+.themeName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.check {
+  color: var(--primary);
+  font-size: 12px;
+}
+
+.themeDesc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+.swatches {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
