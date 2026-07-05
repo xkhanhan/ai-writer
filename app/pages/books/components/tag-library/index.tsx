@@ -278,6 +278,8 @@ export default function TagLibrary({ book }: TagLibraryProps) {
                 onChange={(e) => setFormDescription(e.target.value)}
                 placeholder="描述该标签的详细信息"
                 rows={6}
+                maxLength={2000}
+                showCount
               />
             </div>
           </div>

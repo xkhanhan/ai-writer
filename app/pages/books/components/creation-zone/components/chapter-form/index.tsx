@@ -107,7 +107,7 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
       <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>{label}</label>
       {items.map((it, i) => (
         <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <Input value={it} placeholder={placeholder} onChange={(e) => { const next = [...items]; next[i] = e.target.value; setItems(next); }} />
+          <Input value={it} placeholder={placeholder} maxLength={200} onChange={(e) => { const next = [...items]; next[i] = e.target.value; setItems(next); }} />
           <Button icon={<MinusCircleOutlined />} onClick={() => setItems(items.filter((_, idx) => idx !== i))} />
         </div>
       ))}
@@ -137,7 +137,7 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
       <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
         <div style={{ flex: 2 }}>
           <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>章节标题</label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：意外发现" />
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：意外发现" maxLength={60} />
         </div>
         <div style={{ flex: 1 }}>
           <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>目标字数</label>
@@ -149,24 +149,24 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
       <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
         <div style={{ flex: 1 }}>
           <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>前章衔接</label>
-          <TextArea value={prevChapterLink} onChange={(e) => setPrevChapterLink(e.target.value)} rows={2} placeholder="与上一章的衔接要点" />
+          <TextArea value={prevChapterLink} onChange={(e) => setPrevChapterLink(e.target.value)} rows={2} placeholder="与上一章的衔接要点" maxLength={2000} showCount />
         </div>
         <div style={{ flex: 1 }}>
           <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>下章悬念</label>
-          <TextArea value={nextChapterSuspense} onChange={(e) => setNextChapterSuspense(e.target.value)} rows={2} placeholder="为下一章留的悬念" />
+          <TextArea value={nextChapterSuspense} onChange={(e) => setNextChapterSuspense(e.target.value)} rows={2} placeholder="为下一章留的悬念" maxLength={2000} showCount />
         </div>
       </div>
 
       {/* 情节摘要 */}
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>情节摘要</label>
-        <TextArea value={summary} onChange={(e) => setSummary(e.target.value)} rows={4} placeholder="本章主要情节" />
+        <TextArea value={summary} onChange={(e) => setSummary(e.target.value)} rows={4} placeholder="本章主要情节" maxLength={10000} showCount />
       </div>
 
       {/* 补充说明 */}
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>补充说明</label>
-        <TextArea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="写作时的注意事项" />
+        <TextArea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="写作时的注意事项" maxLength={2000} showCount />
       </div>
 
       {/* 折叠区域 */}
@@ -184,18 +184,18 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
             {renderArrayInput("场景", scenes, setScenes, "场景描述")}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>时间</label>
-              <Input value={time} onChange={(e) => setTime(e.target.value)} placeholder="如：第三天下午" />
+              <Input value={time} onChange={(e) => setTime(e.target.value)} placeholder="如：第三天下午" maxLength={200} />
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>情绪基调</label>
-              <Input value={moodTone} onChange={(e) => setMoodTone(e.target.value)} placeholder="如：紧张、悬疑" />
+              <Input value={moodTone} onChange={(e) => setMoodTone(e.target.value)} placeholder="如：紧张、悬疑" maxLength={200} />
             </div>
             {renderArrayInput("出场人物", characters, setCharacters, "人物名称")}
             {renderArrayInput("重大事件", keyEvents, setKeyEvents, "事件描述")}
             {renderArrayInput("伏笔", foreshadowings, setForeshadowings, "伏笔内容")}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>预计看点</label>
-              <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} placeholder="本章的爽点或看点" />
+              <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} placeholder="本章的爽点或看点" maxLength={200} />
             </div>
           </div>
         )}

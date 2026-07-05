@@ -44,15 +44,15 @@ export function OutlineEditor({ outline, onSave, onCancel }: Props) {
       </div>
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>整体方向</label>
-        <TextArea value={direction} onChange={(e) => setDirection(e.target.value)} rows={3} placeholder="故事的大方向" />
+        <TextArea value={direction} onChange={(e) => setDirection(e.target.value)} rows={3} placeholder="故事的大方向" maxLength={2000} showCount />
       </div>
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>阶段划分</label>
-        <TextArea value={stages} onChange={(e) => setStages(e.target.value)} rows={5} placeholder="每个阶段的大致方向，每行一个阶段" />
+        <TextArea value={stages} onChange={(e) => setStages(e.target.value)} rows={5} placeholder="每个阶段的大致方向，每行一个阶段" maxLength={10000} showCount />
       </div>
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>核心卖点</label>
-        <Input value={sellingPoints} onChange={(e) => setSellingPoints(e.target.value)} placeholder="逗号分隔" />
+        <Input value={sellingPoints} onChange={(e) => setSellingPoints(e.target.value)} placeholder="逗号分隔" maxLength={200} />
       </div>
       <Button onClick={onCancel}>返回</Button>
     </div>

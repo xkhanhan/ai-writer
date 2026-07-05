@@ -1,0 +1,15 @@
+#!/bin/sh
+
+target_branch="$2"
+
+if [ -z "$target_branch" ]; then
+  target_branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+fi
+
+if [ "$target_branch" = "master" ]; then
+  echo "Blocked: rebasing master locally is not allowed."
+  echo "Keep local master aligned with origin/master."
+  exit 1
+fi
+
+exit 0

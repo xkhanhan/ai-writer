@@ -49,7 +49,7 @@ Use these before opening a PR or handing work off.
 - **Theme System**: 4 preset themes (暖纸色 / 冷灰调 / 纯白 / 深色) via React Context + CSS variable injection.
 - **SplitPanel**: reusable left-right split component at `shared/ui/split-panel/`. All list+detail pages must use it.
 - **Component Rules**: use `size="small"` for inline buttons; new-entity buttons use `type="primary"`; delete buttons use `danger`.
-- Full visual specifications are in `docs/standards/visual/`.
+- Full visual specifications are in `docs/standards/visual.md`.
 
 ## Testing Guidelines
 
@@ -133,4 +133,4 @@ PR 描述必须包含：
 - Put file IO, AI provider access, and config persistence in `server/`.
 - If code is specific to one workflow, keep it in that feature's `app/pages/*/` directory until a second consumer appears.
 - Pages communicate with the topbar via custom events (e.g. `navigate-settings`), not direct imports.
-- All SplitPanel-based pages must follow the spec in `docs/standards/visual/components/SPLITPANEL_SPEC.md`.
+- All SplitPanel-based pages must follow the spec in `docs/standards/visual.md` (SplitPanel 章节).

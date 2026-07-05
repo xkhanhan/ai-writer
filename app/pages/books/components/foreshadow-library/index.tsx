@@ -235,6 +235,7 @@ export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
                 onChange={(e) => setFormChapterNumber(e.target.value)}
                 placeholder="可选，输入章节编号"
                 style={{ width: 200 }}
+                maxLength={200}
               />
             </div>
 
@@ -245,6 +246,8 @@ export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
                 onChange={(e) => setFormDescription(e.target.value)}
                 placeholder="描述这条伏笔的内容和走向"
                 rows={6}
+                maxLength={2000}
+                showCount
               />
             </div>
           </div>
