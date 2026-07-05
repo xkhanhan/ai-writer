@@ -89,12 +89,17 @@ docs/文档变更简述        例: docs/update-agents
 
 ### 提交流程
 
-1. 从 `master` 切出功能分支：`git checkout -b feature/xxx master`
-2. 开发过程中，每个独立任务完成后自动提交：
-   `typecheck` → `lint` → `git add` → `git commit`
-3. 开发完成后推送分支：`git push -u origin feature/xxx`
-4. 创建 PR，填写规范的标题和描述
-5. 等待 review 通过后合并
+1. **切出分支**：从最新 `master` 切出功能分支 — `git checkout -b feature/xxx master`
+2. **开发提交**：每个独立任务完成后自动提交 — `typecheck` → `lint` → `git add` → `git commit`
+3. **推送分支**：`git push -u origin feature/xxx`
+4. **创建 PR**：填写规范的标题和描述
+5. **合并 PR**：review 通过后合并（推荐 Squash and merge）
+6. **清理分支**：PR 合并后**立即删除远程和本地分支** —
+   ```
+   git branch -d feature/xxx
+   git push origin --delete feature/xxx
+   ```
+   保持本地和远程只保留 `master`，分支干净无残留
 
 ### Commit 规范
 
