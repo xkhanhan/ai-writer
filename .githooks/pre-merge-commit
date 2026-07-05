@@ -1,0 +1,11 @@
+#!/bin/sh
+
+branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+
+if [ "$branch" = "master" ]; then
+  echo "Blocked: direct merges into master are not allowed."
+  echo "Use a pull request with Rebase and merge on GitHub."
+  exit 1
+fi
+
+exit 0

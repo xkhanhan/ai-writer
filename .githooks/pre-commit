@@ -1,0 +1,11 @@
+#!/bin/sh
+
+branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+
+if [ "$branch" = "master" ]; then
+  echo "Blocked: direct commits on master are not allowed."
+  echo "Create a feature/fix/docs branch and merge through a PR."
+  exit 1
+fi
+
+exit 0
