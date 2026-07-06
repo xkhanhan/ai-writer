@@ -194,6 +194,7 @@ export default function WorldRules({ book }: WorldRulesProps) {
               onChange={(e) => setFormName(e.target.value)}
               placeholder="输入规则名称"
               maxLength={60}
+              showCount
             />
           </div>
           <div className={styles.formField}>

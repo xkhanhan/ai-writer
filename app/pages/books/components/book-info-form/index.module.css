@@ -20,15 +20,8 @@
 /* 标题栏 */
 .dashTop {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.dashTitleWrap {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .dashTitle {
@@ -41,6 +34,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+}
+
+.dashTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .dashTags {

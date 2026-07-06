@@ -94,8 +94,8 @@ export async function createBook(input: {
     throw new Error("书名长度不能超过 60 个字符。");
   }
 
-  if (description.length > 2000) {
-    throw new Error("简介长度不能超过 2000 个字符。");
+  if (description.length > 300) {
+    throw new Error("简介长度不能超过 300 个字符。");
   }
 
   if (!genre) {

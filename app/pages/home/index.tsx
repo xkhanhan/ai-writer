@@ -329,6 +329,7 @@ export default function HomePage({
               value={createTitle}
               onChange={(event) => setCreateTitle(event.target.value)}
               maxLength={60}
+              showCount
               placeholder="可留空"
             />
           </Form.Item>
@@ -355,7 +356,7 @@ export default function HomePage({
             <Input.TextArea
               value={createDescription}
               onChange={(event) => setCreateDescription(event.target.value)}
-              maxLength={2000}
+              maxLength={300}
               showCount
               rows={4}
             />
@@ -383,6 +384,7 @@ export default function HomePage({
               value={editTitle}
               onChange={(event) => setEditTitle(event.target.value)}
               maxLength={60}
+              showCount
             />
           </Form.Item>
           <Form.Item label="题材" required>
@@ -403,7 +405,7 @@ export default function HomePage({
             <Input.TextArea
               value={editDescription}
               onChange={(event) => setEditDescription(event.target.value)}
-              maxLength={2000}
+              maxLength={300}
               showCount
               rows={4}
             />

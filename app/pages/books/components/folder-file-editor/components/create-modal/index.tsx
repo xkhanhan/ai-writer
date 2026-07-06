@@ -39,6 +39,7 @@ export function CreateFolderModal({ onClose, onSubmit }: CreateFolderModalProps)
             autoFocus
             onPressEnter={handleSubmit}
             maxLength={60}
+            showCount
             prefix={<FolderOutlined style={{ color: "var(--text-light)" }} />}
           />
         </Form.Item>
@@ -94,6 +95,7 @@ export function CreateFileModal({ folder, onClose, onSubmit }: CreateFileModalPr
             autoFocus
             onPressEnter={handleSubmit}
             maxLength={60}
+            showCount
           />
         </Form.Item>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24, paddingTop: 16 }}>

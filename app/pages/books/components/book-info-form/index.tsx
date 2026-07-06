@@ -127,23 +127,23 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
     <div className={styles.dash}>
       {/* 标题栏 */}
       <div className={styles.dashTop}>
-        <div className={styles.dashTitleWrap}>
-          <h1 className={styles.dashTitle}>{book.title}</h1>
+        <h1 className={styles.dashTitle}>{book.title}</h1>
+        <div className={styles.dashTopRow}>
           <div className={styles.dashTags}>
             {book.genre && <span className={styles.dashTag}>{book.genre}</span>}
             {book.subGenre && <span className={styles.dashTag}>{book.subGenre}</span>}
             {book.platform && <span className={styles.dashTag}>{book.platform}</span>}
             {book.targetAudience && <span className={styles.dashTag}>{book.targetAudience}</span>}
           </div>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            className={styles.dashEditBtn}
+            onClick={() => setEditOpen(true)}
+          >
+            编辑信息
+          </Button>
         </div>
-        <Button
-          size="small"
-          icon={<EditOutlined />}
-          className={styles.dashEditBtn}
-          onClick={() => setEditOpen(true)}
-        >
-          编辑信息
-        </Button>
       </div>
 
       {statsLoading ? (
@@ -584,7 +584,7 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
         style={{ marginTop: 16 }}
       >
         <Form.Item name="title" label="书名" rules={[{ required: true, message: "请输入书名" }]}>
-          <Input placeholder="请输入书名" maxLength={60} />
+          <Input placeholder="请输入书名" maxLength={60} showCount />
         </Form.Item>
 
         <div className={styles.formRow}>
@@ -605,8 +605,13 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
           </Form.Item>
         </div>
 
-        <Form.Item name="tags" label="标签" tooltip="输入标签后按回车添加">
-          <Select mode="tags" maxCount={10} placeholder="输入标签，按回车添加" />
+        <Form.Item
+          name="tags"
+          label="标签"
+          tooltip="输入标签后按回车添加，每个标签最多10个字符"
+          normalize={(value: string[]) => value?.map((v) => v.slice(0, 10))}
+        >
+          <Select mode="tags" maxCount={10} maxTagTextLength={10} placeholder="输入标签，按回车添加" />
         </Form.Item>
 
         <Form.Item name="writingStyle" label="文笔文风" rules={[{ required: true, message: "请选择文笔文风" }]}>
@@ -614,24 +619,24 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
         </Form.Item>
 
         <div className={styles.formRow}>
-          <Form.Item name="chaptersPerBook" label="每章字数" rules={[{ required: true, message: "请输入每章字数" }]} className={styles.halfWidth}>
+          <Form.Item name="targetWordCount" label="每章字数" rules={[{ required: true, message: "请输入每章字数" }]} className={styles.halfWidth}>
             <InputNumber min={500} max={10000} step={500} placeholder="如 3000" style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item name="targetWordCount" label="总字数（万字）" className={styles.halfWidth}>
-            <InputNumber min={0} step={10} placeholder="如 200" style={{ width: "100%" }} />
+            <InputNumber min={0} max={500} step={10} placeholder="如 200" style={{ width: "100%" }} />
           </Form.Item>
         </div>
 
         <Form.Item name="referenceWorks" label="参考作品">
-          <Input placeholder="如：凡人修仙传、斗破苍穹" maxLength={200} />
+          <Input placeholder="如：凡人修仙传、斗破苍穹" maxLength={200} showCount />
         </Form.Item>
 
         <Form.Item name="sellingPoint" label="核心卖点" extra="影响 AI 生成重心">
-          <Input placeholder="这本书的核心吸引力" maxLength={200} />
+          <Input placeholder="这本书的核心吸引力" maxLength={200} showCount />
         </Form.Item>
 
         <Form.Item name="description" label="简介" rules={[{ required: true, message: "请输入简介" }]}>
-          <Input.TextArea rows={4} maxLength={2000} showCount placeholder="请输入书籍简介" />
+          <Input.TextArea rows={4} maxLength={300} showCount placeholder="请输入书籍简介" />
         </Form.Item>
       </Form>
     </Modal>

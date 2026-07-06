@@ -255,6 +255,7 @@ export default function TagLibrary({ book }: TagLibraryProps) {
                 onChange={(e) => setFormName(e.target.value)}
                 placeholder="输入标签名称"
                 maxLength={60}
+                showCount
               />
             </div>
 
