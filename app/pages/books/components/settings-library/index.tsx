@@ -322,6 +322,9 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
       cancelText="取消"
       width={560}
       destroyOnClose
+      closable={false}
+      maskClosable={false}
+      keyboard={false}
     >
       <div className={styles.modalForm}>
         <div className={styles.formField}>

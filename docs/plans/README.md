@@ -9,3 +9,4 @@
 | [workspace-visual.md](./workspace-visual.md) | 书籍工作区视觉改造（7 面板 + 全局交互规范） | 已有方案 |
 | [book-metadata.md](./book-metadata.md) | 书籍元信息扩展（9 个新字段 + 分区表单） | 待实现 |
 | [input-validation.md](./input-validation.md) | 输入限制与文本截断规范（统一验证规则） | 待实现 |
+| [architecture-v2.md](./architecture-v2.md) | 七大系统联动架构设计（世界规则/设定/创作台/伏笔/事实/正文/提示词） | 设计讨论中 |

@@ -322,6 +322,9 @@ export default function HomePage({
         onCancel={() => setShowCreateModal(false)}
         footer={null}
         width={600}
+        closable={false}
+        maskClosable={false}
+        keyboard={false}
       >
         <form onSubmit={handleCreateBook}>
           <Form.Item label="书名" extra={'可以留空，保存时会自动生成"未命名"。'}>
@@ -377,6 +380,9 @@ export default function HomePage({
         onCancel={() => setEditingBook(null)}
         footer={null}
         width={600}
+        closable={false}
+        maskClosable={false}
+        keyboard={false}
       >
         <form onSubmit={handleEditBook}>
           <Form.Item label="书名">

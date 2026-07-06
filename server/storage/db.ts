@@ -28,6 +28,9 @@ export async function getDb(): Promise<Database.Database> {
   // 迁移：为 volumes 表补充 stages 列
   migrateVolumeStages(db);
 
+  // 迁移：为 books 表补充目标总字数列
+  migrateBookTargetTotalWords(db);
+
   // 迁移：为 chapters 表补充新字段
   migrateChapterNewFields(db);
 
@@ -66,6 +69,14 @@ function migrateVolumeStages(db: Database.Database) {
   const existing = new Set(columns.map((c) => c.name));
   if (!existing.has("stages")) {
     db.exec("ALTER TABLE volumes ADD COLUMN stages TEXT DEFAULT '[]'");
+  }
+}
+
+function migrateBookTargetTotalWords(db: Database.Database) {
+  const columns = db.prepare("PRAGMA table_info(books)").all() as Array<{ name: string }>;
+  const existing = new Set(columns.map((c) => c.name));
+  if (!existing.has("target_total_words")) {
+    db.exec("ALTER TABLE books ADD COLUMN target_total_words INTEGER DEFAULT 0");
   }
 }
 
@@ -191,6 +202,29 @@ function initializeTables(db: Database.Database) {
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
     );
+  `);
+
+  // 世界规则
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS world_rules (
+      id TEXT PRIMARY KEY,
+      book_id TEXT NOT NULL,
+      category TEXT NOT NULL,
+      name TEXT NOT NULL,
+      content TEXT DEFAULT '',
+      is_fixed INTEGER DEFAULT 0,
+      setting_type TEXT DEFAULT '',
+      select_options TEXT DEFAULT '[]',
+      number_min REAL,
+      number_max REAL,
+      number_unit TEXT DEFAULT '',
+      sort_order INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_world_rules_book_category ON world_rules(book_id, category);
+    CREATE INDEX IF NOT EXISTS idx_world_rules_sort ON world_rules(book_id, sort_order);
   `);
 
   // 正文库 - 存稿

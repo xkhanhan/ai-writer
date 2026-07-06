@@ -29,7 +29,7 @@ export function CreateFolderModal({ onClose, onSubmit }: CreateFolderModalProps)
   };
 
   return (
-    <Modal open={true} title="新建文件夹" onCancel={onClose} footer={null} width={480}>
+    <Modal open={true} title="新建文件夹" onCancel={onClose} footer={null} width={480} closable={false} maskClosable={false} keyboard={false}>
       <Form layout="vertical">
         <Form.Item label="文件夹名称" required>
           <Input
@@ -79,7 +79,7 @@ export function CreateFileModal({ folder, onClose, onSubmit }: CreateFileModalPr
   };
 
   return (
-    <Modal open={true} title="新建文件" onCancel={onClose} footer={null} width={480}>
+    <Modal open={true} title="新建文件" onCancel={onClose} footer={null} width={480} closable={false} maskClosable={false} keyboard={false}>
       <Form layout="vertical">
         <div style={{ marginBottom: 20, padding: "10px 14px", background: "var(--bg-muted)", borderRadius: 6 }}>
           <Typography.Text type="secondary">

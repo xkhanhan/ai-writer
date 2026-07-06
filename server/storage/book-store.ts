@@ -14,6 +14,7 @@ export type Book = {
   narrativePov: string;
   targetAudience: string;
   targetWordCount: number;
+  targetTotalWords: number;
   endingType: string;
   referenceWorks: string;
   sellingPoint: string;
@@ -33,6 +34,7 @@ type BookRow = {
   narrative_pov: string;
   target_audience: string;
   target_word_count: number;
+  target_total_words: number;
   ending_type: string;
   reference_works: string;
   selling_point: string;
@@ -53,6 +55,7 @@ function mapBookRow(row: BookRow): Book {
     narrativePov: row.narrative_pov ?? "",
     targetAudience: row.target_audience ?? "",
     targetWordCount: row.target_word_count ?? 0,
+    targetTotalWords: row.target_total_words ?? 0,
     endingType: row.ending_type ?? "",
     referenceWorks: row.reference_works ?? "",
     sellingPoint: row.selling_point ?? "",
@@ -137,6 +140,7 @@ export async function createBook(input: {
     narrativePov: "",
     targetAudience: "",
     targetWordCount: 0,
+    targetTotalWords: 0,
     endingType: "",
     referenceWorks: "",
     sellingPoint: "",
@@ -158,6 +162,7 @@ export async function updateBook(
     narrativePov?: string;
     targetAudience?: string;
     targetWordCount?: number;
+    targetTotalWords?: number;
     endingType?: string;
     referenceWorks?: string;
     sellingPoint?: string;
@@ -207,6 +212,11 @@ export async function updateBook(
   if (input.targetWordCount !== undefined) {
     const count = Number(input.targetWordCount);
     fields.push("target_word_count = ?");
+    values.push(Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0);
+  }
+  if (input.targetTotalWords !== undefined) {
+    const count = Number(input.targetTotalWords);
+    fields.push("target_total_words = ?");
     values.push(Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0);
   }
   if (input.endingType !== undefined) {

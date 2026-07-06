@@ -174,6 +174,9 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
               <Descriptions.Item label="每章字数">
                 <InfoTruncate text={book.targetWordCount ? `${book.targetWordCount.toLocaleString()} 字` : undefined} />
               </Descriptions.Item>
+              <Descriptions.Item label="目标总字数">
+                <InfoTruncate text={book.targetTotalWords ? `${book.targetTotalWords.toLocaleString()} 字` : undefined} />
+              </Descriptions.Item>
               <Descriptions.Item label="核心卖点">
                 <Typography.Text type="success" strong>
                   <InfoTruncate text={book.sellingPoint} />
@@ -545,6 +548,7 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
         tags,
         writingStyle: values.writingStyle ?? "",
         targetWordCount: values.targetWordCount ?? 0,
+        targetTotalWords: values.targetTotalWords ?? 0,
         referenceWorks: values.referenceWorks ?? "",
         sellingPoint: values.sellingPoint ?? "",
         description: values.description ?? "",
@@ -563,6 +567,9 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
       confirmLoading={loading}
       width={640}
       destroyOnClose
+      closable={false}
+      maskClosable={false}
+      keyboard={false}
     >
       <Form
         form={form}
@@ -576,6 +583,7 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
           tags: initialTags,
           writingStyle: book.writingStyle || undefined,
           targetWordCount: book.targetWordCount || undefined,
+          targetTotalWords: book.targetTotalWords || undefined,
           referenceWorks: book.referenceWorks,
           sellingPoint: book.sellingPoint,
           description: book.description,
@@ -622,7 +630,7 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
           <Form.Item name="targetWordCount" label="每章字数" rules={[{ required: true, message: "请输入每章字数" }]} className={styles.halfWidth}>
             <InputNumber min={500} max={10000} step={500} placeholder="如 3000" style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item name="targetWordCount" label="总字数（万字）" className={styles.halfWidth}>
+          <Form.Item name="targetTotalWords" label="总字数（万字）" className={styles.halfWidth}>
             <InputNumber min={0} max={500} step={10} placeholder="如 200" style={{ width: "100%" }} />
           </Form.Item>
         </div>
