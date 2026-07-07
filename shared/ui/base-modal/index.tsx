@@ -16,6 +16,7 @@ export interface BaseModalProps {
   confirmLoading?: boolean;
   width?: number;
   destroyOnClose?: boolean;
+  footer?: React.ReactNode | null;
   children: React.ReactNode;
 }
 
@@ -36,6 +37,7 @@ export default function BaseModal({
   confirmLoading,
   width = 600,
   destroyOnClose = true,
+  footer,
   children,
 }: BaseModalProps) {
   const handleOk = useCallback(async () => {
@@ -43,6 +45,20 @@ export default function BaseModal({
       await onOk();
     }
   }, [onOk]);
+
+  const defaultFooter = (
+    <div className={styles.modalFooter}>
+      <Button onClick={onCancel}>{cancelText}</Button>
+      <Button
+        type="primary"
+        disabled={okButtonProps?.disabled}
+        loading={confirmLoading}
+        onClick={handleOk}
+      >
+        {okText}
+      </Button>
+    </div>
+  );
 
   return (
     <Modal
@@ -54,19 +70,7 @@ export default function BaseModal({
       maskClosable={false}
       keyboard={false}
       onCancel={onCancel}
-      footer={
-        <div className={styles.modalFooter}>
-          <Button onClick={onCancel}>{cancelText}</Button>
-          <Button
-            type="primary"
-            disabled={okButtonProps?.disabled}
-            loading={confirmLoading}
-            onClick={handleOk}
-          >
-            {okText}
-          </Button>
-        </div>
-      }
+      footer={footer === undefined ? defaultFooter : footer}
       classNames={{
         container: styles.modalContent,
         body: styles.modalBody,

@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TagTree 视觉稿件 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== 项目设计令牌 ===== */
+:root {
+  --color-primary: #2F5D50;
+  --color-primary-hover: #1e4438;
+  --color-primary-bg: rgba(47, 93, 80, 0.05);
+  --color-primary-bg-hover: rgba(47, 93, 80, 0.10);
+  --color-primary-border: rgba(47, 93, 80, 0.20);
+  --bg-page: #f0ece4;
+  --bg-elevated: #faf8f4;
+  --bg-muted: #f5f2ec;
+  --bg-strong: #e8e4dc;
+  --text-primary: #1a1814;
+  --text-secondary: #4a4640;
+  --text-tertiary: #807b74;
+  --text-light: #b5b0a8;
+  --text-inverse: #ffffff;
+  --border: #ddd8d0;
+  --border-strong: #c0bbb3;
+  --border-light: #ebe7e0;
+  --shadow: 0 1px 3px rgba(24, 28, 34, 0.08);
+  --shadow-md: 0 4px 12px rgba(24, 28, 34, 0.12);
+  --shadow-lg: 0 8px 24px rgba(24, 28, 34, 0.16);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+  --font-display: 'Noto Serif SC', serif;
+  --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* TagTree 专用变量 */
+  --tree-indent: 24px;
+  --tree-switcher-size: 20px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  padding: 40px;
+  line-height: 1.6;
+}
+
+/* ===== 页面头部 ===== */
+.page-header {
+  max-width: 880px;
+  margin: 0 auto 40px;
+}
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.page-header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.page-header .badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-full);
+  padding: 2px 10px;
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+}
+
+/* ===== 场景卡片 ===== */
+.scene {
+  max-width: 880px;
+  margin: 0 auto 48px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.scene-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.scene-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.scene-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+}
+.scene-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+.scene-body { padding: 24px; }
+
+/* ===== 设计方案说明区 ===== */
+.approach-note {
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+.approach-note strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.approach-note code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: rgba(0,0,0,0.04);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--color-primary);
+}
+.approach-note ul {
+  margin: 8px 0 0 16px;
+  padding: 0;
+}
+.approach-note li {
+  margin-bottom: 4px;
+}
+
+/* ===== 模拟 antd Tree 结构 ===== */
+/* 
+  以下模拟 antd v6 Tree 的真实 DOM 结构：
+  .ant-tree-wrapper
+    .ant-tree
+      .ant-tree-treenode
+        .ant-tree-switcher (展开/收起箭头)
+        .ant-tree-title (内容包装器，blockNode 时 flex:1)
+          [我们在 title prop 中渲染的自定义内容]
+*/
+.mock-tree-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+
+.mock-tree {
+  padding: 4px 0;
+}
+
+/* ---- antd 节点行 ---- */
+.mock-treenode {
+  display: flex;
+  align-items: stretch;
+  min-height: 36px;
+  position: relative;
+}
+
+/* 展开/收起开关区域 */
+.mock-switcher {
+  width: 24px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  transition: color 0.15s;
+  user-select: none;
+}
+.mock-switcher:hover { color: var(--text-secondary); }
+.mock-switcher-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+.mock-switcher.expanded .mock-switcher-icon {
+  transform: rotate(90deg);
+}
+.mock-switcher.leaf {
+  visibility: hidden;
+}
+
+/* 缩进占位 */
+.mock-indent-unit {
+  width: 24px;
+  flex-shrink: 0;
+}
+
+/* 连接线（showLine） */
+.mock-tree.show-line .mock-treenode:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: calc(24px + 11px); /* switcher 中心 */
+  top: 36px;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-light);
+}
+.mock-tree.show-line .mock-treenode .mock-indent-unit::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-light);
+}
+
+/* ---- 节点内容区（antd .ant-tree-title 替代） ---- */
+.mock-node-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 0;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: var(--radius-md);
+  margin: 1px 4px 1px 0;
+}
+.mock-node-content:hover {
+  background: var(--bg-muted);
+}
+
+/* ---- 选中态 ---- */
+.mock-treenode.selected .mock-node-content {
+  background: var(--color-primary-bg);
+}
+
+/* ---- 自定义标题内容（title prop 渲染） ---- */
+.mock-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+/* 名称 + 描述 垂直排列 */
+.mock-title-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.mock-title-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mock-title-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 无描述时名称单行垂直居中 */
+.mock-title.single-line .mock-title-text {
+  justify-content: center;
+}
+
+/* ---- 搜索高亮 ---- */
+.mock-highlight {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  padding: 0 4px;
+  border-radius: 3px;
+  display: inline;
+  width: fit-content;
+}
+
+/* ---- 操作按钮 ---- */
+.mock-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.mock-node-content:hover .mock-actions {
+  opacity: 1;
+}
+
+.mock-action-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 13px;
+  border: none;
+  background: none;
+  line-height: 1;
+}
+.mock-action-btn:hover {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+/* ===== 对比网格 ===== */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.compare-card {
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.compare-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.03em;
+}
+.compare-card .mock-tree-wrap {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ===== 规范参数卡 ===== */
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.spec-card {
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+.spec-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+}
+.spec-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.spec-label {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  min-width: 56px;
+}
+.spec-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-primary);
+}
+
+/* ===== 实现方案代码块 ===== */
+.code-block {
+  background: #2d2d2d;
+  color: #e0e0e0;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-top: 16px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.code-block .comment { color: #6a9955; }
+.code-block .keyword { color: #569cd6; }
+.code-block .string { color: #ce9178; }
+.code-block .prop { color: #9cdcfe; }
+.code-block .value { color: #b5cea8; }
+.code-block .tag { color: #569cd6; }
+.code-block .attr { color: #9cdcfe; }
+
+/* ===== 分隔线 ===== */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 32px 0;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+</style>
+</head>
+<body>
+
+<!-- ====== 页面头部 ====== -->
+<div class="page-header">
+  <span class="badge">VISUAL SPEC v2</span>
+  <h1>TagTree 视觉稿件</h1>
+  <p>基于 antd v6 Tree 组件 + 项目视觉规范的标签树设计。本方案遵循视觉规范，不使用 <code>:global(.ant-xxx)</code> 覆盖 antd 样式，改用 ConfigProvider tokens + CSS 变量实现自定义。</p>
+</div>
+
+<!-- ================================================================ -->
+<!-- 场景 A：完整树结构 -->
+<!-- ================================================================ -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">A</span>
+    <span class="scene-title">完整树结构</span>
+    <span class="scene-desc">多层级 + 展开态 + 操作按钮</span>
+  </div>
+  <div class="scene-body">
+
+    <div class="approach-note">
+      <strong>设计思路：</strong>
+      <ul>
+        <li>使用 antd <code>Tree</code> 的 <code>blockNode</code> + <code>showLine={{ showLeafIcon: false }}</code></li>
+        <li>节点高度由 ConfigProvider token <code>controlHeightSM: 36</code> 控制</li>
+        <li>缩进由 token <code>indentSize: 24</code> 控制</li>
+        <li>节点内容（名称 + 描述 + 操作按钮）在 <code>title</code> prop 中自定义渲染</li>
+        <li>选中/悬停高亮由 antd 内置机制处理，通过 ConfigProvider token 注入项目色彩</li>
+      </ul>
+    </div>
+
+    <div class="mock-tree-wrap">
+      <div class="mock-tree show-line">
+
+        <!-- ====== 性格特征（展开 + 子节点） ====== -->
+        <div class="mock-treenode">
+          <span class="mock-switcher expanded">
+            <span class="mock-switcher-icon">&#9654;</span>
+          </span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">性格特征</span>
+                <span class="mock-title-desc">personality · 用于描述人物性格取向</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn" title="添加子标签">+</button>
+                <button class="mock-action-btn" title="编辑">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 子：修仙果敢 -->
+        <div class="mock-treenode">
+          <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+          <span class="mock-indent-unit"></span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">修仙果敢</span>
+                <span class="mock-title-desc">brave · 性格果敢，行事果断，不畏强敌</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 子：修仙阴沉 -->
+        <div class="mock-treenode">
+          <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+          <span class="mock-indent-unit"></span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">修仙阴沉</span>
+                <span class="mock-title-desc">gloomy · 性格阴沉，城府极深，喜怒不形于色</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 子：谨慎隐忍（无描述） -->
+        <div class="mock-treenode">
+          <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+          <span class="mock-indent-unit"></span>
+          <div class="mock-node-content">
+            <div class="mock-title single-line">
+              <div class="mock-title-text">
+                <span class="mock-title-name">谨慎隐忍</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== 外貌描述（折叠） ====== -->
+        <div class="mock-treenode">
+          <span class="mock-switcher">
+            <span class="mock-switcher-icon">&#9654;</span>
+          </span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">外貌描述</span>
+                <span class="mock-title-desc">appearance · 用于描述人物外貌特征</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== 修炼资质（展开 + 子节点） ====== -->
+        <div class="mock-treenode">
+          <span class="mock-switcher expanded">
+            <span class="mock-switcher-icon">&#9654;</span>
+          </span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">修炼资质</span>
+                <span class="mock-title-desc">aptitude · 修仙天赋与灵根属性</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-treenode">
+          <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+          <span class="mock-indent-unit"></span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">天灵根</span>
+                <span class="mock-title-desc">heavenly · 天赋极高，修炼速度远超常人</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-treenode">
+          <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+          <span class="mock-indent-unit"></span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">异灵根</span>
+                <span class="mock-title-desc">variant · 罕见灵根，属性特殊，可修习变异功法</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-treenode">
+          <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+          <span class="mock-indent-unit"></span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">杂灵根</span>
+                <span class="mock-title-desc">mixed · 多属性灵根，修炼难度较大，进境缓慢</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- 场景 B：四种交互状态 -->
+<!-- ================================================================ -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">B</span>
+    <span class="scene-title">交互状态对比</span>
+    <span class="scene-desc">默认 / 悬停 / 选中 / 搜索匹配</span>
+  </div>
+  <div class="scene-body">
+    <div class="compare-grid">
+
+      <!-- 默认态 -->
+      <div class="compare-card">
+        <div class="compare-card-title">默认态</div>
+        <div class="mock-tree-wrap">
+          <div class="mock-tree show-line">
+            <div class="mock-treenode">
+              <span class="mock-switcher expanded"><span class="mock-switcher-icon">&#9654;</span></span>
+              <div class="mock-node-content">
+                <div class="mock-title">
+                  <div class="mock-title-text">
+                    <span class="mock-title-name">性格特征</span>
+                    <span class="mock-title-desc">personality · 用于描述人物性格取向</span>
+                  </div>
+                  <div class="mock-actions" style="opacity:0">
+                    <button class="mock-action-btn">+</button>
+                    <button class="mock-action-btn">&#9998;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mock-treenode">
+              <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+              <span class="mock-indent-unit"></span>
+              <div class="mock-node-content">
+                <div class="mock-title">
+                  <div class="mock-title-text">
+                    <span class="mock-title-name">修仙果敢</span>
+                    <span class="mock-title-desc">brave · 性格果敢，行事果断</span>
+                  </div>
+                  <div class="mock-actions" style="opacity:0">
+                    <button class="mock-action-btn">+</button>
+                    <button class="mock-action-btn">&#9998;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 悬停态 -->
+      <div class="compare-card">
+        <div class="compare-card-title">悬停态</div>
+        <div class="mock-tree-wrap">
+          <div class="mock-tree show-line">
+            <div class="mock-treenode">
+              <span class="mock-switcher expanded"><span class="mock-switcher-icon">&#9654;</span></span>
+              <div class="mock-node-content" style="background: var(--bg-muted);">
+                <div class="mock-title">
+                  <div class="mock-title-text">
+                    <span class="mock-title-name">性格特征</span>
+                    <span class="mock-title-desc">personality · 用于描述人物性格取向</span>
+                  </div>
+                  <div class="mock-actions" style="opacity:1">
+                    <button class="mock-action-btn" style="background:var(--color-primary-bg);color:var(--color-primary);">+</button>
+                    <button class="mock-action-btn" style="background:var(--color-primary-bg);color:var(--color-primary);">&#9998;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mock-treenode">
+              <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+              <span class="mock-indent-unit"></span>
+              <div class="mock-node-content">
+                <div class="mock-title">
+                  <div class="mock-title-text">
+                    <span class="mock-title-name">修仙果敢</span>
+                    <span class="mock-title-desc">brave · 性格果敢，行事果断</span>
+                  </div>
+                  <div class="mock-actions" style="opacity:0">
+                    <button class="mock-action-btn">+</button>
+                    <button class="mock-action-btn">&#9998;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 选中态 -->
+      <div class="compare-card">
+        <div class="compare-card-title">选中态</div>
+        <div class="mock-tree-wrap">
+          <div class="mock-tree show-line">
+            <div class="mock-treenode">
+              <span class="mock-switcher expanded"><span class="mock-switcher-icon">&#9654;</span></span>
+              <div class="mock-node-content">
+                <div class="mock-title">
+                  <div class="mock-title-text">
+                    <span class="mock-title-name">性格特征</span>
+                    <span class="mock-title-desc">personality · 用于描述人物性格取向</span>
+                  </div>
+                  <div class="mock-actions" style="opacity:0">
+                    <button class="mock-action-btn">+</button>
+                    <button class="mock-action-btn">&#9998;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mock-treenode selected">
+              <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+              <span class="mock-indent-unit"></span>
+              <div class="mock-node-content">
+                <div class="mock-title">
+                  <div class="mock-title-text">
+                    <span class="mock-title-name">修仙果敢</span>
+                    <span class="mock-title-desc">brave · 性格果敢，行事果断</span>
+                  </div>
+                  <div class="mock-actions" style="opacity:1">
+                    <button class="mock-action-btn">+</button>
+                    <button class="mock-action-btn">&#9998;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 搜索匹配态 -->
+      <div class="compare-card">
+        <div class="compare-card-title">搜索匹配态</div>
+        <div class="mock-tree-wrap">
+          <div class="mock-tree show-line">
+            <div class="mock-treenode">
+              <span class="mock-switcher expanded"><span class="mock-switcher-icon">&#9654;</span></span>
+              <div class="mock-node-content">
+                <div class="mock-title">
+                  <div class="mock-title-text">
+                    <span class="mock-title-name"><span class="mock-highlight">修</span>仙果敢</span>
+                    <span class="mock-title-desc">brave · 性格果敢，行事果断</span>
+                  </div>
+                  <div class="mock-actions" style="opacity:0">
+                    <button class="mock-action-btn">+</button>
+                    <button class="mock-action-btn">&#9998;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mock-treenode">
+              <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+              <span class="mock-indent-unit"></span>
+              <div class="mock-node-content">
+                <div class="mock-title">
+                  <div class="mock-title-text">
+                    <span class="mock-title-name" style="opacity:0.45;">修仙果敢</span>
+                    <span class="mock-title-desc" style="opacity:0.45;">brave · 性格果敢，行事果断</span>
+                  </div>
+                  <div class="mock-actions" style="opacity:0">
+                    <button class="mock-action-btn">+</button>
+                    <button class="mock-action-btn">&#9998;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- 场景 C：长文本截断 -->
+<!-- ================================================================ -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">C</span>
+    <span class="scene-title">长文本截断示例</span>
+    <span class="scene-desc">名称和描述超长时的省略号表现</span>
+  </div>
+  <div class="scene-body">
+    <div class="mock-tree-wrap">
+      <div class="mock-tree">
+        <div class="mock-treenode">
+          <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">这是一个非常非常长的标签名称用来测试文本截断效果是否正常工作</span>
+                <span class="mock-title-desc">这是一段很长的描述文字，当描述内容超出容器宽度时，应该显示省略号而不是换行，确保布局不会被撑开</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-treenode">
+          <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+          <div class="mock-node-content">
+            <div class="mock-title">
+              <div class="mock-title-text">
+                <span class="mock-title-name">短名称</span>
+                <span class="mock-title-desc">这是一段很长的描述文字，当描述内容超出容器宽度时，应该显示省略号而不是换行</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-treenode">
+          <span class="mock-switcher leaf"><span class="mock-switcher-icon">&#9654;</span></span>
+          <div class="mock-node-content">
+            <div class="mock-title single-line">
+              <div class="mock-title-text">
+                <span class="mock-title-name">无描述标签</span>
+              </div>
+              <div class="mock-actions">
+                <button class="mock-action-btn">+</button>
+                <button class="mock-action-btn">&#9998;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- 场景 D：实现方案 -->
+<!-- ================================================================ -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">D</span>
+    <span class="scene-title">实现方案</span>
+    <span class="scene-desc">ConfigProvider tokens + CSS Modules</span>
+  </div>
+  <div class="scene-body">
+
+    <div class="approach-note">
+      <strong>合规要点（视觉规范 §1）：</strong>
+      <ul>
+        <li><strong>禁止</strong> 使用 <code>:global(.ant-xxx)</code> 覆盖 antd 样式</li>
+        <li><strong>推荐</strong> 使用 <code>ConfigProvider theme.components.Tree</code> 注入 token</li>
+        <li><strong>允许</strong> 在 CSS Modules 中编写自定义布局样式（仅作用于 title prop 中的自定义 DOM）</li>
+      </ul>
+    </div>
+
+    <div class="section-divider">ConfigProvider 配置</div>
+    <div class="code-block">
+<span class="comment">// 在标签库组件中包裹 ConfigProvider</span>
+<span class="tag">&lt;ConfigProvider</span>
+  <span class="attr">theme</span>=<span class="string">{{</span>
+    <span class="prop">components</span>: <span class="string">{{</span>
+      <span class="prop">Tree</span>: <span class="string">{</span>
+        <span class="comment">// 节点高度</span>
+        <span class="prop">controlHeightSM</span>: <span class="value">36</span>,
+        <span class="comment">// 缩进宽度</span>
+        <span class="prop">indentSize</span>: <span class="value">24</span>,
+        <span class="comment">// 悬停背景色 — 对齐项目 --bg-muted</span>
+        <span class="prop">colorBgContainer</span>: <span class="string">'#faf8f4'</span>,
+        <span class="comment">// 选中背景色 — 对齐项目 --color-primary-bg</span>
+        <span class="prop">colorBgTreeNodeHover</span>: <span class="string">'rgba(47,93,80,0.05)'</span>,
+        <span class="prop">colorBgTreeNodeSelected</span>: <span class="string">'rgba(47,93,80,0.05)'</span>,
+        <span class="comment">// 展开箭头颜色</span>
+        <span class="prop">colorTreeExpandIconToggle</span>: <span class="string">'#807b74'</span>,
+        <span class="comment">// 连接线颜色</span>
+        <span class="prop">colorLine</span>: <span class="string">'#ebe7e0'</span>,
+      <span class="string">}</span>
+    <span class="string">}</span>
+  <span class="string">}}</span>
+<span class="tag">&gt;</span>
+  <span class="tag">&lt;TagTree</span> <span class="attr">...</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;/ConfigProvider&gt;</span>
+    </div>
+
+    <div class="section-divider">CSS Modules（仅 title 内容）</div>
+    <div class="code-block">
+<span class="comment">/* tag-tree/index.module.css */</span>
+<span class="comment">/* 注意：不使用 :global(.ant-xxx)，所有样式仅作用于 title 中的自定义 DOM */</span>
+
+<span class="comment">/* 节点内容包装 — 作为 title prop 的根元素 */</span>
+.<span class="prop">nodeWrap</span> {
+  <span class="prop">display</span>: <span class="value">flex</span>;
+  <span class="prop">align-items</span>: <span class="value">center</span>;
+  <span class="prop">gap</span>: <span class="value">8px</span>;
+  <span class="prop">width</span>: <span class="value">100%</span>;
+  <span class="prop">min-width</span>: <span class="value">0</span>;
+  <span class="prop">padding</span>: <span class="value">6px 0</span>;
+}
+
+<span class="comment">/* 名称 + 描述容器 */</span>
+.<span class="prop">nodeText</span> {
+  <span class="prop">flex</span>: <span class="value">1</span>;
+  <span class="prop">min-width</span>: <span class="value">0</span>;
+  <span class="prop">display</span>: <span class="value">flex</span>;
+  <span class="prop">flex-direction</span>: <span class="value">column</span>;
+  <span class="prop">gap</span>: <span class="value">1px</span>;
+  <span class="prop">overflow</span>: <span class="value">hidden</span>;
+}
+
+<span class="comment">/* 名称 */</span>
+.<span class="prop">name</span> {
+  <span class="prop">font-size</span>: <span class="value">13px</span>;
+  <span class="prop">font-weight</span>: <span class="value">500</span>;
+  <span class="prop">color</span>: <span class="value">var(--text-primary)</span>;
+  <span class="prop">line-height</span>: <span class="value">1.4</span>;
+  <span class="prop">overflow</span>: <span class="value">hidden</span>;
+  <span class="prop">text-overflow</span>: <span class="value">ellipsis</span>;
+  <span class="prop">white-space</span>: <span class="value">nowrap</span>;
+}
+
+<span class="comment">/* 描述 */</span>
+.<span class="prop">desc</span> {
+  <span class="prop">font-size</span>: <span class="value">12px</span>;
+  <span class="prop">color</span>: <span class="value">var(--text-tertiary)</span>;
+  <span class="prop">line-height</span>: <span class="value">1.4</span>;
+  <span class="prop">overflow</span>: <span class="value">hidden</span>;
+  <span class="prop">text-overflow</span>: <span class="value">ellipsis</span>;
+  <span class="prop">white-space</span>: <span class="value">nowrap</span>;
+}
+
+<span class="comment">/* 操作按钮区 */</span>
+.<span class="prop">actions</span> {
+  <span class="prop">flex-shrink</span>: <span class="value">0</span>;
+  <span class="prop">display</span>: <span class="value">flex</span>;
+  <span class="prop">align-items</span>: <span class="value">center</span>;
+  <span class="prop">gap</span>: <span class="value">2px</span>;
+  <span class="prop">opacity</span>: <span class="value">0</span>;
+  <span class="prop">transition</span>: <span class="value">opacity 0.15s</span>;
+}
+
+.<span class="prop">nodeWrap</span>:hover > .<span class="prop">actions</span> {
+  <span class="prop">opacity</span>: <span class="value">1</span>;
+}
+
+.<span class="prop">actionBtn</span> {
+  <span class="prop">width</span>: <span class="value">26px</span>;
+  <span class="prop">height</span>: <span class="value">26px</span>;
+  <span class="prop">display</span>: <span class="value">inline-flex</span>;
+  <span class="prop">align-items</span>: <span class="value">center</span>;
+  <span class="prop">justify-content</span>: <span class="value">center</span>;
+  <span class="prop">border-radius</span>: <span class="value">var(--radius-sm)</span>;
+  <span class="prop">color</span>: <span class="value">var(--text-tertiary)</span>;
+  <span class="prop">cursor</span>: <span class="value">pointer</span>;
+  <span class="prop">transition</span>: <span class="value">all 0.15s</span>;
+  <span class="prop">font-size</span>: <span class="value">13px</span>;
+}
+
+.<span class="prop">actionBtn</span>:hover {
+  <span class="prop">background</span>: <span class="value">var(--color-primary-bg)</span>;
+  <span class="prop">color</span>: <span class="value">var(--color-primary)</span>;
+}
+
+<span class="comment">/* 搜索高亮 */</span>
+.<span class="prop">highlight</span> {
+  <span class="prop">background</span>: <span class="value">var(--color-primary-bg)</span>;
+  <span class="prop">color</span>: <span class="value">var(--color-primary)</span>;
+  <span class="prop">padding</span>: <span class="value">0 4px</span>;
+  <span class="prop">border-radius</span>: <span class="value">3px</span>;
+}
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- 规范参数 -->
+<!-- ================================================================ -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">E</span>
+    <span class="scene-title">视觉规范参数</span>
+  </div>
+  <div class="scene-body">
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-card-title">节点尺寸（ConfigProvider Token）</div>
+        <div class="spec-item"><span class="spec-label">行高</span><span class="spec-value">36px (controlHeightSM)</span></div>
+        <div class="spec-item"><span class="spec-label">缩进</span><span class="spec-value">24px (indentSize)</span></div>
+        <div class="spec-item"><span class="spec-label">开关区</span><span class="spec-value">24px (switcherWidth)</span></div>
+        <div class="spec-item"><span class="spec-label">内容内边距</span><span class="spec-value">0 12px (title padding)</span></div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-title">文字规范</div>
+        <div class="spec-item"><span class="spec-label">名称</span><span class="spec-value">13px / font-weight 500</span></div>
+        <div class="spec-item"><span class="spec-label">描述</span><span class="spec-value">12px / font-weight 400</span></div>
+        <div class="spec-item"><span class="spec-label">行高</span><span class="spec-value">1.4</span></div>
+        <div class="spec-item"><span class="spec-label">截断</span><span class="spec-value">text-overflow: ellipsis</span></div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-title">操作按钮</div>
+        <div class="spec-item"><span class="spec-label">尺寸</span><span class="spec-value">26 × 26px</span></div>
+        <div class="spec-item"><span class="spec-label">间距</span><span class="spec-value">gap: 2px</span></div>
+        <div class="spec-item"><span class="spec-label">圆角</span><span class="spec-value">4px (radius-sm)</span></div>
+        <div class="spec-item"><span class="spec-label">默认色</span><span class="spec-value">var(--text-tertiary)</span></div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-title">交互状态</div>
+        <div class="spec-item"><span class="spec-label">默认</span><span class="spec-value">按钮 opacity: 0</span></div>
+        <div class="spec-item"><span class="spec-label">悬停</span><span class="spec-value">行 bg: muted, 按钮 opacity: 1</span></div>
+        <div class="spec-item"><span class="spec-label">选中</span><span class="spec-value">行 bg: primary-bg</span></div>
+        <div class="spec-item"><span class="spec-label">过渡</span><span class="spec-value">0.15s ease</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- 变更对比 -->
+<!-- ================================================================ -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">F</span>
+    <span class="scene-title">v1 → v2 变更对比</span>
+    <span class="scene-desc">改进点说明</span>
+  </div>
+  <div class="scene-body">
+    <div class="spec-grid" style="grid-template-columns: 1fr;">
+      <div class="spec-card">
+        <div class="spec-card-title">v1 问题（当前代码）</div>
+        <div class="spec-item" style="color: var(--color-error);">
+          <span class="spec-label" style="color: var(--color-error);">问题 1</span>
+          <span class="spec-value" style="color: var(--text-primary); font-family: var(--font-body);">
+            使用 <code>:global(.ant-tree-treenode)</code> 等选择器覆盖 antd 样式 → 违反视觉规范 §1
+          </span>
+        </div>
+        <div class="spec-item" style="color: var(--color-error);">
+          <span class="spec-label" style="color: var(--color-error);">问题 2</span>
+          <span class="spec-value" style="color: var(--text-primary); font-family: var(--font-body);">
+            节点 padding 4px 8px → 与 antd 默认行高不匹配
+          </span>
+        </div>
+        <div class="spec-item" style="color: var(--color-error);">
+          <span class="spec-label" style="color: var(--color-error);">问题 3</span>
+          <span class="spec-value" style="color: var(--text-primary); font-family: var(--font-body);">
+            选中态用 !important 强制覆盖 → 不优雅且可能被主题覆盖
+          </span>
+        </div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-title">v2 改进</div>
+        <div class="spec-item" style="color: var(--color-success);">
+          <span class="spec-label" style="color: var(--color-success);">改进 1</span>
+          <span class="spec-value" style="color: var(--text-primary); font-family: var(--font-body);">
+            移除所有 <code>:global(.ant-xxx)</code> 选择器，改用 ConfigProvider tokens
+          </span>
+        </div>
+        <div class="spec-item" style="color: var(--color-success);">
+          <span class="spec-label" style="color: var(--color-success);">改进 2</span>
+          <span class="spec-value" style="color: var(--text-primary); font-family: var(--font-body);">
+            CSS Modules 仅作用于 title prop 中的自定义 DOM（.nodeWrap / .actions 等）
+          </span>
+        </div>
+        <div class="spec-item" style="color: var(--color-success);">
+          <span class="spec-label" style="color: var(--color-success);">改进 3</span>
+          <span class="spec-value" style="color: var(--text-primary); font-family: var(--font-body);">
+            antd 内置选中/悬停高亮通过 token 注入项目色彩，无需 !important
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

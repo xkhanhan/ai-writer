@@ -243,6 +243,24 @@ function initializeTables(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_archive_book_id ON archived_chapters(book_id);
   `);
 
+  // 标签分类（系统标签库）
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tag_categories (
+      id          TEXT PRIMARY KEY,
+      book_id     TEXT NOT NULL,
+      parent_id   TEXT,
+      name        TEXT NOT NULL,
+      code        TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      sort_order  INTEGER DEFAULT 0,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_tag_categories_book_id ON tag_categories(book_id);
+    CREATE INDEX IF NOT EXISTS idx_tag_categories_parent_id ON tag_categories(parent_id);
+  `);
+
   // 设定库 - 设定实体
   db.exec(`
     CREATE TABLE IF NOT EXISTS setting_entities (

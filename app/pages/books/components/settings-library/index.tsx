@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Button,
   Form,
@@ -26,15 +26,18 @@ import {
   StarOutlined,
   ThunderboltOutlined,
   FallOutlined,
+  TagsOutlined,
 } from "@ant-design/icons";
 import { SplitPanel } from "@/shared/ui/split-panel";
 import BaseModal from "@/shared/ui/base-modal";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
+import { TagSelector } from "@/shared/ui/tag-selector";
 import type {
   Book,
   SettingEntity,
   SettingCategory,
   SettingLevel,
+  TagCategory,
   CreateSettingEntityDTO,
 } from "@/app/types";
 import {
@@ -47,6 +50,7 @@ import {
   updateSettingEntity,
   deleteSettingEntity,
 } from "../../api/setting-entities";
+import { useTagTree } from "@/app/hooks/use-tag-tree";
 import { showError, showSuccess } from "@/app/utils/error-handler";
 import styles from "./index.module.css";
 
@@ -107,6 +111,20 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
   const [entities, setEntities] = useState<SettingEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // 标签名称映射（id -> name），用于详情区展示
+  const { tags: tagTree } = useTagTree(book.id);
+  const tagNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const walk = (tags: TagCategory[]) => {
+      for (const t of tags) {
+        map.set(t.id, t.name);
+        if (t.children) walk(t.children);
+      }
+    };
+    walk(tagTree);
+    return map;
+  }, [tagTree]);
 
   // 分组折叠
   const [openGroups, setOpenGroups] = useState<
@@ -193,6 +211,7 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
     const defaults: Record<string, unknown> = {
       name: "",
       level: "general",
+      tagIds: [],
       description: "",
       appearance: "",
       traits: "",
@@ -220,6 +239,7 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
     form.setFieldsValue({
       name: entity.name,
       level: entity.level,
+      tagIds: entity.tagIds ?? [],
       description: entity.description,
       appearance: entity.appearance,
       traits: entity.traits,
@@ -239,6 +259,7 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
     const {
       name,
       level,
+      tagIds,
       description,
       appearance,
       traits,
@@ -264,6 +285,7 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
       const dto = {
         name: name.trim(),
         level: level as SettingLevel,
+        tagIds: tagIds as string[],
         description,
         appearance,
         traits,
@@ -286,6 +308,7 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
         category: modalCat,
         name: name.trim(),
         level: level as SettingLevel,
+        tagIds: tagIds as string[],
         description,
         appearance,
         traits,
@@ -509,7 +532,28 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
           );
         })}
 
-        {/* 标签区（预留，Phase 2 接入标签库） */}
+        {/* 标签区 */}
+        {activeEntity.tagIds && activeEntity.tagIds.length > 0 && (
+          <div className={styles.infoSection}>
+            <div className={styles.infoSectionHeader}>
+              <span className={styles.infoSectionTitle}>
+                <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                  <TagsOutlined />
+                </span>
+                标签
+              </span>
+            </div>
+            <div className={styles.infoSectionBody}>
+              <div className={styles.tagList}>
+                {activeEntity.tagIds.map((tagId) => (
+                  <span key={tagId} className={styles.tagItem}>
+                    {tagNameMap.get(tagId) ?? tagId}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 分类专属字段 */}
         {CATEGORY_FIELD_TEMPLATES[activeEntity.category]?.length > 0 && (
@@ -613,6 +657,19 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
               { value: "general", label: "一般" },
             ]}
           />
+        </Form.Item>
+        <Form.Item
+          name="tagIds"
+          label="标签"
+          rules={[{
+            validator: async (_, value: string[]) => {
+              if (value && value.length > 10) {
+                throw new Error("最多选择 10 个标签");
+              }
+            },
+          }]}
+        >
+          <TagSelector bookId={book.id} placeholder="选择关联标签" />
         </Form.Item>
       </div>
 
