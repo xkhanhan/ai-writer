@@ -5,7 +5,6 @@ import type {
   VolumeOutline,
   ChapterOutline,
   ArchivedChapter,
-  KeyPoint
 } from "@/app/types";
 
 // ============ 总纲 ============
@@ -14,18 +13,6 @@ export async function fetchOutline(bookId: string): Promise<Result<BookOutline |
   const res = await client.get<{ outline: BookOutline | null }>("/api/outline", { bookId });
   if (!res.ok) return res;
   return { ok: true, data: res.data.outline ?? null };
-}
-
-export async function saveOutline(
-  bookId: string,
-  data: Partial<BookOutline>
-): Promise<Result<BookOutline>> {
-  const res = await client.post<{ outline: BookOutline }>("/api/outline", {
-    bookId,
-    ...data,
-  });
-  if (!res.ok) return res;
-  return { ok: true, data: res.data.outline };
 }
 
 export async function updateOutline(
@@ -140,40 +127,4 @@ export async function saveArchive(
 
 export async function deleteArchive(id: string): Promise<Result<void>> {
   return client.delete(`/api/archive/${id}`);
-}
-
-// ============ 关键节点 ============
-
-export async function fetchKeyPoints(bookId: string): Promise<Result<KeyPoint[]>> {
-  const res = await client.get<{ keyPoints: KeyPoint[] }>("/api/key-points", { bookId });
-  if (!res.ok) return res;
-  return { ok: true, data: res.data.keyPoints ?? [] };
-}
-
-export async function createKeyPoint(
-  bookId: string,
-  data: { title: string; chapterNumber?: number; description?: string }
-): Promise<Result<KeyPoint>> {
-  const res = await client.post<{ keyPoint: KeyPoint }>("/api/key-points", {
-    bookId,
-    ...data,
-  });
-  if (!res.ok) return res;
-  return { ok: true, data: res.data.keyPoint };
-}
-
-export async function updateKeyPoint(
-  id: string,
-  data: { title?: string; chapterNumber?: number; description?: string; resolved?: boolean }
-): Promise<Result<KeyPoint>> {
-  const res = await client.put<{ keyPoint: KeyPoint }, typeof data>(
-    `/api/key-points/${id}`,
-    data
-  );
-  if (!res.ok) return res;
-  return { ok: true, data: res.data.keyPoint };
-}
-
-export async function deleteKeyPoint(id: string): Promise<Result<void>> {
-  return client.delete(`/api/key-points/${id}`);
 }

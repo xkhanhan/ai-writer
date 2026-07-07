@@ -50,7 +50,7 @@ import {
   updateSettingEntity,
   deleteSettingEntity,
 } from "../../api/setting-entities";
-import { useTagTree } from "@/app/hooks/use-tag-tree";
+import { useTagTree } from "@/shared/hooks/use-tag-tree";
 import { showError, showSuccess } from "@/app/utils/error-handler";
 import styles from "./index.module.css";
 

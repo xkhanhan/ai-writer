@@ -4,7 +4,7 @@ import type {
   TagCategory,
   CreateTagCategoryDTO,
   UpdateTagCategoryDTO,
-} from "@/app/types";
+} from "@/shared/types";
 
 // ============ Row 类型 ============
 

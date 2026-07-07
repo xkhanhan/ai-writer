@@ -8,7 +8,7 @@ import { SplitPanel } from "@/shared/ui/split-panel";
 import BaseModal from "@/shared/ui/base-modal";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import { TagTree } from "@/shared/ui/tag-tree";
-import { useTagTree } from "@/app/hooks/use-tag-tree";
+import { useTagTree } from "@/shared/hooks/use-tag-tree";
 import {
   createTag,
   updateTag,

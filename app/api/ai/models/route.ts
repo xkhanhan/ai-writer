@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getProviderById } from "@/app/pages/settings-ai/config/providers";
+import { getProviderById } from "@/shared/ai/providers";
 
 async function fetchOpenAIModels(baseUrl: string, apiKey: string): Promise<string[]> {
   const response = await fetch(`${baseUrl}/models`, {

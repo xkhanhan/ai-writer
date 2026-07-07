@@ -1,8 +1,8 @@
 "use client";
 
 import { Form, Select } from "antd";
-import { AI_PROVIDERS } from "../config/providers";
-import type { AiProvider } from "../config/providers";
+import { AI_PROVIDERS } from "@/shared/ai/providers";
+import type { AiProvider } from "@/shared/ai/providers";
 
 interface ProviderSelectorProps {
   value: string;

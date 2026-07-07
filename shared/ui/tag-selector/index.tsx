@@ -10,8 +10,8 @@ import React, {
 import { TreeSelect, Spin } from "antd";
 import type { TreeSelectProps } from "antd";
 import { TagOutlined } from "@ant-design/icons";
-import { useTagTree } from "@/app/hooks/use-tag-tree";
-import type { TagCategory } from "@/app/types";
+import { useTagTree } from "@/shared/hooks/use-tag-tree";
+import type { TagCategory } from "@/shared/types";
 import styles from "./index.module.css";
 
 // ============ 类型 ============

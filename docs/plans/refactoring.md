@@ -1,301 +1,270 @@
-# 重构计划
+# 优化计划
 
-> 生成日期：2026-07-07 | 分支：`refactor/code-quality`
+> 生成日期：2026-07-07 | 分支：`master`
+> 原则：**让代码更健壮、更好维护；不为优化而引入不必要的复杂度。**
 
-## 当前状态
+## 总览
 
-- typecheck: 通过, lint: 通过, build: 通过
-- 两轮扫描共发现 **75 个问题**
+基于代码库扫描，共识别 **38 项** 优化点，分为 **5 个阶段**。每个阶段都是独立可交付的——完成后代码库保持可运行、可验证。
 
-### 问题分布
-
-| 类别 | P0 严重 | P1 高 | P2 中 | P3 低 | 合计 |
-|------|---------|-------|-------|-------|------|
-| 架构违规 | 3 | 1 | 0 | 0 | 4 |
-| 类型安全 | 2 | 3 | 2 | 1 | 8 |
-| 数据库 | 3 | 2 | 1 | 1 | 7 |
-| 后端正确性 | 4 | 5 | 4 | 5 | 18 |
-| React 状态管理 | 3 | 4 | 3 | 2 | 12 |
-| CSS 质量 | 3 | 4 | 3 | 2 | 12 |
-| 前端工程 | 2 | 3 | 2 | 1 | 8 |
-| 安全 | 2 | 2 | 1 | 1 | 6 |
-| **合计** | **22** | **24** | **16** | **13** | **75** |
+| 阶段 | 主题 | 项数 | 优先级 | 核心价值 |
+|------|------|------|--------|---------|
+| 1 | 数据完整性基础 | 6 | P0 | 数据不会丢、查询不会慢 |
+| 2 | 架构合规与类型统一 | 8 | P0 | 依赖方向正确，类型不再重复 |
+| 3 | 后端健壮性 | 8 | P1 | 输入校验、错误处理、事务保护 |
+| 4 | 前端可靠性 | 8 | P1 | 内存泄漏、XSS、死代码 |
+| 5 | CSS 一致性 | 8 | P2 | 硬编码颜色消除、变量统一 |
 
 ---
 
-## 阶段零：数据库修复（P0 — 数据完整性基础）
+## 阶段一：数据完整性基础（P0）
 
-> 数据库是应用的根基，外键未启用意味着所有级联删除形同虚设。
+> 数据库是根基。外键未启用 = 级联删除形同虚设，无索引 = 数据量增长后查询变慢。
 
-### 0.1 启用 SQLite 外键约束
+### 1.1 启用 SQLite 外键约束
 
-`server/storage/db.ts` 缺少 `PRAGMA foreign_keys = ON`。当前所有 `ON DELETE CASCADE` 声明无效，删除书籍会产生大量孤儿记录（volumes、chapters、world_rules、setting_entities、tag_categories、files、archived_chapters、book_outlines）。
+**问题**：`server/storage/db.ts` 缺少 `PRAGMA foreign_keys = ON`，所有 `ON DELETE CASCADE` 声明无效，删除书籍会产生大量孤儿记录。
 
-**操作：**
-- 在 `getDb()` 单例初始化时添加 `db.pragma("foreign_keys = ON")`
-- 验证所有表的 `FOREIGN KEY ... ON DELETE CASCADE` 是否完整（db.ts 中定义的表）
+**改动**：
+- `server/storage/db.ts`：`getDb()` 单例初始化时添加 `db.pragma("foreign_keys = ON")`
+- 验证：删除一本书后检查 volumes、chapters、world_rules 等表是否正确级联
 
-### 0.2 补充数据库索引
+### 1.2 补充数据库索引
 
-当前所有表没有创建任何索引。以下查询是高频路径，缺少索引会导致全表扫描：
+**问题**：所有表无索引，高频查询走全表扫描。
 
-| 表 | 应建索引列 | 使用场景 |
-|----|-----------|---------|
-| `volumes` | `book_id` | `getVolumesByBookId` |
-| `chapters` | `volume_id` | `getChaptersByVolumeId` |
+**改动**：在 `initDatabase()` 中添加：
+
+| 表 | 索引列 | 用途 |
+|----|--------|------|
+| `volumes` | `book_id` | 按书籍查卷纲 |
+| `chapters` | `volume_id` | 按卷纲查章纲 |
 | `chapters` | `volume_id, sortOrder` | 排序查询 |
-| `files` | `folder_id` | `getFoldersByBookAndCategory` 内部查询 |
-| `tag_categories` | `book_id` | `getTagTreeByBookId` |
+| `tag_categories` | `book_id` | 按书籍查标签树 |
 | `tag_categories` | `book_id, parent_id` | 子节点查询 |
-| `setting_entities` | `book_id` | `getSettingEntitiesByBookId` |
-| `setting_entities` | `book_id, category` | 按分类查询 |
-| `world_rules` | `book_id` | `getWorldRulesByBookId` |
-| `archived_chapters` | `book_id` | `getArchivedChapters` |
-| `book_outlines` | `book_id` | `getBookOutline` |
-| `folders` | `book_id, category` | `getFoldersByBookAndCategory` |
+| `setting_entities` | `book_id` | 按书籍查设定 |
+| `setting_entities` | `book_id, category` | 按分类查设定 |
+| `world_rules` | `book_id` | 按书籍查规则 |
+| `files` | `folder_id` | 按文件夹查文件 |
+| `folders` | `book_id, category` | 按分类查文件夹 |
+| `archived_chapters` | `book_id` | 按书籍查存稿 |
+| `book_outlines` | `book_id` | 按书籍查总纲 |
 
-**操作：**
-- 在 `initDatabase()` 中添加 `CREATE INDEX IF NOT EXISTS` 语句
+### 1.3 统一时间戳生成方式
 
-### 0.3 统一时间戳生成方式
+**问题**：`book-store.ts` 和 `folder-file-store.ts` 用 JS `new Date().toISOString()`，其他用 SQL `datetime('now')`，精度不一致。
 
-`book-store.ts` 和 `folder-file-store.ts` 使用 JS `new Date().toISOString()`，其他使用 SQL `datetime('now')`。两种方式产生不同精度的时间格式。
+**改动**：全部统一为 SQL `datetime('now')`。
 
-**操作：**
-- 全部统一为 SQL `datetime('now')`（在 INSERT/UPDATE 语句中直接使用）
+### 1.4 为多步写操作添加事务
+
+**问题**：`tag-store.ts` 的 `deleteTagCategory` 和 `folder-file-store.ts` 的 `createFile` 无事务保护，中间失败会导致数据不一致。
+
+**改动**：用 `db.transaction(() => { ... })` 包裹。
+
+### 1.5 修复 uniqueCode 死循环风险
+
+**问题**：`tag-store.ts` 的 `uniqueCode` 使用 `while(true)` 无上限，理论上可能无限循环。
+
+**改动**：添加 `maxAttempts = 100` 计数器，超限抛出错误。
+
+### 1.6 补充外键完整性检查
+
+**操作**：检查 `db.ts` 中所有表定义，确保：
+- 新表都有 `FOREIGN KEY ... ON DELETE CASCADE`
+- 外键列和高频查询列已建索引（见 1.2）
 
 ---
 
-## 阶段一：架构修复与类型安全（P0 — 阻塞后续所有工作）
+## 阶段二：架构合规与类型统一（P0）
 
-### 1.1 共享类型下沉到 `shared/` [前后端]
+> 依赖方向错误会像滚雪球一样累积技术债，越早修复代价越低。
 
-`TagCategory` 类型定义在 `app/types/index.ts`，但被 `shared/ui/tag-tree` 和 `shared/ui/tag-selector` 导入 — 违反依赖方向。
+### 2.1 共享类型下沉到 `shared/`
 
-**操作：**
+**问题**：`TagCategory` 类型定义在 `app/types/index.ts`，但 `shared/ui/tag-tree` 和 `shared/ui/tag-selector` 导入了它 — 违反 `shared/ → app/` 禁止的依赖方向。
+
+**改动**：
 - 创建 `shared/types/index.ts`，包含 `TagCategory`、`CreateTagCategoryDTO`、`UpdateTagCategoryDTO`
-- 更新 `shared/ui/tag-tree`、`shared/ui/tag-selector`、`app/types/index.ts` 的导入
-- 更新 `server/storage/tag-store.ts` 的类型导入
+- 更新所有引用方的导入路径
+- `server/storage/tag-store.ts` 也改为从 `shared/types/` 导入
 
-### 1.2 将 `useTagTree` 移到 shared [前端]
+### 2.2 将 `useTagTree` 移到 `shared/`
 
-`shared/ui/tag-selector/index.tsx` 从 `app/hooks/use-tag-tree` 导入 `useTagTree` — shared 禁止依赖 app。
+**问题**：`shared/ui/tag-selector/index.tsx` 从 `app/hooks/use-tag-tree` 导入 — shared 禁止依赖 app。
 
-**操作：**
-- 将 `useTagTree` 移至 `shared/hooks/use-tag-tree.ts`
+**改动**：将 `useTagTree` 移至 `shared/hooks/use-tag-tree.ts`。
 
-### 1.3 修复 API 路由从 `app/pages/` 导入 [后端]
+### 2.3 修复 API 路由的反向导入
 
-`app/api/ai/models/route.ts` 从 `app/pages/settings-ai/config/providers` 导入。
+**问题**：`app/api/ai/models/route.ts` 从 `app/pages/settings-ai/config/providers` 导入。
 
-**操作：**
-- 将 `providers.ts` 配置迁移至 `shared/ai/providers.ts`
+**改动**：将 `providers.ts` 迁移至 `shared/ai/providers.ts`。
 
-### 1.4 消除重复类型定义 [后端]
+### 2.4 消除 server 端重复类型定义
 
-`server/storage/book-store.ts` 独立定义了 `Book`、`BookOptions` 类型。
+**问题**：`server/storage/book-store.ts` 重新定义了 `Book`、`BookOptions`，`server/storage/book-options-store.ts` 重复定义了 `GenreTreeNode`。
 
-**操作：**
-- 所有 store 从 `app/types/` 或 `shared/types/` 导入，删除本地类型定义
+**改动**：所有 store 统一从 `app/types/` 或 `shared/types/` 导入，删除本地重复定义。
 
-### 1.5 添加 React Error Boundary [前端]
+### 2.5 合并重复的 JSON 安全清理
 
-项目中没有任何 Error Boundary 或 `error.tsx`。组件运行时错误会导致整个应用白屏。
+**问题**：`app/pages/settings-ai/utils/json-security.ts` 和 `shared/ai/config-contracts.ts` 有重叠的原型污染防护功能。
 
-**操作：**
-- 在 `app/layout.tsx` 中添加全局 Error Boundary
-- 为关键页面添加 `app/**/error.tsx`
+**改动**：保留 `shared/ai/config-contracts.ts` 中的实现，删除 `settings-ai/utils/json-security.ts` 中的重复逻辑，改为调用 shared 版本。
 
-### 1.6 修复幽灵 API 端点 [前端+后端]
+### 2.6 清理未使用的文件和代码
 
-- `app/pages/books/api/creation.ts` 中 `saveOutline` 使用 `client.post` 但 `/api/outline` 只有 GET 和 PUT
-- `key-points` 相关 4 个函数引用不存在的 `/api/key-points`
+| 文件/代码 | 问题 |
+|-----------|------|
+| `server/utils/id-generator.ts` | 定义了 `generateId()` 但无人使用，所有 store 直接用 `randomUUID` |
+| `server/storage/file-store.ts` | 废弃的 JSON 文件存储，已被 SQLite 替代 |
+| `server/storage/db.ts` 中的 `closeDb()` | 从未被调用 |
+| `shared/ui/save-button/index.module.css` | 完全未使用的样式文件 |
+| `app/pages/books/api/creation.ts` 中 `key-points` 相关 4 个函数 | 引用不存在的 `/api/key-points` 路由 |
+| `app/pages/books/api/creation.ts` 中 `saveOutline` | 使用 `client.post` 但 `/api/outline` 只有 GET 和 PUT |
 
-**操作：**
-- 修正 `saveOutline` 为 `client.put`
-- 要么创建 `/api/key-points` 路由，要么移除死代码
+**改动**：删除未使用文件，移除死代码，修正 `saveOutline` 为 `client.put`。
+
+### 2.7 统一 API 客户端入口
+
+**问题**：存在两套 API 客户端体系 — `app/api-client/`（新，基于 ApiClient 类）和 `app/pages/*/api/`（旧，独立函数）。
+
+**改动**：不重构旧代码（风险高、收益低），但在 `app/api-client/index.ts` 中导出所有 API 函数，让新代码统一从 `app/api-client/` 导入。旧代码保持不动，后续新功能开发时自然迁移。
+
+### 2.8 消除 layout + page 双重数据获取
+
+**问题**：`app/layout.tsx` 和 `app/page.tsx` 各调用一次 `listBooks()`。
+
+**改动**：确认哪处是必要的，移除重复调用。
 
 ---
 
-## 阶段二：后端正确性（P1）
+## 阶段三：后端健壮性（P1）
 
-### 2.1 统一 API 响应格式 [后端]
+> 后端是数据的最后一道防线，输入校验和错误处理不能缺。
 
-当前存在 3 种成功格式 + 3 种错误格式。
+### 3.1 补充 API 输入校验
 
-**目标格式：**
-```
-成功: { success: true, data: <载荷> }
-错误: { success: false, error: "<错误码>", message: "<描述>" }
-```
+**问题**：多个路由直接将 `body` 透传给 store 无任何校验。
 
-**操作：**
-- 创建 `app/api/utils.ts`，提供 `jsonSuccess(data)` 和 `jsonError(code, message, status)`
-- 重构所有路由使用统一工具函数（约 20 个文件）
-
-### 2.2 补充输入校验 [后端]
-
-多个路由直接将 `body` 透传给 store 无任何校验。
-
-**操作：**
-- `volumes/route.ts`、`chapters/route.ts`、`outline/route.ts`、`archive/route.ts`：添加必填参数 400 校验
+**改动**：为以下路由添加必填参数校验（返回 400）：
+- `volumes/route.ts`、`chapters/route.ts`、`outline/route.ts`、`archive/route.ts`
 - `books/[id]/route.ts` PATCH：校验 body 字段类型
-- 所有 PATCH/PUT 路由：将 `body` 断言为对应 DTO 类型
 
-### 2.3 检查 DELETE 返回值 [后端]
+### 3.2 修复 DELETE 返回值未检查
 
-`volumes/[id]`、`chapters/[id]`、`archive/[id]` 未检查删除结果。
+**问题**：`volumes/[id]`、`chapters/[id]`、`archive/[id]` 未检查删除结果。
 
-**操作：**
-- 所有 DELETE 处理器添加 `if (!success) return jsonError("NOT_FOUND", "资源不存在", 404)`
+**改动**：添加 `if (!success) return 404` 响应。
 
-### 2.4 统一 HTTP 方法（PUT → PATCH）[后端]
+### 3.3 修复 `ai/config/route.ts` 缺少 try/catch
 
-6 个路由用 PUT 执行部分更新，2 个用 PATCH。
+**问题**：GET handler 无错误保护。
 
-**操作：**
+**改动**：包裹 try/catch。
+
+### 3.4 AI 调用添加超时保护
+
+**问题**：`app/api/ai/test/route.ts` 和 `server/ai/generate-ai-text.ts` 的 fetch 无超时设置。
+
+**改动**：使用 `AbortController` + `setTimeout` 设置 30s 超时。
+
+### 3.5 异步化文件操作
+
+**问题**：`server/ai/ai-config-store.ts` 使用 `fs.readFileSync`/`writeFileSync` 阻塞事件循环。
+
+**改动**：改为 `fs.promises.readFile`/`writeFile`。
+
+### 3.6 统一 HTTP 方法（PUT → PATCH）
+
+**问题**：6 个路由用 PUT 执行部分更新，2 个用 PATCH，语义不一致。
+
+**改动**：
 - PUT → PATCH：`volumes/[id]`、`chapters/[id]`、`world-rules/[id]`、`setting-entities/[id]`、`tags/[id]`、`outline`
 - 同步更新前端 API 调用
 
-### 2.5 修复 `uniqueCode` 死循环风险 [后端]
+### 3.7 统一 API 响应格式
 
-`server/storage/tag-store.ts` 的 `uniqueCode` 使用 `while(true)` 无上限。
+**问题**：存在 3 种成功格式 + 3 种错误格式。
 
-**操作：**
-- 添加 `maxAttempts = 100` 计数器
+**改动**：
+- 创建 `app/api/utils.ts`，提供 `jsonSuccess(data)` 和 `jsonError(code, message, status)`
+- 逐步重构路由使用（不急于一次性改完，每改一个路由验证一个）
 
-### 2.6 为多步写操作添加事务 [后端]
+### 3.8 提取 `parseJsonSafe` 到共享工具
 
-`tag-store.ts` `deleteTagCategory` 和 `folder-file-store.ts` `createFile` 无事务保护。
+**问题**：`outline-store.ts`、`world-rule-store.ts`、`tag-store.ts`、`setting-entity-store.ts` 各自实现 JSON.parse + try/catch。
 
-**操作：**
-- 用 `db.transaction(() => { ... })` 包裹
-
-### 2.7 AI 调用添加超时保护 [后端]
-
-`app/api/ai/test/route.ts` 和 `server/ai/generate-ai-text.ts` 的 fetch 无超时设置。
-
-**操作：**
-- 使用 `AbortController` + `setTimeout` 设置 30s 超时
-
-### 2.8 关闭文件操作改异步 [后端]
-
-`server/ai/ai-config-store.ts` 使用 `fs.readFileSync`/`writeFileSync` 阻塞事件循环。
-
-**操作：**
-- 改为 `fs.promises.readFile`/`writeFile`
-
-### 2.9 修复 `ai/config/route.ts` 缺少 try/catch [后端]
-
-GET handler 无错误保护。
-
-**操作：**
-- 包裹 try/catch
+**改动**：创建 `server/utils/json.ts`，统一使用。
 
 ---
 
-## 阶段三：React 状态管理修复（P1 — 内存泄漏 + 正确性）
+## 阶段四：前端可靠性（P1）
 
-### 3.1 修复 `useFolderFileEditor` setTimeout 内存泄漏 [前端]
+> 内存泄漏、XSS、渲染错误 — 这些是用户能直接感知到的问题。
 
-`app/pages/books/hooks/use-folder-file-editor.ts` 第 123-133 行的 setTimeout 无 cleanup。组件卸载后 timer 仍执行，导致已卸载组件的 setState。
+### 4.1 修复 `useFolderFileEditor` setTimeout 内存泄漏
 
-**操作：**
+**问题**：setTimeout 无 cleanup，组件卸载后 timer 仍执行，导致已卸载组件的 setState。
+
+**改动**：
 - 添加 `useEffect` cleanup：`return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); }`
 - 修复 debounce 期间切换文件导致保存到旧文件的 stale closure bug
 
-### 3.2 修复 `ContentEditor` 渲染期间 setState [前端]
+### 4.2 修复 `ContentEditor` 渲染期间 setState
 
-`app/pages/books/components/creation-zone/components/content-editor/index.tsx` 第 25-29 行在渲染函数体内调用 setState。
+**问题**：渲染函数体内直接调用 setState。
 
-**操作：**
-- 改为 `useEffect`，依赖 `[chapterId]`
+**改动**：改为 `useEffect`，依赖 `[chapterId]`。
 
-### 3.3 修复 XSS 风险 [前端]
+### 4.3 修复 XSS 风险
 
-`app/pages/books/components/book-info-form/index.tsx` 第 349 行使用 `dangerouslySetInnerHTML` 渲染包含用户标题的 HTML。
+**问题**：`book-info-form/index.tsx` 使用 `dangerouslySetInnerHTML` 渲染包含用户标题的 HTML。
 
-**操作：**
-- 改用 React 元素渲染（`<b>{a.title}</b>`），或对 title 进行 HTML 转义
+**改动**：改用 React 元素渲染（`<b>{a.title}</b>`）。
 
-### 3.4 为 `useBook` 添加竞态保护 [前端]
+### 4.4 为 `useBook` 添加竞态保护
 
-`app/pages/books/hooks/use-book.ts` 的 `update` 方法先 PATCH 再 GET，并发调用时可能导致 UI 显示旧数据。
+**问题**：`update` 方法先 PATCH 再 GET，并发调用时可能导致 UI 显示旧数据。
 
-**操作：**
-- 添加递增的请求 ID，GET 返回时检查是否为最新请求
+**改动**：添加递增的请求 ID，GET 返回时检查是否为最新请求。
 
-### 3.5 为 `useTagTree` 缓存添加 TTL [前端]
+### 4.5 添加 React Error Boundary
 
-`app/hooks/use-tag-tree.ts` 的模块级缓存无失效机制，跨 tab 切换可能返回陈旧数据。
+**问题**：项目无 Error Boundary，组件运行时错误导致白屏。
 
-**操作：**
-- 为缓存条目添加时间戳，超过 5 分钟自动失效
+**改动**：
+- 在 `app/layout.tsx` 添加全局 Error Boundary
+- 为关键页面添加 `app/**/error.tsx`
 
-### 3.6 消除 layout + page 双重数据获取 [前端]
+### 4.6 消除 `message.error/success` 直接调用
 
-`app/layout.tsx` 和 `app/page.tsx` 各调用一次 `listBooks()`。
+**问题**：`navigation-tree` 和 `content-editor` 使用 `message.success/error`，绕过了统一的错误处理链。
 
-**操作：**
-- 将 `listBooks` 仅保留在需要的地方，消除重复查询
+**改动**：全部替换为 `showSuccess/showError`。
 
----
+### 4.7 用明确 DTO 替代 `Record<string, unknown>`
 
-## 阶段四：代码去重复（P1 — 可维护性）
+**问题**：`app/pages/books/api/creation.ts` 的 volume/chapter 操作使用宽松类型。
 
-### 4.1 提取前端共享工具函数 [前端]
+**改动**：在 `app/types/` 中定义 `CreateVolumeDTO`、`UpdateVolumeDTO`、`CreateChapterDTO`、`UpdateChapterDTO`。
 
-重复函数：
-- `useDebounce` — tag-library、tag-selector、home 三处
-- `collectAllIds` / `searchMatch` — tag-library、tag-selector 两处
-- `findInTree` / `findTagById` — tag-library、tag-tree 两处
+### 4.8 清理 globals.css 冗余变量
 
-**操作：**
-- 创建 `shared/utils/tree-utils.ts` 和 `shared/hooks/use-debounce.ts`
+**问题**：`--collapse-*`、`--tag-*`、`--filter-*` 共 11 个变量在所有 CSS 模块中均未使用。
 
-### 4.2 提取 `jsonError` 到共享工具 [后端]
-
-在 3 个路由文件中各自定义。
-
-**操作：**
-- 合并到 `app/api/utils.ts`（与阶段 2.1 同步）
-
-### 4.3 提取 `parseJsonSafe` 到共享工具 [后端]
-
-在 3 个 store 文件中各自实现。
-
-**操作：**
-- 创建 `server/utils/json.ts`
-
-### 4.4 提取 `buildUpdateQuery` 工具函数 [后端]
-
-6 个 store 的 update 函数使用相同的 if-push 拼接模式。
-
-**操作：**
-- 创建 `server/utils/query-builder.ts`
-
-### 4.5 去重 `deleteBook` API 函数 [前端]
-
-两处定义了相同的 `deleteBook`。
-
-**操作：**
-- 仅保留在 `app/pages/home/api/books.ts`
-
-### 4.6 清理幽灵代码 [前端+后端]
-
-- `app/pages/books/api/creation.ts` 中 `key-points` 相关 4 个函数
-- `shared/ui/save-button/index.module.css` 完全未使用
-- `server/storage/file-store.ts` — 废弃的 JSON 文件存储
-- `server/utils/id-generator.ts` — 未使用
-- `server/storage/db.ts` 中的 `closeDb()` — 从未被调用
+**改动**：删除未使用的变量定义。
 
 ---
 
-## 阶段五：CSS 质量提升（P2）
+## 阶段五：CSS 一致性（P2）
 
-### 5.1 修复未定义的 CSS 变量引用 [前端]
+> 视觉不一致会让用户觉得产品不专业，但修复应聚焦在真正影响体验的问题上。
 
-5 个 CSS 文件引用了 `globals.css` 中不存在的变量：
+### 5.1 补全未定义的 CSS 变量引用
+
+**问题**：5 个 CSS 文件引用了 `globals.css` 中不存在的变量。
 
 | 变量 | 影响 |
 |------|------|
@@ -304,129 +273,81 @@ GET handler 无错误保护。
 | `--surface-container-highest` | home 书籍卡片边框色失效 |
 | `--surface-variant` | home 书籍封面背景色失效 |
 
-**操作：**
-- 在 `globals.css` 中定义这些变量，或将引用替换为已有变量
+**改动**：在 `globals.css` 中定义这些变量。
 
-### 5.2 硬编码颜色替换为 CSS 变量 [前端]
+### 5.2 替换硬编码颜色
 
-| 文件 | 硬编码数量 | 问题 |
-|------|-----------|------|
-| `foreshadow-library/index.module.css` | 14 | 状态标签颜色不随主题变化 |
-| `empty-state/index.module.css` | 2 | 图标/描述色深色模式对比度不足 |
-| `ai-dropdown/index.module.css` | 2 | 背景色/禁用色不随主题变化 |
-| `save-button/index.module.css` | 1 | 背景色白色 |
-| `content-library/index.module.css` | 1 | 背景色白色 |
-| `book-info-form/index.module.css` | 5 | rgba 硬编码主色值 |
-| `home/index.module.css` | 3 | rgba 硬编码 |
+**问题**：约 28 处硬编码颜色（hex/rgba），不随主题变化。
 
-**操作：**
-- 全部替换为对应的 CSS 变量
+**改动**：逐文件替换为对应 CSS 变量。重点关注：
+- `foreshadow-library/index.module.css`（14 处，状态标签颜色）
+- `book-info-form/index.module.css`（5 处，rgba 硬编码）
+- `home/index.module.css`（3 处）
 
-### 5.3 移除 `!important` 覆盖 [前端]
+### 5.3 移除 `!important` 覆盖
 
-9 处 `!important`，其中 book-info-form 4 处覆盖 antd Button 样式。
+**问题**：9 处 `!important`，其中 book-info-form 4 处覆盖 antd Button。
 
-**操作：**
-- 通过 CSS Modules 类嵌套或 antd ConfigProvider tokens 替代
+**改动**：通过 CSS Modules 类嵌套或 antd ConfigProvider tokens 替代。
 
-### 5.4 清理 globals.css 冗余变量 [前端]
+### 5.4 统一 CSS 命名体系
 
-`--collapse-*`、`--tag-*`、`--filter-*` 共 11 个变量在全部 CSS 模块中均未使用。
+**问题**：`globals.css` 中新旧两套命名（`--color-primary` vs `--accent`），组件混用。
 
-**操作：**
-- 删除未使用的变量定义
+**改动**：统一为新体系（`--color-*`、`--bg-*`、`--text-*`），旧别名标记为 deprecated 并逐步替换引用。
 
-### 5.5 统一 CSS 命名体系 [前端]
+### 5.5 补全 ThemeProvider 变量注入
 
-`globals.css` 中存在新旧两套命名体系（`--color-primary` vs `--accent`），组件混用。
+**问题**：ThemeProvider 只注入 17 个变量，遗漏了 `--color-primary-bg` 等需要随主题变化的变量。
 
-**操作：**
-- 统一为新体系（`--color-*`、`--bg-*`、`--text-*`），旧别名标记为 deprecated
+**改动**：扩展 `ThemeColors` 接口，补全所有需要注入的变量。
 
-### 5.6 补全 ThemeProvider 缺失的变量注入 [前端]
+### 5.6 补充无障碍属性
 
-ThemeProvider 只注入 17 个变量，遗漏了 `--color-primary-bg`、`--color-primary-bg-hover`、`--color-primary-border`、功能色等。
+**问题**：全项目仅 2 处 `aria-label`。
 
-**操作：**
-- 扩展 `ThemeColors` 接口，补全所有需要随主题变化的变量
+**改动**：为 AiDropdown、ArrayInput、TagTree、ThemeSwitcher 的交互元素添加 `aria-label`/`role`。`<div onClick>` 改为 `<button>` 或添加 `role="button"`。
 
----
+### 5.7 为 transition 添加 `prefers-reduced-motion`
 
-## 阶段六：前端体验优化（P2）
+**问题**：28 处 transition 不尊重用户的减弱动画偏好。
 
-### 6.1 用明确 DTO 替代 `Record<string, unknown>` [前端]
+**改动**：在 `globals.css` 中添加全局 `@media (prefers-reduced-motion: reduce)` 规则。
 
-`app/pages/books/api/creation.ts` 的 volume/chapter 操作使用宽松类型。
+### 5.8 工作区面板按需渲染
 
-**操作：**
-- 在 `app/types/` 中定义 `CreateVolumeDTO`、`UpdateVolumeDTO`、`CreateChapterDTO`、`UpdateChapterDTO`
+**问题**：`app/pages/books/index.tsx` 同时渲染所有面板。
 
-### 6.2 统一消息提示方式 [前端]
-
-`navigation-tree` 和 `content-editor` 使用 `message.success/error`。
-
-**操作：**
-- 全部替换为 `showSuccess/showError/showWarning`
-
-### 6.3 工作区面板改为按需渲染 [前端]
-
-`app/pages/books/index.tsx` 同时渲染所有面板。
-
-**操作：**
-- 改为条件渲染：仅挂载当前激活的面板组件
-
-### 6.4 补充无障碍属性 [前端]
-
-全项目仅 2 处 `aria-label`，共享 UI 组件零 `aria-*`/`role` 属性。
-
-**操作：**
-- 为 AiDropdown、ArrayInput、TagTree、ThemeSwitcher 的交互元素添加 `aria-label`/`role`
-- `<div onClick>` 改为 `<button>` 或添加 `role="button"` + `tabIndex` + `onKeyDown`
-
-### 6.5 为 transition 添加 `prefers-reduced-motion` [前端]
-
-28 处 `transition` 均不尊重用户的减弱动画偏好。
-
-**操作：**
-- 在 `globals.css` 中添加全局 `@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }`
+**改动**：改为条件渲染，仅挂载当前激活的面板。
 
 ---
 
-## 执行顺序（规范与代码同步演进）
+## 执行顺序
 
 ```
-阶段零（数据库 + 规范补充数据库约束）→ 数据完整性是一切的基础
-  ↓
-阶段一（架构修复 + 重写 architecture.md）→ 修正类型位置、shared 目录定义
-  ↓
-阶段二（后端正确性 + 重写 api.md）→ 统一响应格式、补充错误格式定义
-  ↓
-阶段三（React 状态管理 + 补充 coding.md React 章节）→ hooks 规则、Error Boundary
-  ↓
-阶段四（去重复 + 补充 utils.md）→ 共享函数注册表
-  ↓
-阶段五（CSS 质量 + 重写 visual.md）→ 补全 token 清单、主题系统规范
-  ↓
-阶段六（前端体验 + 补充 components.md）→ 无障碍、提取规则
+阶段一（数据完整性）→ 阶段二（架构合规）→ 阶段三（后端健壮性）→ 阶段四（前端可靠性）→ 阶段五（CSS 一致性）
 ```
 
-**原则：每个阶段的规范更新必须与代码变更一起提交。** 规范不是一次性写完的，而是随着代码演进逐步完善。
-
-每个阶段完成后必须验证 `typecheck + lint + build`。
+**原则**：
+1. 每个阶段完成后验证 `typecheck + lint + build`
+2. 每个阶段的规范更新与代码变更一起提交
+3. 不引入新的抽象层、新的工具库、新的设计模式
+4. 保持改动范围最小化 — 只改需要改的
 
 ## 验证清单
 
 全部阶段完成后：
+
 - [ ] `npm run typecheck` — 零错误
 - [ ] `npm run lint` — 零警告
 - [ ] `npm run build` — 生产构建通过
 - [ ] SQLite `PRAGMA foreign_keys = ON` 已启用
 - [ ] 所有高频查询列已建索引
 - [ ] `shared/` 中无对 `app/` 的导入
-- [ ] CSS 文件中无硬编码颜色
-- [ ] 所有 API 路由使用统一的 `{ success, data/error }` 格式
-- [ ] 所有 DELETE 处理器检查返回值
+- [ ] 无重复的类型定义（server 端复用 shared/app 类型）
 - [ ] 所有 setTimeout 有 cleanup
 - [ ] 无 `dangerouslySetInnerHTML` 包含用户数据
 - [ ] 有全局 Error Boundary
-- [ ] 无 `message.error/success` — 全部使用 showError/showSuccess
+- [ ] CSS 文件中无未定义的变量引用
+- [ ] 无硬编码颜色
+- [ ] 删除一本书后无孤儿记录

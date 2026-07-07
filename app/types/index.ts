@@ -197,32 +197,8 @@ export interface Foreshadow {
   updatedAt: string;
 }
 
-// 标签分类（支持无限层级）
-export interface TagCategory {
-  id: string;
-  bookId: string;
-  name: string;
-  code: string;
-  parentId?: string;
-  description?: string;
-  sortOrder: number;
-  children?: TagCategory[];
-}
-
-export interface CreateTagCategoryDTO {
-  name: string;
-  code?: string;
-  parentId?: string;
-  description?: string;
-}
-
-export interface UpdateTagCategoryDTO {
-  name?: string;
-  code?: string;
-  parentId?: string;
-  description?: string;
-  sortOrder?: number;
-}
+// 标签分类 — 重新导出 shared/types（原定义已下沉到 shared 层）
+export type { TagCategory, CreateTagCategoryDTO, UpdateTagCategoryDTO } from "@/shared/types";
 
 // 世界规则
 export type WorldRuleCategory = "global" | "writing" | "setting";

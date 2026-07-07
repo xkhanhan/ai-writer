@@ -8,8 +8,8 @@ import {
   fetchModels as fetchModelsApi,
   testConnection as testConnectionApi,
 } from "../api/ai-config";
-import { getProviderById, getDefaultProvider } from "../config/providers";
-import type { AiProvider } from "../config/providers";
+import { getProviderById, getDefaultProvider } from "@/shared/ai/providers";
+import type { AiProvider } from "@/shared/ai/providers";
 import { validateJsonString } from "../utils/json-security";
 import { syncToAdvancedJson, syncFromAdvancedJson } from "../utils/json-sync";
 

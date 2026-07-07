@@ -4,7 +4,7 @@ import React from "react";
 import { Tree, ConfigProvider } from "antd";
 import type { DataNode } from "antd/es/tree";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import type { TagCategory } from "@/app/types";
+import type { TagCategory } from "@/shared/types";
 import styles from "./index.module.css";
 
 // ============ ConfigProvider Token ============

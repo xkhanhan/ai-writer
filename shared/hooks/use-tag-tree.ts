@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { fetchTagTree } from "@/app/api-client/tags";
-import type { TagCategory } from "@/app/types";
+import type { TagCategory } from "@/shared/types";
 
 /** 全局缓存：同一 bookId 只请求一次 */
 const tagTreeCache = new Map<string, TagCategory[]>();

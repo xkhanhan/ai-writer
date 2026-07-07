@@ -3,7 +3,7 @@
 import { Form, Input, Select, Slider, InputNumber, Button, Row, Col, message } from "antd";
 import { EyeOutlined, EyeInvisibleOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useState } from "react";
-import type { AiProvider } from "../config/providers";
+import type { AiProvider } from "@/shared/ai/providers";
 
 interface BasicConfigProps {
   provider: AiProvider;
