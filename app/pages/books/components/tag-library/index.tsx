@@ -1,11 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
-import { Button, Input, Breadcrumb } from "antd";
-import { TagsOutlined, DeleteOutlined } from "@ant-design/icons";
+import React, { useState, useEffect, useMemo } from "react";
+import { Button, Input, Spin, Divider } from "antd";
+import { TagsOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { EmptyState } from "@/shared/ui/empty-state";
+import { SplitPanel } from "@/shared/ui/split-panel";
+import BaseModal from "@/shared/ui/base-modal";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
+import { TagTree } from "@/shared/ui/tag-tree";
+import { useTagTree } from "@/app/hooks/use-tag-tree";
+import {
+  createTag,
+  updateTag,
+  deleteTag,
+  getTagRefCount,
+} from "@/app/api-client/tags";
 import type { Book, TagCategory } from "@/app/types";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import styles from "./index.module.css";
 
 interface TagLibraryProps {
@@ -17,95 +28,148 @@ type ViewState =
   | { type: "create"; parentId?: string }
   | { type: "edit"; tag: TagCategory };
 
+// ---- 工具函数 ----
+
+function findInTree(nodes: TagCategory[], id: string): TagCategory | null {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    if (node.children) {
+      const found = findInTree(node.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function collectAllIds(tags: TagCategory[]): Set<string> {
+  const ids = new Set<string>();
+  const walk = (nodes: TagCategory[]) => {
+    for (const n of nodes) {
+      ids.add(n.id);
+      if (n.children) walk(n.children);
+    }
+  };
+  walk(tags);
+  return ids;
+}
+
+function searchMatch(
+  tags: TagCategory[],
+  keyword: string
+): Set<string> | null {
+  if (!keyword.trim()) return null;
+  const lower = keyword.toLowerCase();
+  const matched = new Set<string>();
+
+  interface FlatNode {
+    node: TagCategory;
+    path: string[];
+  }
+  const flat: FlatNode[] = [];
+  const walk = (nodes: TagCategory[], path: string[]) => {
+    for (const n of nodes) {
+      flat.push({ node: n, path: [...path, n.id] });
+      if (n.children) walk(n.children, [...path, n.id]);
+    }
+  };
+  walk(tags, []);
+
+  for (const { node, path } of flat) {
+    if (
+      node.name.toLowerCase().includes(lower) ||
+      node.code?.toLowerCase().includes(lower) ||
+      node.description?.toLowerCase().includes(lower)
+    ) {
+      for (const id of path) matched.add(id);
+    }
+  }
+  return matched;
+}
+
+// ---- 持久化展开状态 ----
+
+const EXPANDED_KEY_PREFIX = "tag-lib-expanded-";
+
+function loadExpanded(bookId: string): string[] {
+  try {
+    const raw = localStorage.getItem(EXPANDED_KEY_PREFIX + bookId);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveExpanded(bookId: string, keys: string[]) {
+  try {
+    localStorage.setItem(EXPANDED_KEY_PREFIX + bookId, JSON.stringify(keys));
+  } catch {
+    // ignore
+  }
+}
+
+// ---- 防抖 ----
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
+// ---- 组件 ----
+
 export default function TagLibrary({ book }: TagLibraryProps) {
-  const [categories, setCategories] = useState<TagCategory[]>([]);
+  const { tags: categories, loading, refresh } = useTagTree(book.id);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [expandedKeys, setExpandedKeys] = useState<string[]>(() =>
+    loadExpanded(book.id)
+  );
+  const [searchValue, setSearchValue] = useState("");
   const [view, setView] = useState<ViewState>({ type: "list" });
 
-  // 表单状态
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
 
-  // ---- 工具函数 ----
+  // ---- 搜索 ----
+
+  const debouncedSearch = useDebounce(searchValue, 300);
+  const matchedIds = useMemo(
+    () => (debouncedSearch ? searchMatch(categories, debouncedSearch) : null),
+    [categories, debouncedSearch]
+  );
+
+  const searchExpandedKeys = useMemo(() => {
+    if (matchedIds && matchedIds.size > 0) {
+      return Array.from(collectAllIds(categories));
+    }
+    return [];
+  }, [matchedIds, categories]);
+
+  const effectiveExpandedKeys =
+    searchExpandedKeys.length > 0 ? searchExpandedKeys : expandedKeys;
+
+  // ---- 当前选中分类 ----
+
+  const selectedCategory = selectedCategoryId
+    ? categories.find((c) => c.id === selectedCategoryId) ?? null
+    : null;
+
+  // ---- 事件处理 ----
 
   const resetForm = () => {
     setFormName("");
     setFormDescription("");
   };
 
-  /** 在树中递归查找节点 */
-  const findInTree = (
-    nodes: TagCategory[],
-    id: string
-  ): TagCategory | null => {
-    for (const node of nodes) {
-      if (node.id === id) return node;
-      if (node.children) {
-        const found = findInTree(node.children, id);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
-
-  /** 在树中递归替换节点 */
-  const replaceInTree = (
-    nodes: TagCategory[],
-    id: string,
-    updater: (n: TagCategory) => TagCategory
-  ): TagCategory[] =>
-    nodes.map((n) => {
-      if (n.id === id) return updater(n);
-      if (n.children) {
-        return { ...n, children: replaceInTree(n.children, id, updater) };
-      }
-      return n;
-    });
-
-  /** 在树中递归删除节点 */
-  const removeFromTree = (nodes: TagCategory[], id: string): TagCategory[] =>
-    nodes
-      .filter((n) => n.id !== id)
-      .map((n) =>
-        n.children ? { ...n, children: removeFromTree(n.children, id) } : n
-      );
-
-  /** 在树中递归添加子节点 */
-  const addChildToTree = (
-    nodes: TagCategory[],
-    parentId: string,
-    child: TagCategory
-  ): TagCategory[] =>
-    nodes.map((n) => {
-      if (n.id === parentId) {
-        return { ...n, children: [...(n.children ?? []), child] };
-      }
-      if (n.children) {
-        return { ...n, children: addChildToTree(n.children, parentId, child) };
-      }
-      return n;
-    });
-
-  // ---- 事件处理 ----
-
-  const selectedCategory = selectedCategoryId
-    ? categories.find((c) => c.id === selectedCategoryId) ?? null
-    : null;
-
   const handleSelectCategory = (cat: TagCategory) => {
     setSelectedCategoryId(cat.id);
     setSelectedTagId(null);
     setView({ type: "list" });
     resetForm();
-  };
-
-  const handleSelectTag = (tag: TagCategory) => {
-    setSelectedTagId(tag.id);
-    setView({ type: "edit", tag });
-    setFormName(tag.name);
-    setFormDescription(tag.description ?? "");
+    setExpandedKeys(loadExpanded(book.id));
   };
 
   const handleCreateCategory = () => {
@@ -119,282 +183,304 @@ export default function TagLibrary({ book }: TagLibraryProps) {
     setView({ type: "create", parentId });
   };
 
-  const handleSave = () => {
+  const handleTreeSelect = (tag: TagCategory) => {
+    setSelectedTagId(tag.id);
+    setView({ type: "edit", tag });
+    setFormName(tag.name);
+    setFormDescription(tag.description ?? "");
+  };
+
+  const handleTreeEdit = (tag: TagCategory) => {
+    setSelectedTagId(tag.id);
+    setView({ type: "edit", tag });
+    setFormName(tag.name);
+    setFormDescription(tag.description ?? "");
+  };
+
+  const handleTreeExpand = (keys: string[]) => {
+    setExpandedKeys(keys);
+    if (book.id) saveExpanded(book.id, keys);
+  };
+
+  const handleSave = async () => {
     if (!formName.trim()) return;
 
     if (view.type === "create") {
-      const newTag: TagCategory = {
-        id: `tc_${Date.now()}`,
-        bookId: book.id,
+      const result = await createTag(book.id, {
         name: formName.trim(),
         description: formDescription || undefined,
         parentId: view.parentId,
-      };
-      if (view.parentId) {
-        setCategories((prev) => addChildToTree(prev, view.parentId!, newTag));
-      } else {
-        setCategories((prev) => [...prev, newTag]);
+      });
+      if (!result.ok) {
+        showError(result.error || "创建失败");
+        return;
       }
+      showSuccess("创建成功");
       resetForm();
       setView({ type: "list" });
+      await refresh();
     } else if (view.type === "edit") {
-      const updated: TagCategory = {
-        ...view.tag,
+      const result = await updateTag(view.tag.id, {
         name: formName.trim(),
         description: formDescription || undefined,
-      };
-      setCategories((prev) => replaceInTree(prev, view.tag.id, () => updated));
-      setView({ type: "edit", tag: updated });
+      });
+      if (!result.ok) {
+        showError(result.error || "保存失败");
+        return;
+      }
+      showSuccess("保存成功");
+      setView({ type: "edit", tag: result.data });
+      await refresh();
     }
   };
 
-  const handleDelete = (tag: TagCategory) => {
-    confirmDelete(tag.name, () => {
-      setCategories((prev) => removeFromTree(prev, tag.id));
-      if (selectedTagId === tag.id) {
-        setSelectedTagId(null);
-        setView({ type: "list" });
-      }
-    });
-  };
+  const handleDelete = async (tag: TagCategory) => {
+    const refResult = await getTagRefCount(tag.id);
+    const refCount = refResult.ok ? refResult.data.count : 0;
+    const warning =
+      refCount > 0
+        ? `此标签正被 ${refCount} 个设定实体引用，删除后将自动解除关联。`
+        : undefined;
 
-  const handleToggleExpand = (id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    confirmDelete(
+      tag.name,
+      async () => {
+        const result = await deleteTag(tag.id);
+        if (result.ok) {
+          showSuccess("删除成功");
+          if (selectedTagId === tag.id) {
+            setSelectedTagId(null);
+            setView({ type: "list" });
+          }
+          await refresh();
+        } else {
+          showError(result.error || "删除失败");
+        }
+      },
+      warning
+    );
   };
 
   const handleCancel = () => {
     resetForm();
     setView({ type: "list" });
-    if (selectedTagId) {
-      const tag = findInTree(categories, selectedTagId);
-      if (tag) {
-        setView({ type: "edit", tag });
-      }
-    }
   };
 
-  // ---- 渲染 ----
+  const modalOpen = view.type !== "list";
+  const isEdit = view.type === "edit";
+  const modalTitle = view.type === "create" ? "新建标签" : "编辑标签";
 
-  /** 渲染标签树节点 */
-  const renderTagNode = (tag: TagCategory, depth: number) => {
-    const hasChildren = tag.children && tag.children.length > 0;
-    const isExpanded = expandedIds.has(tag.id);
-    const isActive = selectedTagId === tag.id;
+  // ---- 左侧面板 ----
 
-    return (
-      <React.Fragment key={tag.id}>
-        <div
-          className={`${styles.tagNode} ${isActive ? styles.tagNodeActive : ""}`}
-          style={{ paddingLeft: 12 + depth * 20 }}
-          onClick={() => handleSelectTag(tag)}
-        >
-          <span
-            className={styles.expandArrow}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (hasChildren) handleToggleExpand(tag.id);
-            }}
-          >
-            {hasChildren ? (isExpanded ? "▾" : "▸") : ""}
-          </span>
-          <span className={styles.tagName}>{tag.name}</span>
-          <span
-            className={styles.tagEditLink}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSelectTag(tag);
-            }}
-          >
-            编辑
-          </span>
-        </div>
-        {hasChildren && isExpanded && (
-          <div>
-            {tag.children!.map((child) => renderTagNode(child, depth + 1))}
+  const leftPanel = (
+    <div className={styles.leftPanel}>
+      <div className={styles.leftHeader}>
+        <span className={styles.leftTitle}>标签大类</span>
+        <Button type="link" size="small" onClick={handleCreateCategory}>
+          + 新建大类
+        </Button>
+      </div>
+      <div className={styles.searchWrap}>
+        <Input
+          placeholder="搜索标签名称、编码…"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          allowClear
+          size="small"
+        />
+      </div>
+      <div className={styles.catList}>
+        {categories.length === 0 ? (
+          <div className={styles.emptyList}>暂无标签大类</div>
+        ) : (
+          categories.map((cat) => (
+            <div
+              key={cat.id}
+              className={`${styles.catItem} ${
+                selectedCategoryId === cat.id ? styles.catItemActive : ""
+              }`}
+              onClick={() => handleSelectCategory(cat)}
+            >
+              <span className={styles.catName}>{cat.name}</span>
+              <span className={styles.catCount}>
+                {cat.children?.length ?? 0}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  // ---- 右侧面板 ----
+
+  const rightPanel = !selectedCategory ? (
+    <EmptyState
+      icon={<TagsOutlined />}
+      title="选择一个标签大类"
+      description="从左侧选择大类查看其下标签，或新建大类开始"
+      action={<button onClick={handleCreateCategory}>+ 新建大类</button>}
+    />
+  ) : (
+    <div className={styles.rightPanel}>
+      <div className={styles.rightHeader}>
+        <span className={styles.rightTitle}>
+          {selectedCategory.name} 的标签
+        </span>
+      </div>
+      <div className={styles.treeWrap}>
+        {(selectedCategory.children?.length ?? 0) > 0 ? (
+          <TagTree
+            tags={selectedCategory.children ?? []}
+            expandedKeys={effectiveExpandedKeys}
+            onExpand={handleTreeExpand}
+            selectedKey={selectedTagId}
+            onSelect={handleTreeSelect}
+            onEdit={handleTreeEdit}
+            onAddChild={handleCreateSubTag}
+            matchedIds={matchedIds}
+          />
+        ) : (
+          <div className={styles.emptyList}>
+            暂无子标签，点击「+ 新建大类」或节点上的{" "}
+            <PlusOutlined style={{ fontSize: 10 }} /> 创建
           </div>
         )}
-      </React.Fragment>
-    );
-  };
+      </div>
+    </div>
+  );
 
-  // 表单视图
-  if (view.type === "create" || view.type === "edit") {
-    const isEdit = view.type === "edit";
+  // ---- 加载状态 ----
+
+  if (loading && categories.length === 0) {
     return (
       <div className={styles.container}>
-        <div className={styles.breadcrumbBar}>
-          <Breadcrumb
-            items={[
-              { title: "标签库" },
-              ...(selectedCategory
-                ? [{ title: selectedCategory.name, className: styles.breadcrumbLink, onClick: () => { setSelectedCategoryId(selectedCategory.id); setSelectedTagId(null); setView({ type: "list" }); resetForm(); } }]
-                : []),
-              {
-                title: isEdit ? "编辑标签" : "新建标签",
-                onClick: handleCancel,
-                className: styles.breadcrumbLink,
-              },
-            ]}
-          />
-        </div>
-
-        <div className={styles.formArea}>
-          <div className={styles.formContent}>
-            <div className={styles.formField}>
-              <label className={styles.formLabel}>标签名称</label>
-              <Input
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                placeholder="输入标签名称"
-                maxLength={60}
-              />
-            </div>
-
-            {isEdit && view.tag.parentId && (
-              <div className={styles.formField}>
-                <label className={styles.formLabel}>父级标签</label>
-                <Input
-                  value={(() => {
-                    const parent = findInTree(categories, view.tag.parentId!);
-                    return parent?.name ?? "";
-                  })()}
-                  disabled
-                />
-              </div>
-            )}
-
-            <div className={styles.formField}>
-              <label className={styles.formLabel}>标签详情描述</label>
-              <Input.TextArea
-                value={formDescription}
-                onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="描述该标签的详细信息"
-                rows={6}
-                maxLength={2000}
-                showCount
-              />
-            </div>
-          </div>
-
-          <div className={styles.formActions}>
-            {isEdit && (
-              <div className={styles.formActionsLeft}>
-                <Button
-                  size="small"
-                  onClick={() => handleCreateSubTag(view.tag.id)}
-                >
-                  + 添加子标签
-                </Button>
-              </div>
-            )}
-            <div className={styles.formActionsRight}>
-              {isEdit && (
-                <Button
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={() => handleDelete(view.tag)}
-                >
-                  删除
-                </Button>
-              )}
-              <Button onClick={handleCancel}>取消</Button>
-              <Button
-                type="primary"
-                onClick={handleSave}
-                disabled={!formName.trim()}
-              >
-                保存
-              </Button>
-            </div>
-          </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          <Spin />
         </div>
       </div>
     );
   }
 
-  // 列表视图
+  // ---- 弹窗内容 ----
+
+  const modalContent = (
+    <div className={styles.modalBody}>
+      <div className={styles.formField}>
+        <label className={styles.formLabel}>
+          标签名称 <span style={{ color: "var(--color-error)" }}>*</span>
+        </label>
+        <Input
+          value={formName}
+          onChange={(e) => setFormName(e.target.value)}
+          placeholder="输入标签名称"
+          maxLength={60}
+          showCount
+        />
+      </div>
+
+      {isEdit && view.tag.code && (
+        <div className={styles.formField}>
+          <label className={styles.formLabel}>
+            编码{" "}
+            <span className={styles.formLabelHint}>（系统自动生成）</span>
+          </label>
+          <Input
+            value={view.tag.code}
+            disabled
+            style={{ fontFamily: "var(--font-mono)" }}
+          />
+          <span className={styles.formHint}>
+            根据标签名称自动生成唯一编码，用于 AI 识别与数据关联
+          </span>
+        </div>
+      )}
+
+      {isEdit && view.tag.parentId && (
+        <div className={styles.formField}>
+          <label className={styles.formLabel}>父级标签</label>
+          <Input
+            value={(() => {
+              const parent = findInTree(categories, view.tag.parentId!);
+              return parent?.name ?? "";
+            })()}
+            disabled
+          />
+        </div>
+      )}
+
+      <Divider style={{ margin: "4px 0 12px" }} />
+
+      <div className={styles.formField}>
+        <label className={styles.formLabel}>标签详情描述</label>
+        <Input.TextArea
+          value={formDescription}
+          onChange={(e) => setFormDescription(e.target.value)}
+          placeholder="描述该标签的详细信息，用于 AI 理解标签含义…"
+          rows={5}
+          maxLength={2000}
+          showCount
+        />
+      </div>
+    </div>
+  );
+
+  // ---- 弹窗底部 ----
+
+  const modalFooter = (
+    <div className={styles.modalFooter}>
+      <div className={styles.modalFooterLeft}>
+        {isEdit && (
+          <Button
+            danger
+            size="small"
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(view.tag)}
+          >
+            删除
+          </Button>
+        )}
+      </div>
+      <div className={styles.modalFooterRight}>
+        <Button onClick={handleCancel}>取消</Button>
+        <Button
+          type="primary"
+          disabled={!formName.trim()}
+          onClick={handleSave}
+        >
+          保存
+        </Button>
+      </div>
+    </div>
+  );
+
+  // ---- 主视图 ----
+
   return (
     <div className={styles.container}>
-      <div className={styles.mainArea}>
-        {/* 左侧：大类列表 */}
-        <div className={styles.sidebar}>
-          <div className={styles.sidebarHeader}>
-            <span className={styles.sidebarTitle}>标签大类</span>
-            <Button type="link" size="small" onClick={handleCreateCategory}>
-              + 新建大类
-            </Button>
-          </div>
+      <SplitPanel
+        left={leftPanel}
+        right={rightPanel}
+        emptyHint="选择一个标签大类"
+      />
 
-          <div className={styles.categoryList}>
-            {categories.length === 0 ? (
-              <div className={styles.emptyList}>暂无标签大类</div>
-            ) : (
-              categories.map((cat) => (
-                <div
-                  key={cat.id}
-                  className={`${styles.categoryItem} ${
-                    selectedCategoryId === cat.id ? styles.categoryItemActive : ""
-                  }`}
-                  onClick={() => handleSelectCategory(cat)}
-                >
-                  <span className={styles.categoryName}>{cat.name}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* 右侧：标签树 + 详情 */}
-        <div className={styles.contentArea}>
-          {!selectedCategory ? (
-            <EmptyState
-              icon={<TagsOutlined />}
-              title="选择一个标签大类"
-              description="从左侧选择大类查看其下标签，或新建大类开始"
-              action={
-                <button onClick={handleCreateCategory}>+ 新建大类</button>
-              }
-            />
-          ) : (
-            <div className={styles.tagPanel}>
-              <div className={styles.tagTree}>
-                <div className={styles.tagTreeHeader}>
-                  <span className={styles.tagTreeTitle}>
-                    {selectedCategory.name} 的标签
-                  </span>
-                  <Button
-                    type="link"
-                    size="small"
-                    onClick={() => handleCreateSubTag(selectedCategory.id)}
-                  >
-                    + 添加子标签
-                  </Button>
-                </div>
-                <div className={styles.tagTreeContent}>
-                  {selectedCategory.children &&
-                  selectedCategory.children.length > 0 ? (
-                    selectedCategory.children.map((child) =>
-                      renderTagNode(child, 0)
-                    )
-                  ) : (
-                    <div className={styles.emptyList}>
-                      暂无子标签，点击上方「添加子标签」创建
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <BaseModal
+        open={modalOpen}
+        title={modalTitle}
+        onCancel={handleCancel}
+        width={560}
+        destroyOnClose
+        footer={modalFooter}
+      >
+        {modalOpen && modalContent}
+      </BaseModal>
     </div>
   );
 }

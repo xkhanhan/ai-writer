@@ -57,9 +57,9 @@ export function FolderTree({
         <div key={folder.id}>
           <div className={styles.folderItem} onClick={() => onToggleFolder(folder.id)}>
             {expandedFolders.has(folder.id) ? (
-              <DownOutlined style={{ fontSize: 14, color: "var(--text-tertiary)" }} />
+              <DownOutlined style={{ fontSize: 10, color: "var(--text-secondary)" }} />
             ) : (
-              <RightOutlined style={{ fontSize: 14, color: "var(--text-tertiary)" }} />
+              <RightOutlined style={{ fontSize: 10, color: "var(--text-secondary)" }} />
             )}
             <FolderOutlined style={{ fontSize: 16, color: "var(--text-secondary)" }} className={styles.folderIcon} />
             <span className={styles.folderName}>{folder.name}</span>

@@ -16,6 +16,7 @@ export interface Book {
   narrativePov: string;
   targetAudience: string;
   targetWordCount: number;
+  targetTotalWords: number;
   endingType: string;
   referenceWorks: string;
   sellingPoint: string;
@@ -51,6 +52,7 @@ export interface UpdateBookDTO {
   narrativePov?: string;
   targetAudience?: string;
   targetWordCount?: number;
+  targetTotalWords?: number;
   endingType?: string;
   referenceWorks?: string;
   sellingPoint?: string;
@@ -200,24 +202,77 @@ export interface TagCategory {
   id: string;
   bookId: string;
   name: string;
+  code: string;
   parentId?: string;
   description?: string;
+  sortOrder: number;
   children?: TagCategory[];
 }
 
+export interface CreateTagCategoryDTO {
+  name: string;
+  code?: string;
+  parentId?: string;
+  description?: string;
+}
+
+export interface UpdateTagCategoryDTO {
+  name?: string;
+  code?: string;
+  parentId?: string;
+  description?: string;
+  sortOrder?: number;
+}
+
 // 世界规则
+export type WorldRuleCategory = "global" | "writing" | "setting";
+export type SettingRuleValueType = "text" | "select" | "number";
+
 export interface WorldRule {
   id: string;
   bookId: string;
+  category: WorldRuleCategory;
   name: string;
-  level: "core" | "important" | "general";
   content: string;
+  isFixed: boolean;
+  settingType: SettingRuleValueType | "";
+  selectOptions: string[];
+  numberMin: number;
+  numberMax: number;
+  numberUnit: string;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }
 
+export interface CreateWorldRuleDTO {
+  category: WorldRuleCategory;
+  name: string;
+  content?: string;
+  isFixed?: boolean;
+  settingType?: SettingRuleValueType | "";
+  selectOptions?: string[];
+  numberMin?: number;
+  numberMax?: number;
+  numberUnit?: string;
+}
+
+export interface UpdateWorldRuleDTO {
+  name?: string;
+  content?: string;
+  isFixed?: boolean;
+  settingType?: SettingRuleValueType | "";
+  selectOptions?: string[];
+  numberMin?: number;
+  numberMax?: number;
+  numberUnit?: string;
+  sortOrder?: number;
+}
+
 // 设定库分类
 export type SettingCategory = "character" | "item" | "location" | "faction" | "other";
+
+export type SettingLevel = "core" | "important" | "general";
 
 // 设定库实体
 export interface SettingEntity {
@@ -225,12 +280,65 @@ export interface SettingEntity {
   bookId: string;
   category: SettingCategory;
   name: string;
-  gender?: string;
-  personality?: string;
-  traits?: string;
-  tags?: string[];
-  description?: string;
+  level: SettingLevel;
+  description: string;
+  appearance: string;
+  traits: string;
+  background: string;
+  abilities: string;
+  weaknesses: string;
+  tagIds: string[];
+  categoryFields: Record<string, string>;
+  statusFields: Record<string, string>;
   deprecated: boolean;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CreateSettingEntityDTO {
+  category: SettingCategory;
+  name: string;
+  level?: SettingLevel;
+  description?: string;
+  appearance?: string;
+  traits?: string;
+  background?: string;
+  abilities?: string;
+  weaknesses?: string;
+  tagIds?: string[];
+  categoryFields?: Record<string, string>;
+  statusFields?: Record<string, string>;
+}
+
+export interface UpdateSettingEntityDTO {
+  name?: string;
+  level?: SettingLevel;
+  description?: string;
+  appearance?: string;
+  traits?: string;
+  background?: string;
+  abilities?: string;
+  weaknesses?: string;
+  tagIds?: string[];
+  categoryFields?: Record<string, string>;
+  statusFields?: Record<string, string>;
+  deprecated?: boolean;
+}
+
+// 各分类的状态字段模板
+export const STATUS_FIELD_TEMPLATES: Record<SettingCategory, string[]> = {
+  character: ["性别", "年龄", "修炼境界", "所属势力", "当前状态"],
+  location: ["地点类型", "所属势力", "当前状态"],
+  faction: ["组织类型", "势力规模", "当前状态"],
+  item: ["品阶", "当前持有者", "当前状态"],
+  other: [],
+};
+
+// 分类专属字段模板
+export const CATEGORY_FIELD_TEMPLATES: Record<SettingCategory, string[]> = {
+  character: ["性格"],
+  location: [],
+  faction: [],
+  item: [],
+  other: [],
+};

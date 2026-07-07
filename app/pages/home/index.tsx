@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   EditOutlined,
   CalendarOutlined,
@@ -12,11 +12,13 @@ import {
   DeleteOutlined,
   AppstoreOutlined,
 } from "@ant-design/icons";
-import { Button, Form, Input, Modal, Select, Tag, Progress, Dropdown, message } from "antd";
+import { Button, Form, Input, Modal, Select, Tag, Progress, Dropdown } from "antd";
 import { useBooks, useBookOptions } from "@/app/pages/home/hooks/use-books";
 import { client } from "@/app/api-client";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import { formatDate } from "@/app/utils/format-date";
 import type { Book, BookOptions } from "@/app/types";
+import BaseModal from "@/shared/ui/base-modal";
 import styles from "./index.module.css";
 
 type LayoutMode = "card" | "row";
@@ -83,25 +85,23 @@ export default function HomePage({
     setEditPlatform(book.platform);
   };
 
-  const handleEditBook = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleEditBook = async () => {
     if (!editingBook) return;
     setEditLoading(true);
-    try {
-      await client.patch(`/api/books/${editingBook.id}`, {
-        title: editTitle,
-        description: editDescription,
-        genre: editGenre,
-        platform: editPlatform,
-      });
-      message.success("书籍已更新");
+    const result = await client.patch(`/api/books/${editingBook.id}`, {
+      title: editTitle,
+      description: editDescription,
+      genre: editGenre,
+      platform: editPlatform,
+    });
+    if (result.ok) {
+      showSuccess("书籍已更新");
       setEditingBook(null);
       await refreshBooks();
-    } catch {
-      message.error("更新失败");
-    } finally {
-      setEditLoading(false);
+    } else {
+      showError(result.error || "更新失败");
     }
+    setEditLoading(false);
   };
 
   const handleDeleteBook = async (book: Book) => {
@@ -117,8 +117,7 @@ export default function HomePage({
     });
   };
 
-  const handleCreateBook = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleCreateBook = async () => {
     setCreateLoading(true);
 
     try {
@@ -316,106 +315,96 @@ export default function HomePage({
       </div>
 
       {/* 创建弹窗 */}
-      <Modal
+      <BaseModal
         title="创建新书"
         open={showCreateModal}
         onCancel={() => setShowCreateModal(false)}
-        footer={null}
+        onOk={handleCreateBook}
+        okText="确认创建"
+        confirmLoading={createLoading}
         width={600}
       >
-        <form onSubmit={handleCreateBook}>
-          <Form.Item label="书名" extra={'可以留空，保存时会自动生成"未命名"。'}>
-            <Input
-              value={createTitle}
-              onChange={(event) => setCreateTitle(event.target.value)}
-              maxLength={60}
-              placeholder="可留空"
-            />
-          </Form.Item>
-          <Form.Item label="题材" required>
-            <Select
-              value={createGenre || undefined}
-              onChange={(value) => setCreateGenre(value)}
-              placeholder="请选择题材"
-              options={options.genres.map((genre) => ({ label: genre, value: genre }))}
-            />
-          </Form.Item>
-          <Form.Item label="平台" required>
-            <Select
-              value={createPlatform || undefined}
-              onChange={(value) => setCreatePlatform(value)}
-              placeholder="请选择平台"
-              options={options.platforms.map((platform) => ({
-                label: platform,
-                value: platform
-              }))}
-            />
-          </Form.Item>
-          <Form.Item label="简介">
-            <Input.TextArea
-              value={createDescription}
-              onChange={(event) => setCreateDescription(event.target.value)}
-              maxLength={2000}
-              showCount
-              rows={4}
-            />
-          </Form.Item>
-          <div className={styles.modalFooter}>
-            <Button onClick={() => setShowCreateModal(false)}>取消</Button>
-            <Button type="primary" htmlType="submit" loading={createLoading}>
-              确认创建
-            </Button>
-          </div>
-        </form>
-      </Modal>
+        <Form.Item label="书名" extra={'可以留空，保存时会自动生成"未命名"。'}>
+          <Input
+            value={createTitle}
+            onChange={(event) => setCreateTitle(event.target.value)}
+            maxLength={60}
+            showCount
+            placeholder="可留空"
+          />
+        </Form.Item>
+        <Form.Item label="题材" required>
+          <Select
+            value={createGenre || undefined}
+            onChange={(value) => setCreateGenre(value)}
+            placeholder="请选择题材"
+            options={options.genres.map((genre) => ({ label: genre, value: genre }))}
+          />
+        </Form.Item>
+        <Form.Item label="平台" required>
+          <Select
+            value={createPlatform || undefined}
+            onChange={(value) => setCreatePlatform(value)}
+            placeholder="请选择平台"
+            options={options.platforms.map((platform) => ({
+              label: platform,
+              value: platform
+            }))}
+          />
+        </Form.Item>
+        <Form.Item label="简介">
+          <Input.TextArea
+            value={createDescription}
+            onChange={(event) => setCreateDescription(event.target.value)}
+            maxLength={300}
+            showCount
+            rows={4}
+          />
+        </Form.Item>
+      </BaseModal>
 
       {/* 编辑弹窗 */}
-      <Modal
+      <BaseModal
         title="编辑书籍"
         open={!!editingBook}
         onCancel={() => setEditingBook(null)}
-        footer={null}
+        onOk={handleEditBook}
+        okText="保存修改"
+        confirmLoading={editLoading}
         width={600}
       >
-        <form onSubmit={handleEditBook}>
-          <Form.Item label="书名">
-            <Input
-              value={editTitle}
-              onChange={(event) => setEditTitle(event.target.value)}
-              maxLength={60}
-            />
-          </Form.Item>
-          <Form.Item label="题材" required>
-            <Select
-              value={editGenre || undefined}
-              onChange={(value) => setEditGenre(value)}
-              options={options.genres.map((g) => ({ label: g, value: g }))}
-            />
-          </Form.Item>
-          <Form.Item label="平台" required>
-            <Select
-              value={editPlatform || undefined}
-              onChange={(value) => setEditPlatform(value)}
-              options={options.platforms.map((p) => ({ label: p, value: p }))}
-            />
-          </Form.Item>
-          <Form.Item label="简介">
-            <Input.TextArea
-              value={editDescription}
-              onChange={(event) => setEditDescription(event.target.value)}
-              maxLength={2000}
-              showCount
-              rows={4}
-            />
-          </Form.Item>
-          <div className={styles.modalFooter}>
-            <Button onClick={() => setEditingBook(null)}>取消</Button>
-            <Button type="primary" htmlType="submit" loading={editLoading}>
-              保存修改
-            </Button>
-          </div>
-        </form>
-      </Modal>
+        <Form.Item label="书名">
+          <Input
+            value={editTitle}
+            onChange={(event) => setEditTitle(event.target.value)}
+            maxLength={60}
+            showCount
+          />
+        </Form.Item>
+        <Form.Item label="题材" required>
+          <Select
+            value={editGenre || undefined}
+            onChange={(value) => setEditGenre(value)}
+            options={options.genres.map((g) => ({ label: g, value: g }))}
+          />
+        </Form.Item>
+        <Form.Item label="平台" required>
+          <Select
+            value={editPlatform || undefined}
+            onChange={(value) => setEditPlatform(value)}
+            options={options.platforms.map((p) => ({ label: p, value: p }))}
+          />
+        </Form.Item>
+        <Form.Item label="简介">
+          <Input.TextArea
+            value={editDescription}
+            onChange={(event) => setEditDescription(event.target.value)}
+            maxLength={300}
+            showCount
+            rows={4}
+          />
+        </Form.Item>
+      </BaseModal>
     </main>
   );
 }

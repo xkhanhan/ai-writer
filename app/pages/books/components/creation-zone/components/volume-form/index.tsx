@@ -10,9 +10,9 @@ const { TextArea } = Input;
 
 interface Props {
   volume?: VolumeOutline;
-  onSave: (data: { id?: string; title: string; coreConflict?: string; stages?: string[]; highlights?: string }) => Promise<VolumeOutline>;
+  onSave: (data: { id?: string; title: string; coreConflict?: string; stages?: string[]; highlights?: string }) => Promise<VolumeOutline | null>;
   onCancel: () => void;
-  onDelete?: (id: string) => Promise<void>;
+  onDelete?: (id: string) => Promise<boolean>;
 }
 
 export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {
@@ -65,7 +65,7 @@ export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {
 
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>卷标题</label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：第一卷 风起" maxLength={60} />
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：第一卷 风起" maxLength={60} showCount />
       </div>
 
       <div style={{ marginBottom: 16 }}>
@@ -77,7 +77,7 @@ export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {
         <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>阶段划分</label>
         {stages.map((stage, i) => (
           <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            <Input value={stage} placeholder={`阶段 ${i + 1}`} maxLength={200} onChange={(e) => {
+            <Input value={stage} placeholder={`阶段 ${i + 1}`} maxLength={200} showCount onChange={(e) => {
               const next = [...stages]; next[i] = e.target.value; setStages(next);
             }} />
             <Button icon={<MinusCircleOutlined />} onClick={() => setStages(stages.filter((_, idx) => idx !== i))} />
@@ -88,7 +88,7 @@ export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {
 
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>预计看点</label>
-        <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} placeholder="用逗号分隔多个看点" maxLength={200} />
+        <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} placeholder="用逗号分隔多个看点" maxLength={200} showCount />
       </div>
 
       <Button onClick={onCancel}>返回</Button>

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { handleApiError, showSuccess } from "@/app/utils/error-handler";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import type { Book, UpdateBookDTO } from "@/app/types";
 import { deleteBook, getBookById, updateBook } from "@/app/pages/books/api/books";
 
@@ -9,46 +9,49 @@ export function useBook(initialBook: Book) {
 
   const refreshBook = useCallback(async () => {
     setLoading(true);
-    try {
-      const nextBook = await getBookById(initialBook.id);
-      setBook(nextBook);
-    } catch (error) {
-      handleApiError(error, "获取书籍信息失败");
-    } finally {
-      setLoading(false);
+    const result = await getBookById(initialBook.id);
+    if (result.ok) {
+      setBook(result.data);
+    } else {
+      showError(result.error || "获取书籍信息失败");
     }
+    setLoading(false);
   }, [initialBook.id]);
 
   const update = useCallback(
     async (data: UpdateBookDTO) => {
       setLoading(true);
-      try {
-        await updateBook(initialBook.id, data);
-        const nextBook = await getBookById(initialBook.id);
-        setBook(nextBook);
-        showSuccess("保存成功");
-        return nextBook;
-      } catch (error) {
-        handleApiError(error, "保存失败");
-        throw error;
-      } finally {
+      const updateResult = await updateBook(initialBook.id, data);
+      if (!updateResult.ok) {
+        showError(updateResult.error || "保存失败");
         setLoading(false);
+        return null;
       }
+      const fetchResult = await getBookById(initialBook.id);
+      if (fetchResult.ok) {
+        setBook(fetchResult.data);
+        showSuccess("保存成功");
+        setLoading(false);
+        return fetchResult.data;
+      }
+      showError(fetchResult.error || "保存成功但获取最新数据失败");
+      setLoading(false);
+      return null;
     },
     [initialBook.id]
   );
 
   const remove = useCallback(async () => {
     setLoading(true);
-    try {
-      await deleteBook(initialBook.id);
+    const result = await deleteBook(initialBook.id);
+    if (result.ok) {
       showSuccess("删除成功");
-    } catch (error) {
-      handleApiError(error, "删除失败");
-      throw error;
-    } finally {
       setLoading(false);
+      return true;
     }
+    showError(result.error || "删除失败");
+    setLoading(false);
+    return false;
   }, [initialBook.id]);
 
   return {

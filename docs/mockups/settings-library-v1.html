@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设定库 — 视觉稿 v2</title>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@5/dist/index.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary:#2F5D50;--color-primary-hover:#1e4438;
+    --color-primary-bg:rgba(47,93,80,0.05);--color-primary-border:rgba(47,93,80,0.20);
+    --color-success:#2E8B57;--color-warning:#964400;--color-error:#ba1a1a;
+    --bg-page:#f0ece4;--bg-elevated:#faf8f4;--bg-muted:#f5f2ec;--bg-strong:#e8e4dc;
+    --text-primary:#1a1814;--text-secondary:#4a4640;--text-tertiary:#807b74;--text-light:#b5b0a8;
+    --border:#ddd8d0;--border-strong:#c0bbb3;--border-light:#ebe7e0;
+    --accent:var(--color-primary);--accent-soft:var(--color-primary-bg);
+    --panel:var(--bg-elevated);--panel-soft:var(--bg-muted);
+    --text:var(--text-primary);--muted:var(--text-secondary);--ink-tertiary:var(--text-tertiary);--line:var(--border);
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
+    --radius-sm:4px;--radius-md:6px;--radius-lg:8px;--radius-full:999px;
+    --font-display:'Noto Serif SC',serif;--font-body:'Noto Sans SC',-apple-system,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--font-body);background:var(--bg-page);color:var(--text);font-size:14px;}
+  .ant-btn-primary{background:var(--color-primary)!important;border-color:var(--color-primary)!important;}
+  .ant-btn-primary:hover{background:var(--color-primary-hover)!important;border-color:var(--color-primary-hover)!important;}
+  .ant-tag{font-family:var(--font-body);}
+  .ant-form-item-label>label{font-family:var(--font-body)!important;font-size:13px!important;}
+  .ant-modal-title{font-family:var(--font-body)!important;}
+
+  /* SplitPanel */
+  .splitPanel{display:flex;height:100%;gap:1px;background:var(--border-light);overflow:hidden;}
+  .leftPanel{width:280px;min-width:280px;display:flex;flex-direction:column;background:var(--panel);overflow:hidden;flex-shrink:0;}
+  .rightPanel{flex:1;min-width:0;background:var(--panel);display:flex;flex-direction:column;overflow:hidden;}
+  .emptyRight{flex:1;display:flex;align-items:center;justify-content:center;}
+  .emptyHint{font-size:13px;color:var(--ink-tertiary);}
+
+  /* Left list */
+  .listToolbar{display:flex;align-items:center;justify-content:space-between;padding:var(--space-3);flex-shrink:0;border-bottom:1px solid var(--border-light);}
+  .entityCount{font-weight:600;font-size:13px;color:var(--ink-tertiary);}
+  .entityList{flex:1;overflow-y:auto;padding:var(--space-2) var(--space-3) var(--space-3);}
+
+  /* Category groups */
+  .catGroup{margin-bottom:var(--space-1);}
+  .catHeader{display:flex;align-items:center;justify-content:space-between;padding:var(--space-2);border-radius:var(--radius-md);cursor:pointer;transition:background 0.15s;user-select:none;}
+  .catHeader:hover{background:var(--panel-soft);}
+  .catHeaderLeft{display:flex;align-items:center;gap:var(--space-2);flex:1;min-width:0;}
+  .catArrow{font-size:10px;color:var(--ink-tertiary);transition:transform 0.2s;flex-shrink:0;}
+  .catArrow.open{transform:rotate(90deg);}
+  .catName{font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--text);letter-spacing:0.03em;}
+  .catCount{font-size:11px;color:var(--ink-tertiary);font-family:var(--font-body);}
+  .catItems{padding:0 0 var(--space-1) var(--space-3);}
+
+  /* Entity list items */
+  .entityItem{padding:var(--space-2);border-radius:var(--radius-md);margin-bottom:2px;border-left:3px solid transparent;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);}
+  .entityItem:hover{background:var(--panel-soft);}
+  .entityItemActive{background:var(--accent-soft);border-left-color:var(--accent);}
+  .entityItemDeprecated{opacity:0.5;}
+  .entityItemBody{display:flex;align-items:center;gap:var(--space-2);flex:1;min-width:0;}
+  .entityName{font-size:13px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+
+  /* Right detail */
+  .detailPanel{display:flex;flex-direction:column;height:100%;overflow:hidden;}
+  .detailHeader{padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--line);flex-shrink:0;}
+  .detailTitleRow{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1);flex-wrap:wrap;}
+  .detailTitle{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .detailMeta{font-size:12px;color:var(--ink-tertiary);margin-bottom:var(--space-3);}
+  .detailActions{display:flex;gap:var(--space-2);}
+  .detailBody{flex:1;overflow-y:auto;padding:var(--space-5) var(--space-5);}
+
+  /* Info section cards */
+  .infoSection{margin-bottom:var(--space-4);background:var(--panel-soft);border:1px solid var(--border-light);border-radius:var(--radius-lg);overflow:hidden;}
+  .infoSectionHeader{display:flex;align-items:center;justify-content:space-between;padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border-light);background:rgba(0,0,0,0.02);}
+  .infoSectionTitle{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:var(--space-2);}
+  .infoSectionBody{padding:var(--space-4);}
+  .infoSectionBody.collapsed{display:none;}
+
+  /* Description */
+  .descText{font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;}
+  .descEmpty{font-size:13px;color:var(--ink-tertiary);font-style:italic;}
+
+  /* Tags display */
+  .tagList{display:flex;flex-wrap:wrap;gap:var(--space-2);}
+  .tagItem{display:inline-flex;align-items:center;padding:2px 10px;border:1px solid var(--border);border-radius:var(--radius-full);font-size:12px;color:var(--text-secondary);font-family:var(--font-body);}
+
+  /* Status fields */
+  .statusGrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3) var(--space-5);}
+  .statusField{display:flex;flex-direction:column;gap:2px;}
+  .statusLabel{font-size:11px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.05em;font-family:var(--font-body);}
+  .statusValue{font-size:14px;color:var(--text);font-family:var(--font-body);line-height:1.6;}
+  .statusEmpty{font-size:12px;color:var(--text-light);font-style:italic;}
+
+  /* Modal form */
+  .modalForm{padding-top:var(--space-3);}
+  .formSection{margin-bottom:var(--space-3);}
+  .formSectionTitle{font-size:13px;font-weight:600;color:var(--text);margin-bottom:var(--space-2);padding-bottom:var(--space-2);border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:var(--space-2);}
+  .formDivider{margin:var(--space-3) 0;border:none;border-top:1px solid var(--border-light);}
+
+  /* Modal scrollable body */
+  .settingsModal .ant-modal-content{display:flex;flex-direction:column;max-height:85vh;}
+  .settingsModal .ant-modal-body{flex:1;overflow-y:auto;min-height:0;padding:var(--space-5) var(--space-6) var(--space-4) var(--space-6);}
+  .settingsModal .ant-modal-footer{flex-shrink:0;padding:var(--space-4) var(--space-6);border-top:1px solid var(--border-light);}
+  .settingsModal .ant-form-item{margin-bottom:var(--space-3);}
+  .settingsModal .ant-form-item:last-child{margin-bottom:0;}
+
+  /* Field label with icon */
+  .fieldLabel{display:flex;align-items:center;gap:var(--space-1);margin-bottom:4px;font-size:12px;font-weight:500;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.04em;}
+  .fieldLabel .fieldIcon{font-size:11px;}
+
+  /* Collapse toggle */
+  .collapseToggle{font-size:11px;color:var(--ink-tertiary);cursor:pointer;border:none;background:none;font-family:var(--font-body);padding:2px 6px;border-radius:var(--radius-sm);transition:background 0.15s;}
+  .collapseToggle:hover{background:var(--panel-soft);}
+
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const{useState}=React;
+const{Button,Tag,Modal,Form,Input,Select,Tooltip}=antd;
+const{PlusOutlined,EditOutlined,DeleteOutlined,RightOutlined,TagOutlined,InfoCircleOutlined,UserOutlined,EnvironmentOutlined,BankOutlined,GiftOutlined,AppstoreOutlined,EyeOutlined,BulbOutlined,HistoryOutlined,ThunderboltOutlined,FallOutlined}=icons;
+
+const STATUS_TEMPLATES={
+  character:["性别","年龄","修炼境界","所属势力","当前状态"],
+  location:["地点类型","所属势力","当前状态"],
+  faction:["组织类型","势力规模","当前状态"],
+  item:["品阶","当前持有者","当前状态"],
+  other:[],
+};
+
+const CATEGORY_FIELDS={character:["性格"],location:[],faction:[],item:[],other:[]};
+
+const CAT_ICONS={character:UserOutlined,location:EnvironmentOutlined,faction:BankOutlined,item:GiftOutlined,other:AppstoreOutlined};
+const LEVEL_MAP={core:{label:'核心',color:'green'},important:{label:'重要',color:'orange'},general:{label:'一般',color:''}};
+
+const catCfg=[
+  {key:'character',label:'人物'},
+  {key:'location',label:'地点'},
+  {key:'faction',label:'势力'},
+  {key:'item',label:'物品'},
+  {key:'other',label:'其他'},
+];
+
+const initialEntities=[
+  {id:'se_1',bookId:'b_1',category:'character',name:'李凡',level:'core',description:'山村少年，天赋平平但毅力过人。偶得神秘玉佩，踏上修仙之路。性格坚韧内敛，不善言辞但重情重义。',appearance:'身材瘦削但结实，剑眉星目，肤色微黑。常穿一身洗得发白的青布衣裳，腰间别着一柄朴素长剑。',traits:'毅力过人，能忍受常人难以忍受的修炼之苦。直觉敏锐，常在危急时刻做出正确判断。重情重义，为朋友可以不顾一切。',background:'出生在青云山脉脚下的小山村，父母早亡，由村中老猎户抚养长大。十六岁时老猎户病逝，独自闯荡，后被青云宗外门执事看中资质收入宗门。',abilities:'修炼剑法天赋极高，尤其擅长快剑。偶得的玉佩能净化心魔，大幅提升神识强度。',weaknesses:'性格偏冲动，容易被激怒。修为尚浅，面对高阶修士毫无还手之力。',tagIds:['t_1','t_2'],categoryFields:{'性格':'坚韧内敛，不善言辞但重情重义'},statusFields:{"性别":"男","年龄":"17","修炼境界":"练气三层","所属势力":"青云宗","当前状态":"存活"},deprecated:false,createdAt:'2026-07-01T10:00:00Z',updatedAt:'2026-07-05T14:30:00Z'},
+  {id:'se_2',bookId:'b_1',category:'character',name:'苏瑶',level:'important',description:'青云宗内门弟子，天资聪颖，修炼速度极快。与李凡同期入门，表面冷淡实则心地善良。',appearance:'容貌清丽脱俗，一袭白衣如雪。长发以玉簪束起，眉宇间透着几分清冷之气。',traits:'天资聪颖，悟性极高。表面冷淡，内心善良。对修炼极为专注，不喜社交。',background:'出身修仙世家苏家，自幼被送入青云宗培养。苏家与青云宗有世代交好之谊。',abilities:'擅长冰系法术，修炼速度在同辈中名列前茅。剑术造诣也不俗。',weaknesses:'过于骄傲，不愿向他人求助。对人情世故不太擅长。',tagIds:['t_1','t_3'],categoryFields:{'性格':'表面冷淡，内心善良'},statusFields:{"性别":"女","年龄":"16","修炼境界":"筑基初期","所属势力":"青云宗","当前状态":"存活"},deprecated:false,createdAt:'2026-07-01T10:00:00Z',updatedAt:'2026-07-04T10:00:00Z'},
+  {id:'se_3',bookId:'b_1',category:'character',name:'老乞丐',level:'important',description:'神秘老者，表面是街头乞丐，实则是化神期散修。曾暗中指点李凡修炼，后消失无踪。',appearance:'蓬头垢面，衣衫褴褛，满头白发打结成团。但仔细看其双眼，偶尔会闪过一道精光。',traits:'深藏不露，嬉笑怒骂间暗含深意。行事古怪，不按常理出牌。对李凡有特殊的关注。',background:'真实身份不明，疑似数百年甚至千年前的上古修士。化名游历世间，以乞丐身份掩人耳目。',abilities:'化神期修为，精通多种上古功法。对修炼之道的理解远超常人。',weaknesses:'行踪不定，无人知其真实来历。似乎在躲避某些势力的追踪。',tagIds:['t_5'],categoryFields:{'性格':'嬉笑怒骂，深藏不露'},statusFields:{"性别":"男","年龄":"???","修炼境界":"化神期","所属势力":"散修","当前状态":"失踪"},deprecated:false,createdAt:'2026-07-03T10:00:00Z',updatedAt:'2026-07-05T10:00:00Z'},
+  {id:'se_5',bookId:'b_1',category:'location',name:'青云宗',level:'core',description:'坐落于青云山脉之巅的修仙宗门，以剑修闻名。宗门内分内门、外门、杂役三区，等级森严。',appearance:'巍峨群山之巅，云雾缭绕。数百座殿宇楼阁依山而建，飞檐翘角，气势恢宏。山门前矗立两座百丈石碑，上刻"青云"二字。',traits:'灵气浓郁，是方圆千里内最佳的修炼圣地。宗门大阵覆盖全山，攻防一体。',background:'三千年前由散修青云子创建，历经数十代宗主，发展为一品宗门。曾多次抵御魔道入侵。',abilities:'提供优良的修炼环境和丰富的修仙资源。宗门大阵可抵御元婴期修士的全力攻击。',weaknesses:'内部派系林立，内门外门矛盾日益加深。太上长老闭关多年，宗门缺乏顶尖战力威慑。',tagIds:['t_6','t_7'],categoryFields:{},statusFields:{"地点类型":"宗门","所属势力":"青云宗","当前状态":"安全"},deprecated:false,createdAt:'2026-07-01T10:00:00Z',updatedAt:'2026-07-02T10:00:00Z'},
+  {id:'se_6',bookId:'b_1',category:'location',name:'落星渊',level:'important',description:'青云山脉深处的一处远古秘境，传说有上古修士遗留的传承。入口被阵法封锁，百年开启一次。',appearance:'幽深峡谷，深不见底。谷中星光点点，如陨星坠落。入口处有一座古老石门，刻满神秘符文。',traits:'灵气浓度极高，是外界的数十倍。谷中暗藏上古禁制，进入者生死难料。',background:'据传是远古大能陨落后形成的秘境。数千年来只开启过三次，每次开启都引来各方势力争夺。',abilities:'谷中蕴含上古传承，有机缘者可获得强大功法和宝物。',weaknesses:'入口百年一开，且开启时间仅有七日。谷中禁制凶险，金丹期以下修士进入九死一生。',tagIds:['t_8'],categoryFields:{},statusFields:{"地点类型":"秘境","所属势力":"无","当前状态":"封印中"},deprecated:false,createdAt:'2026-07-02T10:00:00Z',updatedAt:'2026-07-03T10:00:00Z'},
+  {id:'se_7',bookId:'b_1',category:'faction',name:'青云宗',level:'core',description:'一品宗门，拥有元婴期太上长老坐镇。门下弟子数千人，分为剑修、丹修、阵修三大支脉。',appearance:'宗门大殿金碧辉煌，殿前广场可容纳万人。各支脉殿宇风格迥异，剑修殿锋锐、丹修殿古朴、阵修殿神秘。',traits:'以剑修闻名天下，门规森严。内部竞争激烈但整体团结。对散修态度友好。',background:'三千年前由散修青云子创立，以剑修立宗。历代宗主励精图治，终成一品宗门。',abilities:'掌控青云山脉方圆千里，资源丰富。拥有多个灵脉和灵矿。门下弟子战力不俗。',weaknesses:'太上长老闭关多年，宗门缺乏绝对威慑力。内部门派之争日趋激烈。',tagIds:['t_6'],categoryFields:{},statusFields:{"组织类型":"宗门","势力规模":"一品宗门","当前状态":"鼎盛"},deprecated:false,createdAt:'2026-07-01T10:00:00Z',updatedAt:'2026-07-02T10:00:00Z'},
+  {id:'se_8',bookId:'b_1',category:'faction',name:'天魔宗',level:'important',description:'魔道第一宗门，修炼吞噬功法，与正道势力长期对立。宗主修为深不可测，疑似化神期巅峰。',appearance:'总部位于天魔山脉深处，终年黑雾缭绕。宗门建筑以黑色为主调，风格诡异阴森。',traits:'以吞噬功法著称，实力增长极快但副作用大。内部弱肉强食，等级森严。',background:'千年前由一代魔修大能创建，以吞噬功法立宗。与正道势力多次交锋，互有胜负。',abilities:'弟子战力凶悍，单兵作战能力极强。宗主疑似化神期巅峰，是正道最大威胁。',weaknesses:'内部派系斗争激烈，弟子之间互相吞噬削弱。正道联盟对其形成包围之势。',tagIds:['t_9'],categoryFields:{},statusFields:{"组织类型":"宗门","势力规模":"一品宗门","当前状态":"蛰伏"},deprecated:false,createdAt:'2026-07-03T10:00:00Z',updatedAt:'2026-07-04T10:00:00Z'},
+  {id:'se_9',bookId:'b_1',category:'item',name:'破妄玉佩',level:'core',description:'李凡偶得的神秘玉佩，内含一缕上古大能的神识碎片。佩戴时可净化心魔，提升神识强度。',appearance:'拇指大小的玉佩，通体温润如脂，隐隐泛着淡青色光华。玉佩背面刻有古老的符文，正面是一轮弯月图案。',traits:'能自动感知佩戴者的心魔并加以净化。玉佩中蕴含的神识碎片偶尔会给出模糊的指引。',background:'传说是一位上古大能陨落前将毕生修为封印于此。具体来历不可考，至少有数千年历史。',abilities:'净化心魔，大幅提升神识强度。佩戴者修炼时不易走火入魔。蕴含的神识碎片可提供修炼指引。',weaknesses:'需要灵力激活，练气期修士只能发挥其十分之一的功效。无法主动使用，只能被动触发。',tagIds:['t_10'],categoryFields:{},statusFields:{"品阶":"仙器","当前持有者":"李凡","当前状态":"完整"},deprecated:false,createdAt:'2026-07-01T10:00:00Z',updatedAt:'2026-07-05T10:00:00Z'},
+  {id:'se_10',bookId:'b_1',category:'item',name:'青霜剑',level:'general',description:'青云宗制式灵器长剑，锋利异常，剑身隐隐泛着寒霜之气。',appearance:'三尺长剑，剑身呈淡青色，剑刃处泛着隐隐寒光。剑柄缠绕银丝，剑格处刻有青云宗标志。',traits:'挥动时可带起阵阵寒霜，对火属性法术有天然克制。与青云宗弟子有灵力共鸣。',background:'青云宗剑修支脉的标准配剑，由宗门炼器师批量炼制。品质上乘但并非独一无二。',abilities:'锋利无比，可轻松斩断普通法器。附带寒霜属性攻击，可减缓敌人行动。',weaknesses:'仅对灵力亲和度高的修士有增幅效果。面对高品阶法器时处于劣势。',tagIds:[],categoryFields:{},statusFields:{"品阶":"灵器","当前持有者":"李凡","当前状态":"完整"},deprecated:false,createdAt:'2026-07-02T10:00:00Z',updatedAt:'2026-07-03T10:00:00Z'},
+  {id:'se_11',bookId:'b_1',category:'item',name:'碎星锤',level:'general',description:'赵天行的成名武器，锤身刻有星辰纹路，重达三百斤。',appearance:'通体乌黑的巨锤，锤面刻有星辰纹路，挥动时隐隐有星光闪烁。锤柄以寒铁打造，握感沉重。',traits:'重量惊人，普通修士难以举起。锤面的星辰纹路可在击中时释放震荡波。',background:'赵家祖传法器，据传是赵家先祖在一处远古遗迹中发现。',abilities:'威力巨大，一锤之下可碎裂山石。星辰纹路可释放震荡波，对防御型法术有破防效果。',weaknesses:'重量过大，灵活度极差。使用者必须有足够的力量和灵力支撑。',tagIds:[],categoryFields:{},statusFields:{"品阶":"灵器","当前持有者":"赵天行","当前状态":"完整"},deprecated:true,createdAt:'2026-07-03T10:00:00Z',updatedAt:'2026-07-04T10:00:00Z'},
+];
+
+const tagPathMap={'t_1':'种族/人族','t_2':'种族/人族/修仙者','t_3':'种族/人族/修仙者','t_4':'势力/青云宗/外门','t_5':'身份/散修','t_6':'势力/宗门/一品宗门','t_7':'地点/宗门/正道','t_8':'地点/秘境/远古','t_9':'势力/宗门/魔道','t_10':'物品/法宝/传承之物'};
+
+// Field definitions with icons and labels
+const INFO_FIELDS=[
+  {key:'description',label:'描述',icon:BulbOutlined},
+  {key:'appearance',label:'外观',icon:EyeOutlined},
+  {key:'traits',label:'特点',icon:InfoCircleOutlined},
+  {key:'background',label:'背景',icon:HistoryOutlined},
+  {key:'abilities',label:'能力',icon:ThunderboltOutlined},
+  {key:'weaknesses',label:'弱点',icon:FallOutlined},
+];
+
+function App(){
+  const[entities,setEntities]=useState(initialEntities);
+  const[activeId,setActiveId]=useState('se_1');
+  const[openGroups,setOpenGroups]=useState({character:true,location:true,faction:true,item:true,other:true});
+  const[modalOpen,setModalOpen]=useState(false);
+  const[modalCat,setModalCat]=useState('character');
+  const[editing,setEditing]=useState(null);
+  const[form]=Form.useForm();
+  const activeEntity=entities.find(e=>e.id===activeId);
+  const[expandedFields,setExpandedFields]=useState({description:true,appearance:true,traits:true,background:true,abilities:true,weaknesses:true});
+
+  const toggle=cat=>setOpenGroups(p=>({...p,[cat]:!p[cat]}));
+
+  const openCreate=cat=>{
+    setEditing(null);setModalCat(cat);
+    const defaults={name:'',level:'general',description:'',appearance:'',traits:'',background:'',abilities:'',weaknesses:'',...Object.fromEntries((STATUS_TEMPLATES[cat]||[]).map(f=>[f,'']))};
+    if(cat==='character')defaults['性格']='';
+    form.resetFields();form.setFieldsValue(defaults);setModalOpen(true);
+  };
+  const openEdit=entity=>{
+    setEditing(entity);setModalCat(entity.category);
+    form.setFieldsValue({name:entity.name,level:entity.level,description:entity.description||'',appearance:entity.appearance||'',traits:entity.traits||'',background:entity.background||'',abilities:entity.abilities||'',weaknesses:entity.weaknesses||'',...entity.categoryFields,...entity.statusFields});
+    setModalOpen(true);
+  };
+  const handleSave=()=>{
+    form.validateFields().then(v=>{
+      const{level,description,appearance,traits,background,abilities,weaknesses,...rest}=v;
+      const catFields={};(CATEGORY_FIELDS[modalCat]||[]).forEach(f=>{if(rest[f]!==undefined)catFields[f]=rest[f];});
+      const statusFields={};(STATUS_TEMPLATES[modalCat]||[]).forEach(f=>{if(rest[f]!==undefined)statusFields[f]=rest[f];});
+      const now=new Date().toISOString();
+      if(editing){
+        setEntities(p=>p.map(e=>e.id===editing.id?{...e,name:v.name,level,description,appearance,traits,background,abilities,weaknesses,categoryFields:catFields,statusFields,updatedAt:now}:e));
+      }else{
+        const ne={id:`se_${Date.now()}`,bookId:'b_1',category:modalCat,name:v.name,level,description,appearance,traits,background,abilities,weaknesses,tagIds:[],categoryFields:catFields,statusFields,deprecated:false,createdAt:now,updatedAt:now};
+        setEntities(p=>[...p,ne]);setActiveId(ne.id);setOpenGroups(p=>({...p,[modalCat]:true}));
+      }
+      setModalOpen(false);
+    });
+  };
+  const handleDelete=entity=>{
+    Modal.confirm({title:'确认删除',content:`确定删除设定「${entity.name}」吗？此操作不可撤销。`,okText:'删除',okType:'danger',cancelText:'取消',
+      onOk:()=>{setEntities(p=>p.filter(e=>e.id!==entity.id));if(activeId===entity.id)setActiveId(null);},
+      closable:false,maskClosable:false});
+  };
+  const handleToggleDeprecated=entity=>{
+    setEntities(p=>p.map(e=>e.id===entity.id?{...e,deprecated:!e.deprecated,updatedAt:new Date().toISOString()}:e));
+  };
+
+  const toggleField=key=>setExpandedFields(p=>({...p,[key]:!p[key]}));
+
+  // Left panel
+  const leftPanel=React.createElement(React.Fragment,null,
+    React.createElement('div',{className:'listToolbar'},
+      React.createElement('span',{className:'entityCount'},`${entities.length} 条设定`),
+    ),
+    React.createElement('div',{className:'entityList'},
+      catCfg.map(({key,label})=>{
+        const items=entities.filter(e=>e.category===key);
+        const isOpen=openGroups[key];
+        const Icon=CAT_ICONS[key];
+        return React.createElement('div',{key,className:'catGroup'},
+          React.createElement('div',{className:'catHeader',onClick:()=>toggle(key)},
+            React.createElement('div',{className:'catHeaderLeft'},
+              React.createElement('span',{className:`catArrow ${isOpen?'open':''}`},React.createElement(RightOutlined,{style:{fontSize:10}})),
+              React.createElement(Icon,{style:{fontSize:13,color:'var(--ink-tertiary)'}}),
+              React.createElement('span',{className:'catName'},label),
+              React.createElement('span',{className:'catCount'},items.length),
+            ),
+            React.createElement(Tooltip,{title:`新建${label}`},
+              React.createElement(Button,{type:'text',size:'small',icon:React.createElement(PlusOutlined),onClick:e=>{e.stopPropagation();openCreate(key);}})
+            ),
+          ),
+          isOpen&&React.createElement('div',{className:'catItems'},
+            items.length===0?React.createElement('div',{style:{padding:'6px 0',fontSize:11,color:'var(--ink-tertiary)',fontStyle:'italic'}},`暂无${label}`):
+            items.map(entity=>React.createElement('div',{key:entity.id,className:`entityItem ${activeId===entity.id?'entityItemActive':''} ${entity.deprecated?'entityItemDeprecated':''}`,onClick:()=>setActiveId(entity.id)},
+              React.createElement('div',{className:'entityItemBody'},
+                React.createElement('span',{className:'entityName'},entity.name),
+                React.createElement(Tag,{color:LEVEL_MAP[entity.level]?.color||'',style:{margin:0,fontSize:11}},LEVEL_MAP[entity.level]?.label||'一般'),
+              ),
+            ))
+          ),
+        );
+      }),
+    ),
+  );
+
+  // Right panel
+  const rightPanel=activeEntity?React.createElement('div',{className:'detailPanel'},
+    React.createElement('div',{className:'detailHeader'},
+      React.createElement('div',{className:'detailTitleRow'},
+        React.createElement('h3',{className:'detailTitle'},activeEntity.name),
+        React.createElement(Tag,{color:LEVEL_MAP[activeEntity.level]?.color},LEVEL_MAP[activeEntity.level]?.label),
+        React.createElement(Tag,{},catCfg.find(c=>c.key===activeEntity.category)?.label),
+        activeEntity.deprecated&&React.createElement(Tag,{color:'error'},'已废弃'),
+      ),
+      React.createElement('div',{className:'detailMeta'},`创建于 ${new Date(activeEntity.createdAt).toLocaleString('zh-CN')} · 更新于 ${new Date(activeEntity.updatedAt).toLocaleString('zh-CN')}`),
+      React.createElement('div',{className:'detailActions'},
+        React.createElement(Button,{size:'small',icon:React.createElement(EditOutlined),onClick:()=>openEdit(activeEntity)},'编辑'),
+        React.createElement(Button,{size:'small',danger:true,icon:React.createElement(DeleteOutlined),onClick:()=>handleDelete(activeEntity)},'删除'),
+        React.createElement(Button,{size:'small',onClick:()=>handleToggleDeprecated(activeEntity)},activeEntity.deprecated?'取消废弃':'废弃'),
+      ),
+    ),
+    React.createElement('div',{className:'detailBody'},
+      // 6 个通用信息字段卡片
+      INFO_FIELDS.map(f=>{
+        const val=activeEntity[f.key];
+        const isExpanded=expandedFields[f.key];
+        const Icon=f.icon;
+        return React.createElement('div',{key:f.key,className:'infoSection'},
+          React.createElement('div',{className:'infoSectionHeader'},
+            React.createElement('span',{className:'infoSectionTitle'},
+              React.createElement(Icon,{style:{fontSize:13,color:'var(--ink-tertiary)'}}),f.label
+            ),
+            React.createElement('button',{className:'collapseToggle',onClick:()=>toggleField(f.key)},isExpanded?'收起':'展开'),
+          ),
+          isExpanded&&React.createElement('div',{className:'infoSectionBody'},
+            val?React.createElement('div',{className:'descText'},val):React.createElement('div',{className:'descEmpty'},'暂无内容'),
+          ),
+        );
+      }),
+      // 标签区
+      activeEntity.tagIds&&activeEntity.tagIds.length>0&&React.createElement('div',{className:'infoSection'},
+        React.createElement('div',{className:'infoSectionHeader'},
+          React.createElement('span',{className:'infoSectionTitle'},React.createElement(TagOutlined,{style:{fontSize:13,color:'var(--ink-tertiary)'}}),'标签'),
+          React.createElement(Tag,{style:{margin:0}},`${activeEntity.tagIds.length} 个`),
+        ),
+        React.createElement('div',{className:'infoSectionBody'},
+          React.createElement('div',{className:'tagList'},
+            activeEntity.tagIds.map(tid=>React.createElement('span',{key:tid,className:'tagItem'},tagPathMap[tid]||tid))
+          ),
+        ),
+      ),
+      // 分类专属字段
+      (CATEGORY_FIELDS[activeEntity.category]||[]).length>0&&React.createElement('div',{className:'infoSection'},
+        React.createElement('div',{className:'infoSectionHeader'},
+          React.createElement('span',{className:'infoSectionTitle'},React.createElement(InfoCircleOutlined,{style:{fontSize:13,color:'var(--ink-tertiary)'}}),'分类专属'),
+        ),
+        React.createElement('div',{className:'infoSectionBody'},
+          (CATEGORY_FIELDS[activeEntity.category]||[]).map(f=>React.createElement('div',{key:f,className:'statusField',style:{marginBottom:8}},
+            React.createElement('span',{className:'statusLabel'},f),
+            React.createElement('span',{className:'statusValue'},activeEntity.categoryFields?.[f]||'—'),
+          )),
+        ),
+      ),
+      // 状态信息区
+      React.createElement('div',{className:'infoSection'},
+        React.createElement('div',{className:'infoSectionHeader'},
+          React.createElement('span',{className:'infoSectionTitle'},React.createElement(InfoCircleOutlined,{style:{fontSize:13,color:'var(--ink-tertiary)'}}),'状态信息'),
+          React.createElement(Tooltip,{title:'状态信息随正文变化，仅记录当前快照'},React.createElement(InfoCircleOutlined,{style:{fontSize:14,color:'var(--ink-tertiary)',cursor:'help'}})),
+        ),
+        React.createElement('div',{className:'infoSectionBody'},
+          Object.keys(activeEntity.statusFields||{}).length>0?React.createElement('div',{className:'statusGrid'},
+            Object.entries(activeEntity.statusFields).map(([k,v])=>React.createElement('div',{key:k,className:'statusField'},
+              React.createElement('span',{className:'statusLabel'},k),
+              React.createElement('span',{className:'statusValue'},v||'—'),
+            ))
+          ):React.createElement('div',{className:'statusEmpty'},'暂无状态信息'),
+        ),
+      ),
+    ),
+  ):React.createElement('div',{className:'emptyRight'},React.createElement('span',{className:'emptyHint'},'选择一项设定查看详情'));
+
+  // Modal
+  const catLabel=catCfg.find(c=>c.key===modalCat)?.label||'设定';
+  const modalTitle=`${editing?'编辑':'新建'}${catLabel}`;
+  const statusFieldsList=STATUS_TEMPLATES[modalCat]||[];
+  const catFieldsList=CATEGORY_FIELDS[modalCat]||[];
+
+  const formContent=React.createElement(Form,{form,layout:'vertical',style:{marginTop:12},initialValues:{level:'general'}},
+    // ── 基础信息 ──
+    React.createElement('div',{className:'formSection'},
+      React.createElement('div',{className:'formSectionTitle'},React.createElement(InfoCircleOutlined,{style:{fontSize:13,color:'var(--ink-tertiary)'}}),'基础信息'),
+      React.createElement(Form.Item,{name:'name',label:'名称',rules:[{required:true,message:'请输入名称'}]},
+        React.createElement(Input,{placeholder:'输入设定实体名称',maxLength:60,showCount:true})
+      ),
+      React.createElement(Form.Item,{name:'level',label:'级别'},
+        React.createElement(Select,{placeholder:'选择级别',allowClear:false,options:[
+          {value:'core',label:React.createElement('span',null,React.createElement('span',{style:{display:'inline-block',width:7,height:7,borderRadius:'50%',background:'#2E8B57',marginRight:6,verticalAlign:'middle'}}),'核心')},
+          {value:'important',label:React.createElement('span',null,React.createElement('span',{style:{display:'inline-block',width:7,height:7,borderRadius:'50%',background:'#d48806',marginRight:6,verticalAlign:'middle'}}),'重要')},
+          {value:'general',label:React.createElement('span',null,React.createElement('span',{style:{display:'inline-block',width:7,height:7,borderRadius:'50%',background:'#b5b0a8',marginRight:6,verticalAlign:'middle'}}),'一般')},
+        ]})
+      ),
+    ),
+    React.createElement('div',{className:'formDivider'}),
+    // ── 通用信息（9字段中的6个文本字段）──
+    React.createElement('div',{className:'formSection'},
+      React.createElement('div',{className:'formSectionTitle'},React.createElement(BulbOutlined,{style:{fontSize:13,color:'var(--ink-tertiary)'}}),'设定信息'),
+      INFO_FIELDS.map(f=>React.createElement(Form.Item,{key:f.key,name:f.key,label:f.label},
+        React.createElement(Input.TextArea,{rows:2,placeholder:`填写${f.label}...`,maxLength:f.key==='description'?2000:1000,showCount:true})
+      )),
+    ),
+    // ── 分类专属 ──
+    catFieldsList.length>0&&React.createElement(React.Fragment,null,
+      React.createElement('div',{className:'formDivider'}),
+      React.createElement('div',{className:'formSection'},
+        React.createElement('div',{className:'formSectionTitle'},React.createElement(InfoCircleOutlined,{style:{fontSize:13,color:'var(--ink-tertiary)'}}),`${catLabel}专属`),
+        catFieldsList.map(f=>React.createElement(Form.Item,{key:f,name:f,label:f},
+          React.createElement(Input.TextArea,{rows:2,placeholder:`填写${f}...`,maxLength:500,showCount:true})
+        )),
+      ),
+    ),
+    // ── 初始状态 ──
+    statusFieldsList.length>0&&React.createElement(React.Fragment,null,
+      React.createElement('div',{className:'formDivider'}),
+      React.createElement('div',{className:'formSection'},
+        React.createElement('div',{className:'formSectionTitle'},React.createElement(InfoCircleOutlined,{style:{fontSize:13,color:'var(--ink-tertiary)'}}),'初始状态',React.createElement('span',{style:{fontWeight:400,color:'var(--ink-tertiary)',fontSize:12}},'（可留空，后续系统自动更新）')),
+        statusFieldsList.map(f=>React.createElement(Form.Item,{key:f,name:f,label:f},
+          React.createElement(Input,{placeholder:`填写${f}（可留空）`,maxLength:200})
+        )),
+      ),
+    ),
+  );
+
+  return React.createElement(React.Fragment,null,
+    React.createElement('div',{className:'splitPanel',style:{height:'100vh'}},
+      React.createElement('div',{className:'leftPanel'},leftPanel),
+      React.createElement('div',{className:'rightPanel'},rightPanel),
+    ),
+    React.createElement(Modal,{
+      className:'settingsModal',title:modalTitle,open:modalOpen,onCancel:()=>setModalOpen(false),onOk:handleSave,
+      okText:'保存',cancelText:'取消',width:600,destroyOnClose:true,
+      closable:false,maskClosable:false,keyboard:false,
+    },formContent),
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>

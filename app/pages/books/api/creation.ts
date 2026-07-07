@@ -1,4 +1,5 @@
 import { client } from "@/app/api-client";
+import type { Result } from "@/app/api-client";
 import type {
   BookOutline,
   VolumeOutline,
@@ -9,140 +10,170 @@ import type {
 
 // ============ 总纲 ============
 
-export async function fetchOutline(bookId: string): Promise<BookOutline | null> {
+export async function fetchOutline(bookId: string): Promise<Result<BookOutline | null>> {
   const res = await client.get<{ outline: BookOutline | null }>("/api/outline", { bookId });
-  return res.outline ?? null;
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.outline ?? null };
+}
+
+export async function saveOutline(
+  bookId: string,
+  data: Partial<BookOutline>
+): Promise<Result<BookOutline>> {
+  const res = await client.post<{ outline: BookOutline }>("/api/outline", {
+    bookId,
+    ...data,
+  });
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.outline };
 }
 
 export async function updateOutline(
   bookId: string,
-  data: { direction: string; stages: string; sellingPoints: string }
-): Promise<BookOutline> {
-  const res = await client.put<{ outline: BookOutline }>("/api/outline", { bookId, ...data });
-  return res.outline;
+  data: Partial<BookOutline>
+): Promise<Result<BookOutline>> {
+  const res = await client.put<{ outline: BookOutline }, Partial<BookOutline>>("/api/outline", {
+    bookId,
+    ...data,
+  });
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.outline };
 }
 
 // ============ 卷纲 ============
 
-export async function fetchVolumes(bookId: string): Promise<VolumeOutline[]> {
+export async function fetchVolumes(bookId: string): Promise<Result<VolumeOutline[]>> {
   const res = await client.get<{ volumes: VolumeOutline[] }>("/api/volumes", { bookId });
-  return res.volumes ?? [];
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.volumes ?? [] };
 }
 
 export async function createVolume(
   bookId: string,
-  data: {
-    title: string;
-    coreConflict?: string;
-    stages?: string[];
-    developmentArc?: string;
-    keyPoints?: KeyPoint[];
-    highlights?: string;
-  }
-): Promise<VolumeOutline> {
-  const res = await client.post<{ volume: VolumeOutline }>("/api/volumes", { bookId, ...data });
-  return res.volume;
+  data: Record<string, unknown>
+): Promise<Result<VolumeOutline>> {
+  const res = await client.post<{ volume: VolumeOutline }>("/api/volumes", {
+    bookId,
+    ...data,
+  });
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.volume };
 }
 
 export async function updateVolume(
   id: string,
-  data: Partial<{
-    title: string;
-    coreConflict: string;
-    stages: string[];
-    developmentArc: string;
-    keyPoints: KeyPoint[];
-    highlights: string;
-  }>
-): Promise<VolumeOutline> {
-  const res = await client.put<{ volume: VolumeOutline }, typeof data>(`/api/volumes/${id}`, data);
-  return res.volume;
+  data: Record<string, unknown>
+): Promise<Result<VolumeOutline>> {
+  const res = await client.put<{ volume: VolumeOutline }, Record<string, unknown>>(
+    `/api/volumes/${id}`,
+    data
+  );
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.volume };
 }
 
-export async function deleteVolume(id: string): Promise<void> {
-  await client.delete(`/api/volumes/${id}`);
+export async function deleteVolume(id: string): Promise<Result<void>> {
+  return client.delete(`/api/volumes/${id}`);
 }
 
 // ============ 章纲 ============
 
-export async function fetchChapters(volumeId: string): Promise<ChapterOutline[]> {
+export async function fetchChapters(volumeId: string): Promise<Result<ChapterOutline[]>> {
   const res = await client.get<{ chapters: ChapterOutline[] }>("/api/chapters", { volumeId });
-  return res.chapters ?? [];
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.chapters ?? [] };
 }
 
 export async function createChapter(
   volumeId: string,
-  data: {
-    title: string;
-    summary?: string;
-    prevChapterLink?: string;
-    nextChapterSuspense?: string;
-    scenes?: string[];
-    time?: string;
-    moodTone?: string;
-    characters?: string[];
-    keyEvents?: string[];
-    foreshadowings?: string[];
-    highlights?: string;
-    expectedWords?: number;
-    note?: string;
-  }
-): Promise<ChapterOutline> {
-  const res = await client.post<{ chapter: ChapterOutline }>("/api/chapters", { volumeId, ...data });
-  return res.chapter;
+  data: Record<string, unknown>
+): Promise<Result<ChapterOutline>> {
+  const res = await client.post<{ chapter: ChapterOutline }>("/api/chapters", {
+    volumeId,
+    ...data,
+  });
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.chapter };
 }
 
 export async function updateChapter(
   id: string,
-  data: Partial<{
-    title: string;
-    summary: string;
-    prevChapterLink: string;
-    nextChapterSuspense: string;
-    scenes: string[];
-    time: string;
-    moodTone: string;
-    characters: string[];
-    keyEvents: string[];
-    foreshadowings: string[];
-    highlights: string;
-    expectedWords: number;
-    note: string;
-    content: string;
-    status: string;
-  }>
-): Promise<ChapterOutline> {
-  const res = await client.put<{ chapter: ChapterOutline }, typeof data>(`/api/chapters/${id}`, data);
-  return res.chapter;
+  data: Record<string, unknown>
+): Promise<Result<ChapterOutline>> {
+  const res = await client.put<{ chapter: ChapterOutline }, Record<string, unknown>>(
+    `/api/chapters/${id}`,
+    data
+  );
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.chapter };
 }
 
-export async function deleteChapter(id: string): Promise<void> {
-  await client.delete(`/api/chapters/${id}`);
+export async function deleteChapter(id: string): Promise<Result<void>> {
+  return client.delete(`/api/chapters/${id}`);
 }
 
 // ============ 正文库 ============
 
-export async function fetchArchives(bookId: string): Promise<ArchivedChapter[]> {
+export async function fetchArchives(bookId: string): Promise<Result<ArchivedChapter[]>> {
   const res = await client.get<{ archives: ArchivedChapter[] }>("/api/archive", { bookId });
-  return res.archives ?? [];
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.archives ?? [] };
 }
 
-export async function getArchive(id: string): Promise<ArchivedChapter | null> {
+export async function getArchive(id: string): Promise<Result<ArchivedChapter | null>> {
   const res = await client.get<{ archive: ArchivedChapter | null }>(`/api/archive/${id}`);
-  return res.archive ?? null;
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.archive ?? null };
 }
 
 export async function saveArchive(
   bookId: string,
   data: { chapterId: string; sortOrder: number; title: string; content: string }
-): Promise<ArchivedChapter> {
+): Promise<Result<ArchivedChapter>> {
   const res = await client.post<{ archive: ArchivedChapter }>("/api/archive/save", {
     bookId,
     ...data
   });
-  return res.archive;
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.archive };
 }
 
-export async function deleteArchive(id: string): Promise<void> {
-  await client.delete(`/api/archive/${id}`);
+export async function deleteArchive(id: string): Promise<Result<void>> {
+  return client.delete(`/api/archive/${id}`);
+}
+
+// ============ 关键节点 ============
+
+export async function fetchKeyPoints(bookId: string): Promise<Result<KeyPoint[]>> {
+  const res = await client.get<{ keyPoints: KeyPoint[] }>("/api/key-points", { bookId });
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.keyPoints ?? [] };
+}
+
+export async function createKeyPoint(
+  bookId: string,
+  data: { title: string; chapterNumber?: number; description?: string }
+): Promise<Result<KeyPoint>> {
+  const res = await client.post<{ keyPoint: KeyPoint }>("/api/key-points", {
+    bookId,
+    ...data,
+  });
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.keyPoint };
+}
+
+export async function updateKeyPoint(
+  id: string,
+  data: { title?: string; chapterNumber?: number; description?: string; resolved?: boolean }
+): Promise<Result<KeyPoint>> {
+  const res = await client.put<{ keyPoint: KeyPoint }, typeof data>(
+    `/api/key-points/${id}`,
+    data
+  );
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.keyPoint };
+}
+
+export async function deleteKeyPoint(id: string): Promise<Result<void>> {
+  return client.delete(`/api/key-points/${id}`);
 }

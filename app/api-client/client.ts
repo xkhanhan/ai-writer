@@ -1,18 +1,12 @@
+export type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string };
+
 export interface RequestConfig<TBody = unknown> {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: Record<string, string>;
   body?: TBody;
   params?: Record<string, string>;
-}
-
-export class ApiError extends Error {
-  constructor(
-    public code: string,
-    message: string,
-    public status: number = 400
-  ) {
-    super(message);
-  }
 }
 
 type ErrorPayload = {
@@ -31,7 +25,7 @@ class ApiClient {
   async request<TResponse, TBody = unknown>(
     url: string,
     config: RequestConfig<TBody> = {}
-  ): Promise<TResponse> {
+  ): Promise<Result<TResponse>> {
     const { method = "GET", headers = {}, body, params } = config;
 
     let fullUrl = `${this.baseUrl}${url}`;
@@ -54,24 +48,18 @@ class ApiClient {
         const errorData = (await response
           .json()
           .catch(() => ({}))) as ErrorPayload;
-        throw new ApiError(
-          errorData.error || "REQUEST_FAILED",
-          errorData.message || `请求失败: ${response.status}`,
-          response.status
-        );
+        return {
+          ok: false,
+          error: errorData.message || `请求失败: ${response.status}`
+        };
       }
 
-      return (await response.json()) as TResponse;
+      return { ok: true, data: (await response.json()) as TResponse };
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
-      }
-
-      throw new ApiError(
-        "NETWORK_ERROR",
-        error instanceof Error ? error.message : "网络请求失败",
-        0
-      );
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "网络请求失败"
+      };
     }
   }
 

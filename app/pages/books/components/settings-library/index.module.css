@@ -1,127 +1,135 @@
-/* ===== 左侧列表 ===== */
-.leftEmpty {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.entityList {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-}
-
-.listToolbar {
+.leftToolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 10px;
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .entityCount {
   font-weight: 600;
   font-size: 13px;
-  color: var(--ink-tertiary);
-  font-family: var(--font-body);
+  color: var(--text-secondary);
 }
 
-/* ===== 分类分组 ===== */
-.categoryGroup {
+.entityList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px 12px;
+}
+
+/* Category groups */
+.catGroup {
   margin-bottom: 4px;
 }
 
-.categoryHeader {
+.catHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s;
   user-select: none;
+  position: relative;
 }
 
-.categoryHeader:hover {
-  background: var(--panel-soft);
+.catHeader:hover {
+  background: var(--bg-muted);
 }
 
-.categoryHeaderActive {
-  background: var(--accent-soft);
+.addBtn {
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
-.categoryName {
-  font-family: var(--font-display);
+.catHeader:hover .addBtn {
+  opacity: 1;
+}
+
+.catHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.catArrow {
+  font-size: 10px;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.catArrowClosed {
+  transform: rotate(-90deg);
+}
+
+.catName {
   font-weight: 600;
   font-size: 13px;
-  color: var(--text);
-  letter-spacing: 0.03em;
+  color: var(--text-primary);
 }
 
-.categoryCount {
+.catCount {
   font-size: 11px;
-  color: var(--ink-tertiary);
-  font-family: var(--font-body);
+  color: var(--text-secondary);
 }
 
-/* ===== 分类子列表 ===== */
-.categoryItems {
-  padding: 2px 0 6px 12px;
+.catItems {
+  padding-left: 12px;
 }
 
-.categoryEmpty {
-  padding: 10px;
-  text-align: center;
-  font-size: 11px;
-  color: var(--ink-tertiary);
-  font-family: var(--font-body);
-}
-
-/* ===== 实体列表项 ===== */
+/* Entity list items */
 .entityItem {
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-radius: var(--radius-md);
   margin-bottom: 2px;
   border-left: 3px solid transparent;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
 }
 
 .entityItem:hover {
-  background: var(--panel-soft);
+  background: var(--bg-muted);
 }
 
 .entityItemActive {
-  background: var(--accent-soft);
-  border-left-color: var(--accent);
+  background: var(--color-primary-bg);
+  border-left-color: var(--color-primary);
 }
 
 .entityItemDeprecated {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .entityItemBody {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .entityName {
-  flex: 1;
-  min-width: 0;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
-  font-family: var(--font-body);
-  color: var(--text);
-  font-weight: 500;
+  flex: 1;
+  min-width: 0;
 }
 
-/* ===== 右侧详情面板 ===== */
+/* Right detail */
 .detailPanel {
   display: flex;
   flex-direction: column;
@@ -130,98 +138,105 @@
 }
 
 .detailHeader {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--line);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .detailTitleRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 4px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
 }
 
 .detailTitle {
-  font-family: var(--font-display);
   font-size: 18px;
   font-weight: 600;
-  color: var(--text);
-  margin: 0;
+  color: var(--text-primary);
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin: 0;
 }
 
-.detailTime {
-  font-size: 11px;
-  color: var(--ink-tertiary);
-  font-family: var(--font-body);
-  margin-bottom: 10px;
+.detailMeta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
 }
 
 .detailActions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
 }
 
-.detailContent {
+.detailBody {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px;
+  padding: 16px;
 }
 
-.detailText {
+/* Info section cards */
+.infoSection {
+  margin-bottom: 12px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.infoSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.infoSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.infoSectionBody {
+  padding: 12px;
+}
+
+.infoSectionBodyCollapsed {
+  display: none;
+}
+
+.descText {
   font-size: 13px;
   line-height: 1.8;
-  color: var(--text);
-  font-family: var(--font-body);
-  margin: 0;
+  color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.detailEmpty {
+.descEmpty {
   font-size: 13px;
-  color: var(--ink-tertiary);
-  font-family: var(--font-body);
-  margin: 0;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
-/* ===== 详情字段 ===== */
-.viewField {
-  margin-bottom: 14px;
-}
-
-.viewFieldLabel {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink-tertiary);
-  margin-bottom: 4px;
-  font-family: var(--font-body);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.viewFieldValue {
-  font-size: 14px;
-  color: var(--text);
-  font-family: var(--font-body);
-  line-height: 1.6;
-  white-space: pre-wrap;
-}
-
-.viewTags {
+/* Tags display */
+.tagList {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 
-.viewTag {
+.tagItem {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
@@ -229,46 +244,94 @@
   border-radius: var(--radius-full);
   font-size: 12px;
   color: var(--text-secondary);
-  font-family: var(--font-body);
 }
 
-/* ===== Modal 表单 ===== */
-.modalForm {
-  padding-top: 12px;
+/* Status fields */
+.statusGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
 }
 
-.formField {
-  margin-bottom: 16px;
+.statusField {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.formLabel {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 13px;
+.statusLabel {
+  font-size: 11px;
   font-weight: 500;
-  font-family: var(--font-body);
-  color: var(--text);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.formRequired {
-  color: var(--color-error);
+.statusValue {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.6;
 }
 
-/* ===== 响应式 ===== */
-@media (max-width: 768px) {
-  .entityList {
-    padding: 8px 12px;
-  }
+.statusEmpty {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
 
-  .detailHeader {
-    padding: 14px 16px;
-  }
+/* Modal */
+.settingsModal :global(.ant-modal-content) {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
 
-  .detailContent {
-    padding: 12px 16px;
-  }
+.settingsModal :global(.ant-modal-body) {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 16px 24px 12px 24px;
+}
 
-  .detailTitle {
-    font-size: 16px;
-  }
+.settingsModal :global(.ant-modal-footer) {
+  flex-shrink: 0;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.settingsModal :global(.ant-form-item) {
+  margin-bottom: 8px;
+}
+
+.settingsModal :global(.ant-form-item:last-child) {
+  margin-bottom: 0;
+}
+
+/* Form sections */
+.formSection {
+  margin-bottom: 8px;
+}
+
+.formSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.formSectionHint {
+  font-weight: 400;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.formDivider {
+  margin: 8px 0;
+  border: none;
+  border-top: 1px solid var(--border);
 }

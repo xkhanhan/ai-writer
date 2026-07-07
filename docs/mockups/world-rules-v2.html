@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世界规则 — 视觉稿 v2 (Ant Design)</title>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@5/dist/index.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary: #2F5D50;
+    --color-primary-hover: #1e4438;
+    --bg-page: #f0ece4;
+    --bg-elevated: #faf8f4;
+    --bg-muted: #f5f2ec;
+    --bg-strong: #e8e4dc;
+    --text-primary: #1a1814;
+    --text-secondary: #4a4640;
+    --text-tertiary: #807b74;
+    --border: #ddd8d0;
+    --border-light: #ebe7e0;
+    --font-display: 'Noto Serif SC', serif;
+    --font-body: 'Noto Sans SC', -apple-system, sans-serif;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+  /* Ant Design theme override */
+  .ant-btn-primary { background: var(--color-primary) !important; border-color: var(--color-primary) !important; }
+  .ant-btn-primary:hover { background: var(--color-primary-hover) !important; border-color: var(--color-primary-hover) !important; }
+  .ant-collapse-header { font-family: var(--font-body) !important; }
+  .ant-tag { font-family: var(--font-body); }
+  .ant-form-item-label > label { font-family: var(--font-body) !important; }
+  .ant-modal-title { font-family: var(--font-body) !important; }
+  .ant-input, .ant-select-selector, .ant-input-affix-wrapper, .ant-input-textarea textarea {
+    font-family: var(--font-body) !important;
+  }
+
+  /* ===== Layout ===== */
+  .page-root { display: flex; height: 100vh; overflow: hidden; background: var(--bg-page); }
+  .left-panel {
+    width: 300px; min-width: 300px; background: var(--bg-elevated);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .left-header {
+    padding: 16px 16px 12px; border-bottom: 1px solid var(--border-light); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .left-title {
+    font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text-primary);
+  }
+  .left-body { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ===== Category Group (Ant Collapse style) ===== */
+  .cat-group { border-bottom: 1px solid var(--border-light); }
+  .cat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; user-select: none; transition: background 0.15s;
+  }
+  .cat-header:hover { background: var(--bg-muted); }
+  .cat-header-left { display: flex; align-items: center; gap: var(--space-2); flex: 1; min-width: 0; }
+  .cat-arrow { font-size: 10px; color: var(--text-tertiary); transition: transform 0.2s; flex-shrink: 0; }
+  .cat-arrow.open { transform: rotate(90deg); }
+  .cat-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .cat-count {
+    font-size: 11px; color: var(--text-tertiary); background: var(--bg-strong);
+    padding: 1px 6px; border-radius: 10px; flex-shrink: 0; line-height: 1.4;
+  }
+
+  /* ===== Rule Items ===== */
+  .cat-items { padding: 0 0 4px 0; }
+  .rule-item {
+    padding: 7px 16px 7px 32px; margin: 1px 8px; border-radius: var(--radius-md);
+    border-left: 3px solid transparent; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  }
+  .rule-item:hover { background: var(--bg-muted); }
+  .rule-item.active { background: rgba(47,93,80,0.06); border-left-color: var(--color-primary); }
+  .rule-item-name {
+    font-size: 13px; color: var(--text-primary); font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;
+  }
+  .rule-item-name.fixed { color: var(--text-tertiary); }
+
+  /* ===== Right Detail ===== */
+  .detail-empty {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    color: var(--text-tertiary); font-size: 13px;
+  }
+  .detail-panel { display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--bg-elevated); }
+  .detail-header { padding: 16px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .detail-title-row { display: flex; align-items: center; gap: var(--space-3); margin-bottom: 4px; }
+  .detail-title {
+    font-family: var(--font-display); font-size: 18px; font-weight: 600;
+    color: var(--text-primary); flex: 1; min-width: 0;
+  }
+  .detail-meta { display: flex; align-items: center; gap: var(--space-3); margin: 6px 0 10px; }
+  .detail-meta span { font-size: 12px; color: var(--text-tertiary); }
+  .detail-actions { display: flex; gap: var(--space-2); }
+  .detail-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+  .detail-section-title { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+  .detail-content-box {
+    background: var(--bg-muted); border: 1px solid var(--border-light);
+    border-radius: var(--radius-md); padding: 14px 16px;
+    font-size: 13px; line-height: 1.8; color: var(--text-primary);
+    white-space: pre-wrap; word-break: break-word;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const { useState, useCallback } = React;
+const { Button, Tag, Modal, Form, Input, Select, InputNumber, Tooltip, Empty, Typography, Divider, Space, Badge } = antd;
+const { PlusOutlined, EditOutlined, DeleteOutlined, LockOutlined, AppstoreOutlined, SettingOutlined, BookOutlined, RightOutlined, InfoCircleOutlined } = icons;
+
+// ===== Mock Data =====
+const initialRules = [
+  { id: 'wr_1', category: 'global', name: '政治合规', content: '本作品不包含政治敏感内容，不涉及真实政治人物、政治事件或政治立场的表达。作品中的国家、宗门等设定均为虚构，不代表任何现实政治实体。', isFixed: true, createdAt: '2026-07-01T10:00:00Z', updatedAt: '2026-07-01T10:00:00Z' },
+  { id: 'wr_2', category: 'global', name: '修仙世界观', content: '所有角色均为修仙者，不存在现代科技。修炼体系以灵气为核心，境界划分为：练气、筑基、金丹、元婴、化神、渡劫、大乘。', isFixed: false, createdAt: '2026-07-02T10:00:00Z', updatedAt: '2026-07-02T10:00:00Z' },
+  { id: 'wr_3', category: 'global', name: '力量体系上限', content: '单卷内角色境界提升不超过2级，防止主角成长过快。', isFixed: false, createdAt: '2026-07-03T10:00:00Z', updatedAt: '2026-07-03T10:00:00Z' },
+  { id: 'wr_4', category: 'writing', name: '文笔风格', content: '整体文笔偏古典，适度使用四字成语和古风句式。对话可以口语化，但叙述部分保持文学性。避免网络流行语和现代梗。', isFixed: false, createdAt: '2026-07-01T10:00:00Z', updatedAt: '2026-07-01T10:00:00Z' },
+  { id: 'wr_5', category: 'writing', name: '节奏控制', content: '每章设置至少一个小高潮或悬念点。战斗场景占全文比例不超过30%。日常修炼和人际关系描写占40%，剧情推进占30%。', isFixed: false, createdAt: '2026-07-02T10:00:00Z', updatedAt: '2026-07-02T10:00:00Z' },
+  { id: 'wr_6', category: 'setting', name: '力量体系', content: '修仙体系，境界划分：练气→筑基→金丹→元婴→化神→渡劫→大乘。每个大境界分为1-9层。', isFixed: false, settingType: 'text', createdAt: '2026-07-01T10:00:00Z', updatedAt: '2026-07-01T10:00:00Z' },
+  { id: 'wr_7', category: 'setting', name: '境界上限', content: '单卷内境界跃迁数不超过设定值', isFixed: false, settingType: 'number', numberMin: 1, numberMax: 5, numberUnit: '级', createdAt: '2026-07-02T10:00:00Z', updatedAt: '2026-07-02T10:00:00Z' },
+  { id: 'wr_8', category: 'setting', name: '势力分类', content: '允许的组织类型', isFixed: false, settingType: 'select', selectOptions: ['宗门', '家族', '帝国', '散修联盟', '魔道'], createdAt: '2026-07-03T10:00:00Z', updatedAt: '2026-07-03T10:00:00Z' },
+  { id: 'wr_9', category: 'setting', name: '物品品阶', content: '法宝和灵器的品质等级', isFixed: false, settingType: 'select', selectOptions: ['凡器', '灵器', '仙器', '神器', '混沌至宝'], createdAt: '2026-07-04T10:00:00Z', updatedAt: '2026-07-04T10:00:00Z' },
+];
+
+const categoryConfig = {
+  global: { label: '全局规则', color: 'green', icon: React.createElement(AppstoreOutlined), maxCount: 20, desc: '创作基石，所有内容必须遵守' },
+  writing: { label: '写作规则', color: 'blue', icon: React.createElement(BookOutlined), maxCount: 20, desc: 'AI 写作正文时的风格/文笔约束' },
+  setting: { label: '设定规则', color: 'orange', icon: React.createElement(SettingOutlined), maxCount: null, desc: '约束设定库的校验规则' },
+};
+
+const settingTypeMap = { text: { label: '文本', color: 'green' }, select: { label: '下拉', color: 'blue' }, number: { label: '数字', color: 'gold' } };
+
+function App() {
+  const [rules, setRules] = useState(initialRules);
+  const [activeId, setActiveId] = useState('wr_1');
+  const [openGroups, setOpenGroups] = useState({ global: true, writing: true, setting: true });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalCategory, setModalCategory] = useState('global');
+  const [editingRule, setEditingRule] = useState(null);
+  const [form] = Form.useForm();
+  const settingTypeValue = Form.useWatch('settingType', form);
+
+  const activeRule = rules.find(r => r.id === activeId);
+
+  const toggleGroup = (cat) => setOpenGroups(prev => ({ ...prev, [cat]: !prev[cat] }));
+
+  const openCreate = (cat) => {
+    setEditingRule(null);
+    setModalCategory(cat);
+    form.resetFields();
+    if (cat === 'global') form.setFieldsValue({ settingType: 'text' });
+    setModalOpen(true);
+  };
+
+  const openEdit = (rule) => {
+    setEditingRule(rule);
+    setModalCategory(rule.category);
+    form.setFieldsValue({
+      name: rule.name,
+      content: rule.content,
+      settingType: rule.settingType || 'text',
+      selectOptions: rule.selectOptions?.join('\n') || '',
+      numberMin: rule.numberMin,
+      numberMax: rule.numberMax,
+      numberUnit: rule.numberUnit || '',
+    });
+    setModalOpen(true);
+  };
+
+  const handleSave = () => {
+    form.validateFields().then(values => {
+      if (editingRule) {
+        setRules(prev => prev.map(r => r.id === editingRule.id ? { ...r, ...values, updatedAt: new Date().toISOString() } : r));
+      } else {
+        const newRule = {
+          id: `wr_${Date.now()}`,
+          category: modalCategory,
+          name: values.name,
+          content: values.content,
+          isFixed: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        if (modalCategory === 'setting') {
+          newRule.settingType = values.settingType;
+          if (values.settingType === 'select') newRule.selectOptions = (values.selectOptions || '').split('\n').filter(Boolean);
+          if (values.settingType === 'number') { newRule.numberMin = values.numberMin; newRule.numberMax = values.numberMax; newRule.numberUnit = values.numberUnit; }
+        }
+        setRules(prev => [...prev, newRule]);
+        setActiveId(newRule.id);
+      }
+      setModalOpen(false);
+    });
+  };
+
+  const handleDelete = (rule) => {
+    Modal.confirm({
+      title: '确认删除', content: `确定删除规则「${rule.name}」吗？`, okText: '删除', okType: 'danger', cancelText: '取消',
+      onOk: () => { setRules(prev => prev.filter(r => r.id !== rule.id)); if (activeId === rule.id) setActiveId(null); },
+      closable: false, maskClosable: false,
+    });
+  };
+
+  // ===== Left Panel =====
+  const leftPanel = React.createElement('div', { className: 'left-body' },
+    ['global', 'writing', 'setting'].map(cat => {
+      const cfg = categoryConfig[cat];
+      const catRules = rules.filter(r => r.category === cat);
+      const isOpen = openGroups[cat];
+      const countText = cfg.maxCount ? `${catRules.length}/${cfg.maxCount}` : `${catRules.length}`;
+      return React.createElement('div', { key: cat, className: 'cat-group' },
+        React.createElement('div', { className: 'cat-header', onClick: () => toggleGroup(cat) },
+          React.createElement('div', { className: 'cat-header-left' },
+            React.createElement('span', { className: `cat-arrow ${isOpen ? 'open' : ''}` }, React.createElement(RightOutlined, { style: { fontSize: 10 } })),
+            React.createElement(Tag, { color: cfg.color, style: { margin: 0 }, bordered: false }, cfg.label),
+            React.createElement('span', { className: 'cat-count' }, countText),
+          ),
+          React.createElement(Tooltip, { title: `新建${cfg.label}` },
+            React.createElement(Button, { type: 'text', size: 'small', icon: React.createElement(PlusOutlined), onClick: (e) => { e.stopPropagation(); openCreate(cat); } })
+          ),
+        ),
+        isOpen && React.createElement('div', { className: 'cat-items' },
+          catRules.length === 0
+            ? React.createElement('div', { style: { padding: '8px 32px', fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic' } }, '暂无规则')
+            : catRules.map(rule =>
+                React.createElement('div', { key: rule.id, className: `rule-item ${activeId === rule.id ? 'active' : ''}`, onClick: () => setActiveId(rule.id) },
+                  React.createElement('span', { className: `rule-item-name ${rule.isFixed ? 'fixed' : ''}` }, rule.name),
+                  rule.isFixed
+                    ? React.createElement(Tag, { color: 'red', style: { margin: 0, fontSize: 11 } }, '固定')
+                    : rule.settingType
+                      ? React.createElement(Tag, { color: settingTypeMap[rule.settingType]?.color, style: { margin: 0, fontSize: 11 } }, settingTypeMap[rule.settingType]?.label)
+                      : null,
+                )
+              )
+        ),
+      );
+    })
+  );
+
+  // ===== Right Detail =====
+  const rightPanel = activeRule
+    ? React.createElement('div', { className: 'detail-panel' },
+        React.createElement('div', { className: 'detail-header' },
+          React.createElement('div', { className: 'detail-title-row' },
+            React.createElement('h3', { className: 'detail-title' }, activeRule.name),
+            React.createElement(Tag, { color: categoryConfig[activeRule.category].color }, categoryConfig[activeRule.category].label),
+            activeRule.isFixed && React.createElement(Tag, { icon: React.createElement(LockOutlined), color: 'error' }, '固定规则'),
+          ),
+          React.createElement('div', { className: 'detail-meta' },
+            React.createElement('span', null, `更新于 ${new Date(activeRule.updatedAt).toLocaleString('zh-CN')}`),
+          ),
+          React.createElement('div', { className: 'detail-actions' },
+            React.createElement(Button, { size: 'small', icon: React.createElement(EditOutlined), disabled: activeRule.isFixed, onClick: () => openEdit(activeRule) }, '编辑'),
+            React.createElement(Button, { size: 'small', danger: true, icon: React.createElement(DeleteOutlined), disabled: activeRule.isFixed, onClick: () => handleDelete(activeRule) }, '删除'),
+          ),
+        ),
+        React.createElement('div', { className: 'detail-body' },
+          React.createElement('div', { className: 'detail-section-title' }, '规则内容'),
+          React.createElement('div', { className: 'detail-content-box' }, activeRule.content || '暂无内容'),
+          activeRule.category === 'setting' && React.createElement(React.Fragment, null,
+            React.createElement(Divider),
+            React.createElement('div', { className: 'detail-section-title', style: { marginTop: 16 } }, '设定规则配置'),
+            React.createElement(Space, { direction: 'vertical', size: 'small', style: { width: '100%' } },
+              React.createElement(Tag, { color: settingTypeMap[activeRule.settingType]?.color }, `值类型：${settingTypeMap[activeRule.settingType]?.label || '文本'}`),
+              activeRule.settingType === 'select' && activeRule.selectOptions &&
+                React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4 } },
+                  ...activeRule.selectOptions.map(opt => React.createElement(Tag, { key: opt }, opt))
+                ),
+              activeRule.settingType === 'number' &&
+                React.createElement('div', { style: { fontSize: 13, color: 'var(--text-secondary)' } },
+                  `范围：${activeRule.numberMin ?? '—'} ~ ${activeRule.numberMax ?? '—'} ${activeRule.numberUnit || ''}`
+                ),
+            ),
+          ),
+        ),
+      )
+    : React.createElement('div', { className: 'detail-empty' }, '选择一条规则查看详情');
+
+  // ===== Modal Form =====
+  const catLabel = categoryConfig[modalCategory]?.label || '规则';
+  const titlePrefix = editingRule ? '编辑' : '新建';
+  const modalTitle = `${titlePrefix}${catLabel}`;
+
+  const formContent = React.createElement(Form, { form, layout: 'vertical', style: { marginTop: 16 } },
+    React.createElement(Form.Item, { name: 'name', label: '规则名称', rules: [{ required: true, message: '请输入规则名称' }] },
+      React.createElement(Input, { placeholder: `如：${modalCategory === 'global' ? '世界观设定' : modalCategory === 'writing' ? '文笔风格' : '力量体系'}`, maxLength: 60, showCount: true })
+    ),
+    modalCategory === 'setting' && React.createElement(Form.Item, { name: 'settingType', label: '值类型', initialValue: 'text' },
+      React.createElement(Select, { options: [{ label: '文本', value: 'text' }, { label: '下拉选项', value: 'select' }, { label: '数字', value: 'number' }] })
+    ),
+    settingTypeValue === 'select' && modalCategory === 'setting' && React.createElement(Form.Item, { name: 'selectOptions', label: '选项列表', extra: '每行一个选项' },
+      React.createElement(Input.TextArea, { rows: 3, placeholder: '宗门\n家族\n帝国\n散修联盟' })
+    ),
+    settingTypeValue === 'number' && modalCategory === 'setting' && React.createElement(Space, { style: { width: '100%' } },
+      React.createElement(Form.Item, { name: 'numberMin', label: '最小值', style: { flex: 1 } },
+        React.createElement(InputNumber, { style: { width: '100%' }, placeholder: '如 1' })
+      ),
+      React.createElement(Form.Item, { name: 'numberMax', label: '最大值', style: { flex: 1 } },
+        React.createElement(InputNumber, { style: { width: '100%' }, placeholder: '如 10' })
+      ),
+      React.createElement(Form.Item, { name: 'numberUnit', label: '单位', style: { flex: 1 } },
+        React.createElement(Input, { placeholder: '如 万字' })
+      ),
+    ),
+    React.createElement(Form.Item, { name: 'content', label: '规则内容', rules: [{ required: true, message: '请输入规则内容' }] },
+      React.createElement(Input.TextArea, { rows: 5, placeholder: '描述这条规则的具体内容...', maxLength: 300, showCount: true })
+    ),
+  );
+
+  return React.createElement(React.Fragment, null,
+    React.createElement('div', { className: 'page-root' },
+      React.createElement('div', { className: 'left-panel' },
+        React.createElement('div', { className: 'left-header' },
+          React.createElement('span', { className: 'left-title' }, '世界规则'),
+          React.createElement(Badge, { count: rules.length, style: { backgroundColor: 'var(--text-tertiary)' } }),
+        ),
+        leftPanel,
+      ),
+      React.createElement('div', { className: 'right-panel' }, rightPanel),
+    ),
+    React.createElement(Modal, {
+      title: modalTitle, open: modalOpen,
+      onCancel: () => setModalOpen(false),
+      onOk: handleSave,
+      okText: '保存', cancelText: '取消',
+      width: 560, destroyOnClose: true,
+      closable: false, maskClosable: false, keyboard: false,
+    }, formContent),
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>

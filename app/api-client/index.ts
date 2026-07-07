@@ -1,2 +1,10 @@
-export { client, ApiError } from "./client";
-export type { RequestConfig } from "./client";
+export { client } from "./client";
+export type { Result, RequestConfig } from "./client";
+export {
+  fetchTagTree,
+  getTag,
+  createTag,
+  updateTag,
+  deleteTag,
+  getTagRefCount,
+} from "./tags";

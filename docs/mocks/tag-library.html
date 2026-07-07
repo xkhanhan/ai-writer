@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>标签库 — 视觉稿件</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== 项目设计令牌 ===== */
+:root {
+  --color-primary: #2F5D50;
+  --color-primary-hover: #1e4438;
+  --color-primary-bg: rgba(47, 93, 80, 0.05);
+  --color-primary-bg-hover: rgba(47, 93, 80, 0.10);
+  --color-primary-border: rgba(47, 93, 80, 0.20);
+  --color-success: #2E8B57;
+  --color-success-bg: rgba(46, 139, 87, 0.1);
+  --color-warning: #964400;
+  --color-warning-bg: rgba(150, 68, 0, 0.1);
+  --color-error: #ba1a1a;
+  --color-error-bg: rgba(186, 26, 26, 0.06);
+  --bg-page: #f0ece4;
+  --bg-elevated: #faf8f4;
+  --bg-muted: #f5f2ec;
+  --bg-strong: #e8e4dc;
+  --text-primary: #1a1814;
+  --text-secondary: #4a4640;
+  --text-tertiary: #807b74;
+  --text-light: #b5b0a8;
+  --text-inverse: #ffffff;
+  --border: #ddd8d0;
+  --border-strong: #c0bbb3;
+  --border-light: #ebe7e0;
+  --shadow: 0 1px 3px rgba(24, 28, 34, 0.08);
+  --shadow-md: 0 4px 12px rgba(24, 28, 34, 0.12);
+  --shadow-lg: 0 8px 24px rgba(24, 28, 34, 0.16);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+  --font-display: 'Noto Serif SC', serif;
+  --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  padding: 40px;
+  min-height: 100vh;
+}
+
+/* ===== 页面标题 ===== */
+.page-header {
+  max-width: 1200px;
+  margin: 0 auto 40px;
+}
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.page-header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ===== 场景卡片 ===== */
+.scene {
+  max-width: 1200px;
+  margin: 0 auto 48px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.scene-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.scene-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.scene-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.scene-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+.scene-body {
+  padding: 0;
+}
+
+/* ===== 场景 A：主视图 (SplitPanel) ===== */
+.mock-app {
+  display: flex;
+  height: 520px;
+  overflow: hidden;
+}
+
+/* 左侧面板 */
+.mock-left {
+  width: 280px;
+  min-width: 280px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+}
+.mock-left-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.mock-left-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.mock-btn-link {
+  font-size: 13px;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.mock-btn-link:hover { text-decoration: underline; }
+
+/* 搜索框 */
+.mock-search {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.mock-search-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px 0 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23807b74' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+}
+.mock-search-input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--bg-elevated);
+}
+.mock-search-input::placeholder {
+  color: var(--text-light);
+}
+
+/* 标签大类列表 */
+.mock-cat-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px 12px;
+}
+.mock-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+.mock-cat-item:hover { background: var(--bg-muted); }
+.mock-cat-item.active {
+  background: var(--color-primary-bg);
+  border-left-color: var(--color-primary);
+}
+.mock-cat-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.mock-cat-count {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--bg-muted);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+/* 右侧内容区 */
+.mock-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mock-right-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.mock-right-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.mock-right-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+/* 树节点 */
+.mock-tree-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.mock-tree-node:hover { background: var(--bg-muted); }
+.mock-tree-node.active {
+  background: var(--color-primary-bg);
+  border-left: 3px solid var(--color-primary);
+  padding-left: 13px;
+}
+.mock-tree-node.child { padding-left: 40px; }
+.mock-tree-node.child-2 { padding-left: 60px; }
+.mock-tree-arrow {
+  width: 16px;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  text-align: center;
+  user-select: none;
+}
+.mock-tree-arrow.empty { visibility: hidden; }
+.mock-tree-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.mock-tree-code {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--bg-muted);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+}
+.mock-tree-edit {
+  font-size: 12px;
+  color: var(--color-primary);
+  opacity: 0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mock-tree-node:hover .mock-tree-edit { opacity: 1; }
+
+/* ===== 场景 B：创建/编辑弹窗 ===== */
+.mock-modal-overlay {
+  position: relative;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  min-height: 600px;
+}
+.mock-modal {
+  width: 560px;
+  max-height: 85vh;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mock-modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.mock-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+.mock-modal-footer {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* 表单 */
+.mock-form-section {
+  margin-bottom: 8px;
+}
+.mock-form-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mock-form-section-title svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-tertiary);
+}
+.mock-form-divider {
+  margin: 12px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+.mock-form-item {
+  margin-bottom: 12px;
+}
+.mock-form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.mock-form-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.mock-form-input:focus { border-color: var(--color-primary); }
+.mock-form-input::placeholder { color: var(--text-light); }
+.mock-form-textarea {
+  width: 100%;
+  min-height: 64px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+.mock-form-textarea:focus { border-color: var(--color-primary); }
+.mock-form-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+.mock-form-count {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: right;
+  margin-top: 2px;
+}
+.mock-select {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23807b74' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+/* 按钮 */
+.mock-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mock-btn:hover { background: var(--bg-muted); border-color: var(--border-strong); }
+.mock-btn-primary {
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border-color: var(--color-primary);
+}
+.mock-btn-primary:hover { background: var(--color-primary-hover); }
+.mock-btn-danger {
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+}
+.mock-btn-danger:hover { background: rgba(186, 26, 26, 0.12); }
+.mock-btn-sm {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+/* ===== 场景 C：TagSelector 下拉 ===== */
+.mock-selector-wrap {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+.mock-selector {
+  width: 100%;
+  min-height: 32px;
+  padding: 3px 30px 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  position: relative;
+}
+.mock-selector:focus-within { border-color: var(--color-primary); }
+.mock-selector-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--color-primary);
+}
+.mock-selector-tag-close {
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.mock-selector-tag-close:hover { opacity: 1; }
+.mock-selector-placeholder {
+  font-size: 13px;
+  color: var(--text-light);
+}
+.mock-selector-suffix {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+.mock-selector-overflow {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 6px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* 下拉面板 */
+.mock-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 320px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  overflow: hidden;
+}
+.mock-dropdown-search {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.mock-dropdown-tree {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.mock-dropdown-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 13px;
+}
+.mock-dropdown-node:hover { background: var(--bg-muted); }
+.mock-dropdown-node.highlight {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+.mock-dropdown-check {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-inverse);
+  transition: all 0.15s;
+}
+.mock-dropdown-check.checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.mock-dropdown-arrow {
+  width: 16px;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-align: center;
+  flex-shrink: 0;
+}
+.mock-dropdown-arrow.hidden { visibility: hidden; }
+.mock-dropdown-indent { padding-left: 28px; }
+.mock-dropdown-indent-2 { padding-left: 48px; }
+.mock-dropdown-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mock-dropdown-label em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.mock-dropdown-code {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+/* ===== 场景 D：删除确认 ===== */
+.mock-confirm-overlay {
+  position: relative;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  min-height: 420px;
+}
+.mock-confirm {
+  width: 400px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.mock-confirm-body {
+  padding: 24px;
+}
+.mock-confirm-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--color-error-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.mock-confirm-icon svg {
+  width: 24px;
+  height: 24px;
+  color: var(--color-error);
+}
+.mock-confirm-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.mock-confirm-content {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.mock-confirm-content strong {
+  color: var(--text-primary);
+}
+.mock-confirm-warning {
+  font-size: 12px;
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-warning);
+  line-height: 1.5;
+}
+.mock-confirm-footer {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ===== 场景 E：详情区标签展示 ===== */
+.mock-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mock-detail-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-muted);
+  transition: all 0.15s;
+}
+.mock-detail-tag:hover {
+  border-color: var(--color-primary-border);
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+/* ===== 标注系统 ===== */
+.annotation {
+  position: absolute;
+  font-size: 11px;
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+  border: 1px dashed var(--color-primary-border);
+  border-radius: var(--radius-md);
+  padding: 2px 8px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+}
+.annotation::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 1px;
+  background: var(--color-primary-border);
+}
+.annotation.left::before {
+  right: -20px;
+  top: 50%;
+}
+.annotation.bottom::before {
+  bottom: -12px;
+  left: 50%;
+  width: 1px;
+  height: 12px;
+}
+
+/* ===== 交互状态说明 ===== */
+.state-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 24px;
+}
+.state-card {
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+.state-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+.state-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.state-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.state-dot.green { background: var(--color-success); }
+.state-dot.orange { background: var(--color-warning); }
+.state-dot.red { background: var(--color-error); }
+.state-dot.gray { background: var(--text-light); }
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  body { padding: 16px; }
+  .mock-app { flex-direction: column; height: auto; }
+  .mock-left { width: 100%; min-width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid var(--border); }
+  .mock-dropdown { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 页面标题 ==================== -->
+<div class="page-header">
+  <h1>标签库 — 视觉稿件</h1>
+  <p>基于重构计划的 UI 视觉设计，覆盖主视图、创建编辑、级联选择、删除确认、详情展示五个核心场景。</p>
+</div>
+
+<!-- ==================== 场景 A：主视图 ==================== -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">A</span>
+    <span class="scene-title">标签库主视图</span>
+    <span class="scene-desc">SplitPanel 左右分栏 + 搜索 + 树形浏览</span>
+  </div>
+  <div class="scene-body">
+    <div class="mock-app">
+      <!-- 左侧面板 -->
+      <div class="mock-left">
+        <div class="mock-left-header">
+          <span class="mock-left-title">标签大类</span>
+          <button class="mock-btn-link">+ 新建大类</button>
+        </div>
+        <div class="mock-search">
+          <input class="mock-search-input" type="text" placeholder="搜索标签名称、编码…" value="修">
+        </div>
+        <div class="mock-cat-list">
+          <div class="mock-cat-item active">
+            <span class="mock-cat-name">人物属性</span>
+            <span class="mock-cat-count">12</span>
+          </div>
+          <div class="mock-cat-item">
+            <span class="mock-cat-name">修炼体系</span>
+            <span class="mock-cat-count">8</span>
+          </div>
+          <div class="mock-cat-item">
+            <span class="mock-cat-name">势力组织</span>
+            <span class="mock-cat-count">5</span>
+          </div>
+          <div class="mock-cat-item">
+            <span class="mock-cat-name">地理区域</span>
+            <span class="mock-cat-count">3</span>
+          </div>
+          <div class="mock-cat-item">
+            <span class="mock-cat-name">物品道具</span>
+            <span class="mock-cat-count">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧内容区 -->
+      <div class="mock-right">
+        <div class="mock-right-header">
+          <span class="mock-right-title">人物属性 的标签</span>
+          <button class="mock-btn-link">+ 添加子标签</button>
+        </div>
+        <div class="mock-right-content">
+          <!-- 顶层节点 -->
+          <div class="mock-tree-node">
+            <span class="mock-tree-arrow">▾</span>
+            <span class="mock-tree-label">性格特征</span>
+            <span class="mock-tree-code">personality</span>
+            <span class="mock-tree-edit">编辑</span>
+          </div>
+          <!-- 子节点 -->
+          <div class="mock-tree-node child">
+            <span class="mock-tree-arrow empty"></span>
+            <span class="mock-tree-label" style="background: var(--color-primary-bg); padding: 1px 6px; border-radius: 3px; color: var(--color-primary);">修</span><span class="mock-tree-label">仙果敢</span>
+            <span class="mock-tree-code">brave</span>
+            <span class="mock-tree-edit">编辑</span>
+          </div>
+          <div class="mock-tree-node child">
+            <span class="mock-tree-arrow empty"></span>
+            <span class="mock-tree-label" style="background: var(--color-primary-bg); padding: 1px 6px; border-radius: 3px; color: var(--color-primary);">修</span><span class="mock-tree-label">仙阴沉</span>
+            <span class="mock-tree-code">gloomy</span>
+            <span class="mock-tree-edit">编辑</span>
+          </div>
+
+          <!-- 顶层节点 -->
+          <div class="mock-tree-node">
+            <span class="mock-tree-arrow">▸</span>
+            <span class="mock-tree-label">外貌描述</span>
+            <span class="mock-tree-code">appearance</span>
+            <span class="mock-tree-edit">编辑</span>
+          </div>
+
+          <!-- 顶层节点 -->
+          <div class="mock-tree-node">
+            <span class="mock-tree-arrow">▾</span>
+            <span class="mock-tree-label">修炼资质</span>
+            <span class="mock-tree-code">aptitude</span>
+            <span class="mock-tree-edit">编辑</span>
+          </div>
+          <div class="mock-tree-node child">
+            <span class="mock-tree-arrow empty"></span>
+            <span class="mock-tree-label">天灵根</span>
+            <span class="mock-tree-code">heavenly</span>
+            <span class="mock-tree-edit">编辑</span>
+          </div>
+          <div class="mock-tree-node child">
+            <span class="mock-tree-arrow empty"></span>
+            <span class="mock-tree-label">异灵根</span>
+            <span class="mock-tree-code">variant</span>
+            <span class="mock-tree-edit">编辑</span>
+          </div>
+          <div class="mock-tree-node child">
+            <span class="mock-tree-arrow empty"></span>
+            <span class="mock-tree-label" style="background: var(--color-primary-bg); padding: 1px 6px; border-radius: 3px; color: var(--color-primary);">修</span><span class="mock-tree-label">仙灵根</span>
+            <span class="mock-tree-code">mixed</span>
+            <span class="mock-tree-edit">编辑</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 场景 B：创建/编辑弹窗 ==================== -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">B</span>
+    <span class="scene-title">创建 / 编辑标签弹窗</span>
+    <span class="scene-desc">BaseModal + 编码字段 + 标签上限校验</span>
+  </div>
+  <div class="scene-body">
+    <div class="mock-modal-overlay">
+      <div class="mock-modal">
+        <div class="mock-modal-header">编辑标签</div>
+        <div class="mock-modal-body">
+          <!-- 基础信息 -->
+          <div class="mock-form-section">
+            <div class="mock-form-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              基础信息
+            </div>
+            <div class="mock-form-item">
+              <label class="mock-form-label">标签名称 <span style="color: var(--color-error)">*</span></label>
+              <input class="mock-form-input" type="text" value="修仙果敢" placeholder="输入标签名称">
+              <div class="mock-form-count">4 / 60</div>
+            </div>
+            <div class="mock-form-item">
+              <label class="mock-form-label">编码 <span style="font-size: 11px; color: var(--text-tertiary); font-weight: 400;">（系统自动生成）</span></label>
+              <input class="mock-form-input" type="text" value="brave" disabled style="background: var(--bg-muted); color: var(--text-tertiary); font-family: var(--font-mono); cursor: not-allowed;">
+              <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 2px;">根据标签名称自动生成唯一编码，用于 AI 识别与数据关联</div>
+            </div>
+            <div class="mock-form-item">
+              <label class="mock-form-label">父级标签</label>
+              <input class="mock-form-input" type="text" value="性格特征" disabled style="background: var(--bg-muted); color: var(--text-tertiary);">
+            </div>
+          </div>
+
+          <hr class="mock-form-divider">
+
+          <!-- 描述信息 -->
+          <div class="mock-form-section">
+            <div class="mock-form-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              描述信息
+            </div>
+            <div class="mock-form-item">
+              <label class="mock-form-label">标签详情描述</label>
+              <textarea class="mock-form-textarea" rows="4" placeholder="描述该标签的详细信息，用于 AI 理解标签含义…">性格果敢，行事果断，不畏强敌。常见于主角或重要配角，是推动剧情的关键性格特征。</textarea>
+              <div class="mock-form-count">48 / 2000</div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-modal-footer">
+          <button class="mock-btn">取消</button>
+          <button class="mock-btn mock-btn-primary">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 场景 C：TagSelector 级联下拉 ==================== -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">C</span>
+    <span class="scene-title">TagSelector 级联下拉选择器</span>
+    <span class="scene-desc">虚拟滚动 + 搜索防抖 + 视口自适应 + 编码展示</span>
+  </div>
+  <div class="scene-body" style="padding: 24px;">
+    <div style="max-width: 480px; position: relative;">
+      <label class="mock-form-label" style="margin-bottom: 6px;">标签</label>
+      <!-- 已选状态 -->
+      <div class="mock-selector">
+        <span class="mock-selector-tag">性格特征<span class="mock-selector-tag-close">×</span></span>
+        <span class="mock-selector-tag">修炼资质 · 天灵根<span class="mock-selector-tag-close">×</span></span>
+        <span class="mock-selector-overflow">+3 项…</span>
+      </div>
+      <span class="mock-selector-suffix">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      </span>
+
+      <!-- 下拉面板 -->
+      <div class="mock-dropdown" style="margin-top: 8px;">
+        <div class="mock-dropdown-search">
+          <input class="mock-search-input" type="text" placeholder="搜索标签名称、编码…" value="天">
+        </div>
+        <div class="mock-dropdown-tree">
+          <!-- 人物属性（展开） -->
+          <div class="mock-dropdown-node">
+            <span class="mock-dropdown-check checked">✓</span>
+            <span class="mock-dropdown-arrow">▾</span>
+            <span class="mock-dropdown-label">人物属性</span>
+            <span class="mock-dropdown-code">person</span>
+          </div>
+          <div class="mock-dropdown-node mock-dropdown-indent">
+            <span class="mock-dropdown-check checked">✓</span>
+            <span class="mock-dropdown-arrow hidden"></span>
+            <span class="mock-dropdown-label">性格特征</span>
+            <span class="mock-dropdown-code">personality</span>
+          </div>
+          <div class="mock-dropdown-node mock-dropdown-indent mock-dropdown-indent-2">
+            <span class="mock-dropdown-check"></span>
+            <span class="mock-dropdown-arrow hidden"></span>
+            <span class="mock-dropdown-label">修仙果敢</span>
+            <span class="mock-dropdown-code">brave</span>
+          </div>
+          <div class="mock-dropdown-node mock-dropdown-indent">
+            <span class="mock-dropdown-check"></span>
+            <span class="mock-dropdown-arrow">▾</span>
+            <span class="mock-dropdown-label">修炼资质</span>
+            <span class="mock-dropdown-code">aptitude</span>
+          </div>
+          <div class="mock-dropdown-node mock-dropdown-indent-2">
+            <span class="mock-dropdown-check checked">✓</span>
+            <span class="mock-dropdown-arrow hidden"></span>
+            <span class="mock-dropdown-label highlight">天<em>灵根</em></span>
+            <span class="mock-dropdown-code">heavenly</span>
+          </div>
+          <div class="mock-dropdown-node mock-dropdown-indent-2">
+            <span class="mock-dropdown-check"></span>
+            <span class="mock-dropdown-arrow hidden"></span>
+            <span class="mock-dropdown-label">异灵根</span>
+            <span class="mock-dropdown-code">variant</span>
+          </div>
+          <!-- 修炼体系 -->
+          <div class="mock-dropdown-node">
+            <span class="mock-dropdown-check"></span>
+            <span class="mock-dropdown-arrow">▸</span>
+            <span class="mock-dropdown-label">修炼体系</span>
+            <span class="mock-dropdown-code">cultivation</span>
+          </div>
+          <!-- 势力组织 -->
+          <div class="mock-dropdown-node">
+            <span class="mock-dropdown-check"></span>
+            <span class="mock-dropdown-arrow">▸</span>
+            <span class="mock-dropdown-label">势力组织</span>
+            <span class="mock-dropdown-code">faction</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 场景 D：删除确认弹窗 ==================== -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">D</span>
+    <span class="scene-title">删除标签确认</span>
+    <span class="scene-desc">引用计数提示 + 级联清理说明</span>
+  </div>
+  <div class="scene-body">
+    <div class="mock-confirm-overlay">
+      <div class="mock-confirm">
+        <div class="mock-confirm-body">
+          <div class="mock-confirm-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="mock-confirm-title">确认删除</div>
+          <div class="mock-confirm-content">
+            确定要删除「<strong>天灵根</strong>」吗？此操作不可撤销。
+          </div>
+          <div class="mock-confirm-content" style="margin-bottom: 12px;">
+            该标签下包含 <strong>2</strong> 个子标签，将一并删除。
+          </div>
+          <div class="mock-confirm-warning">
+            此标签正被 <strong>3</strong> 个设定实体引用，删除后将自动解除关联。
+          </div>
+        </div>
+        <div class="mock-confirm-footer">
+          <button class="mock-btn">取消</button>
+          <button class="mock-btn mock-btn-danger">删除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 场景 E：详情区标签展示 ==================== -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">E</span>
+    <span class="scene-title">设定详情区 — 标签展示</span>
+    <span class="scene-desc">标签展示卡片（标签超过 10 个时折叠）</span>
+  </div>
+  <div class="scene-body" style="padding: 24px;">
+    <div style="max-width: 600px;">
+      <!-- 标签卡片 -->
+      <div style="background: var(--bg-muted); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.02);">
+          <span style="font-size: 13px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            标签
+          </span>
+          <span style="font-size: 12px; color: var(--text-tertiary);">5 个</span>
+        </div>
+        <div style="padding: 12px;">
+          <div class="mock-detail-tags">
+            <span class="mock-detail-tag">性格特征</span>
+            <span class="mock-detail-tag">修仙果敢</span>
+            <span class="mock-detail-tag">天灵根</span>
+            <span class="mock-detail-tag">剑修</span>
+            <span class="mock-detail-tag">散修</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 对比：无标签状态 -->
+      <div style="background: var(--bg-muted); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-top: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.02);">
+          <span style="font-size: 13px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            标签
+          </span>
+        </div>
+        <div style="padding: 12px;">
+          <span style="font-size: 13px; color: var(--text-tertiary); font-style: italic;">暂无标签</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 交互状态说明 ==================== -->
+<div class="scene">
+  <div class="scene-header">
+    <span class="scene-num">✦</span>
+    <span class="scene-title">交互状态与设计规范</span>
+  </div>
+  <div class="scene-body">
+    <div class="state-grid">
+      <div class="state-card">
+        <div class="state-card-title">搜索防抖</div>
+        <div class="state-item"><span class="state-dot green"></span>输入后 300ms 触发过滤</div>
+        <div class="state-item"><span class="state-dot green"></span>匹配名称 / 编码 / 描述</div>
+        <div class="state-item"><span class="state-dot green"></span>自动展开匹配节点的祖先路径</div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-title">虚拟滚动</div>
+        <div class="state-item"><span class="state-dot green"></span>TreeSelect 内建 virtual 模式</div>
+        <div class="state-item"><span class="state-dot green"></span>仅渲染可视区域节点</div>
+        <div class="state-item"><span class="state-dot green"></span>1000+ 标签保持 60fps</div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-title">视口适配</div>
+        <div class="state-item"><span class="state-dot green"></span>弹出层挂载到 body</div>
+        <div class="state-item"><span class="state-dot green"></span>自动检测下方空间</div>
+        <div class="state-item"><span class="state-dot green"></span>空间不足时向上展开</div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-title">数据一致性</div>
+        <div class="state-item"><span class="state-dot orange"></span>删除标签级联清理关联</div>
+        <div class="state-item"><span class="state-dot orange"></span>删除前提示引用计数</div>
+        <div class="state-item"><span class="state-dot green"></span>全局缓存避免重复请求</div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-title">组件复用</div>
+        <div class="state-item"><span class="state-dot green"></span>TagSelector → shared/ui/</div>
+        <div class="state-item"><span class="state-dot green"></span>API 迁移至 api-client/</div>
+        <div class="state-item"><span class="state-dot green"></span>useTagTree 全局 Hook</div>
+      </div>
+      <div class="state-card">
+        <div class="state-card-title">限制规则</div>
+        <div class="state-item"><span class="state-dot red"></span>每个设定实体最多 10 个标签</div>
+        <div class="state-item"><span class="state-dot green"></span>标签名称最长 60 字符</div>
+        <div class="state-item"><span class="state-dot green"></span>编码由系统根据名称自动生成</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

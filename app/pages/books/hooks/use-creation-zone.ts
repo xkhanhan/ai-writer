@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import type { BookOutline, VolumeOutline, ChapterOutline, KeyPoint } from "@/app/types";
+import { showError } from "@/app/utils/error-handler";
 import * as api from "../api/creation";
 
 export type ViewMode =
@@ -22,23 +23,28 @@ export function useCreationZone(bookId: string) {
   // 初始加载
   const loadAll = useCallback(async () => {
     setLoading(true);
-    try {
-      const [out, vols] = await Promise.all([
-        api.fetchOutline(bookId),
-        api.fetchVolumes(bookId)
-      ]);
-      setOutline(out);
-      setVolumes(vols);
+    const [outResult, volsResult] = await Promise.all([
+      api.fetchOutline(bookId),
+      api.fetchVolumes(bookId)
+    ]);
+
+    if (outResult.ok) setOutline(outResult.data);
+    if (volsResult.ok) {
+      setVolumes(volsResult.data);
       const chMap: Record<string, ChapterOutline[]> = {};
-      await Promise.all(
-        vols.map(async (v) => {
-          chMap[v.id] = await api.fetchChapters(v.id);
-        })
+      const chResults = await Promise.all(
+        volsResult.data.map(async (v) => ({
+          volId: v.id,
+          result: await api.fetchChapters(v.id)
+        }))
       );
+      for (const { volId, result } of chResults) {
+        if (result.ok) chMap[volId] = result.data;
+      }
       setChaptersMap(chMap);
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   }, [bookId]);
 
   useEffect(() => {
@@ -60,9 +66,13 @@ export function useCreationZone(bookId: string) {
   // 总纲操作
   const saveOutline = useCallback(
     async (data: { direction: string; stages: string; sellingPoints: string }) => {
-      const updated = await api.updateOutline(bookId, data);
-      setOutline(updated);
-      return updated;
+      const result = await api.updateOutline(bookId, data);
+      if (result.ok) {
+        setOutline(result.data);
+        return result.data;
+      }
+      showError(result.error || "保存总纲失败");
+      return null;
     },
     [bookId]
   );
@@ -79,7 +89,7 @@ export function useCreationZone(bookId: string) {
       highlights?: string;
     }) => {
       if (data.id) {
-        const updated = await api.updateVolume(data.id, {
+        const result = await api.updateVolume(data.id, {
           title: data.title,
           coreConflict: data.coreConflict,
           stages: data.stages,
@@ -87,10 +97,14 @@ export function useCreationZone(bookId: string) {
           keyPoints: data.keyPoints,
           highlights: data.highlights
         });
-        setVolumes((prev) => prev.map((v) => (v.id === data.id ? updated : v)));
-        return updated;
+        if (!result.ok) {
+          showError(result.error || "保存卷纲失败");
+          return null;
+        }
+        setVolumes((prev) => prev.map((v) => (v.id === data.id ? result.data : v)));
+        return result.data;
       }
-      const created = await api.createVolume(bookId, {
+      const result = await api.createVolume(bookId, {
         title: data.title,
         coreConflict: data.coreConflict,
         stages: data.stages,
@@ -98,29 +112,41 @@ export function useCreationZone(bookId: string) {
         keyPoints: data.keyPoints,
         highlights: data.highlights
       });
-      setVolumes((prev) => [...prev, created]);
-      setChaptersMap((prev) => ({ ...prev, [created.id]: [] }));
-      setExpandedVolumes((prev) => new Set(prev).add(created.id));
-      return created;
+      if (!result.ok) {
+        showError(result.error || "创建卷纲失败");
+        return null;
+      }
+      setVolumes((prev) => [...prev, result.data]);
+      setChaptersMap((prev) => ({ ...prev, [result.data.id]: [] }));
+      setExpandedVolumes((prev) => new Set(prev).add(result.data.id));
+      return result.data;
     },
     [bookId]
   );
 
   const removeVolume = useCallback(async (volumeId: string) => {
-    await api.deleteVolume(volumeId);
+    const result = await api.deleteVolume(volumeId);
+    if (!result.ok) {
+      showError(result.error || "删除卷纲失败");
+      return false;
+    }
     setVolumes((prev) => prev.filter((v) => v.id !== volumeId));
     setChaptersMap((prev) => {
       const next = { ...prev };
       delete next[volumeId];
       return next;
     });
+    return true;
   }, []);
 
   // 章纲操作
   const refreshChapters = useCallback(async (volumeId: string) => {
-    const chapters = await api.fetchChapters(volumeId);
-    setChaptersMap((prev) => ({ ...prev, [volumeId]: chapters }));
-    return chapters;
+    const result = await api.fetchChapters(volumeId);
+    if (result.ok) {
+      setChaptersMap((prev) => ({ ...prev, [volumeId]: result.data }));
+      return result.data;
+    }
+    return [];
   }, []);
 
   const saveChapter = useCallback(
@@ -144,7 +170,7 @@ export function useCreationZone(bookId: string) {
       }
     ) => {
       if (data.id) {
-        const updated = await api.updateChapter(data.id, {
+        const result = await api.updateChapter(data.id, {
           title: data.title,
           summary: data.summary,
           prevChapterLink: data.prevChapterLink,
@@ -159,13 +185,17 @@ export function useCreationZone(bookId: string) {
           expectedWords: data.expectedWords,
           note: data.note
         });
+        if (!result.ok) {
+          showError(result.error || "保存章纲失败");
+          return null;
+        }
         setChaptersMap((prev) => ({
           ...prev,
-          [volumeId]: (prev[volumeId] || []).map((c) => (c.id === data.id ? updated : c))
+          [volumeId]: (prev[volumeId] || []).map((c) => (c.id === data.id ? result.data : c))
         }));
-        return updated;
+        return result.data;
       }
-      const created = await api.createChapter(volumeId, {
+      const result = await api.createChapter(volumeId, {
         title: data.title,
         summary: data.summary,
         prevChapterLink: data.prevChapterLink,
@@ -180,40 +210,58 @@ export function useCreationZone(bookId: string) {
         expectedWords: data.expectedWords,
         note: data.note
       });
+      if (!result.ok) {
+        showError(result.error || "创建章纲失败");
+        return null;
+      }
       setChaptersMap((prev) => ({
         ...prev,
-        [volumeId]: [...(prev[volumeId] || []), created]
+        [volumeId]: [...(prev[volumeId] || []), result.data]
       }));
-      return created;
+      return result.data;
     },
     []
   );
 
   const removeChapter = useCallback(async (volumeId: string, chapterId: string) => {
-    await api.deleteChapter(chapterId);
+    const result = await api.deleteChapter(chapterId);
+    if (!result.ok) {
+      showError(result.error || "删除章纲失败");
+      return false;
+    }
     setChaptersMap((prev) => ({
       ...prev,
       [volumeId]: (prev[volumeId] || []).filter((c) => c.id !== chapterId)
     }));
+    return true;
   }, []);
 
   // 正文操作
   const saveChapterContent = useCallback(
     async (chapterId: string, content: string, status?: string) => {
-      const updated = await api.updateChapter(chapterId, { content, status });
-      const volId = updated.volumeId;
+      const result = await api.updateChapter(chapterId, { content, status });
+      if (!result.ok) {
+        showError(result.error || "保存正文失败");
+        return null;
+      }
+      const volId = result.data.volumeId;
       setChaptersMap((prev) => ({
         ...prev,
-        [volId]: (prev[volId] || []).map((c) => (c.id === chapterId ? updated : c))
+        [volId]: (prev[volId] || []).map((c) => (c.id === chapterId ? result.data : c))
       }));
-      return updated;
+      return result.data;
     },
     []
   );
 
   const saveToArchive = useCallback(
     async (chapterId: string, sortOrder: number, title: string, content: string) => {
-      await api.saveArchive(bookId, { chapterId, sortOrder, title, content });
+      const result = await api.saveArchive(bookId, { chapterId, sortOrder, title, content });
+      if (!result.ok) {
+        showError(result.error || "保存到正文库失败");
+        return false;
+      }
+      return true;
     },
     [bookId]
   );

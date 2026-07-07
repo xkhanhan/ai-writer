@@ -1,0 +1,63 @@
+.selectorWrap {
+  width: 100%;
+}
+
+.loadingWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+  min-height: 32px;
+}
+
+.loadingText {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.emptyState {
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* TreeSelect 本体 */
+.treeSelect {
+  width: 100%;
+}
+
+/* 弹出面板视口适配 */
+.popup {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 搜索输入框 */
+.treeSelect :global(.ant-select-selection-search-input) {
+  font-size: 13px;
+}
+
+/* 已选标签样式 */
+.treeSelect :global(.ant-select-selection-item) {
+  font-size: 12px;
+}
+
+/* 虚拟滚动列表项高度适配 */
+.treeSelect :global(.ant-select-tree-treenode) {
+  padding: 2px 0;
+}
+
+.treeSelect :global(.ant-select-tree-title) {
+  font-size: 13px;
+}
+
+/* 搜索高亮 */
+.treeSelect :global(.ant-select-tree-title em) {
+  color: var(--color-primary);
+  font-style: normal;
+  font-weight: 600;
+}

@@ -9,7 +9,7 @@ const { TextArea } = Input;
 
 interface Props {
   outline: BookOutline | null;
-  onSave: (data: { direction: string; stages: string; sellingPoints: string }) => Promise<BookOutline>;
+  onSave: (data: { direction: string; stages: string; sellingPoints: string }) => Promise<BookOutline | null>;
   onCancel: () => void;
 }
 
@@ -52,7 +52,7 @@ export function OutlineEditor({ outline, onSave, onCancel }: Props) {
       </div>
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>核心卖点</label>
-        <Input value={sellingPoints} onChange={(e) => setSellingPoints(e.target.value)} placeholder="逗号分隔" maxLength={200} />
+        <Input value={sellingPoints} onChange={(e) => setSellingPoints(e.target.value)} placeholder="逗号分隔" maxLength={200} showCount />
       </div>
       <Button onClick={onCancel}>返回</Button>
     </div>

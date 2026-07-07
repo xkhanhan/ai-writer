@@ -32,9 +32,9 @@ interface Props {
     highlights?: string;
     expectedWords?: number;
     note?: string;
-  }) => Promise<ChapterOutline>;
+  }) => Promise<ChapterOutline | null>;
   onCancel: () => void;
-  onDelete?: (volumeId: string, chapterId: string) => Promise<void>;
+  onDelete?: (volumeId: string, chapterId: string) => Promise<boolean>;
 }
 
 export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: Props) {
@@ -107,7 +107,7 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
       <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>{label}</label>
       {items.map((it, i) => (
         <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <Input value={it} placeholder={placeholder} maxLength={200} onChange={(e) => { const next = [...items]; next[i] = e.target.value; setItems(next); }} />
+          <Input value={it} placeholder={placeholder} maxLength={200} showCount onChange={(e) => { const next = [...items]; next[i] = e.target.value; setItems(next); }} />
           <Button icon={<MinusCircleOutlined />} onClick={() => setItems(items.filter((_, idx) => idx !== i))} />
         </div>
       ))}
@@ -137,11 +137,11 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
       <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
         <div style={{ flex: 2 }}>
           <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>章节标题</label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：意外发现" maxLength={60} />
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：意外发现" maxLength={60} showCount />
         </div>
         <div style={{ flex: 1 }}>
           <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>目标字数</label>
-          <InputNumber value={expectedWords} onChange={(v) => setExpectedWords(v ?? 3000)} min={100} step={500} style={{ width: "100%" }} />
+          <InputNumber value={expectedWords} onChange={(v) => setExpectedWords(v ?? 3000)} min={100} max={50000} step={500} style={{ width: "100%" }} />
         </div>
       </div>
 
@@ -184,18 +184,18 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
             {renderArrayInput("场景", scenes, setScenes, "场景描述")}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>时间</label>
-              <Input value={time} onChange={(e) => setTime(e.target.value)} placeholder="如：第三天下午" maxLength={200} />
+              <Input value={time} onChange={(e) => setTime(e.target.value)} placeholder="如：第三天下午" maxLength={200} showCount />
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>情绪基调</label>
-              <Input value={moodTone} onChange={(e) => setMoodTone(e.target.value)} placeholder="如：紧张、悬疑" maxLength={200} />
+              <Input value={moodTone} onChange={(e) => setMoodTone(e.target.value)} placeholder="如：紧张、悬疑" maxLength={200} showCount />
             </div>
             {renderArrayInput("出场人物", characters, setCharacters, "人物名称")}
             {renderArrayInput("重大事件", keyEvents, setKeyEvents, "事件描述")}
             {renderArrayInput("伏笔", foreshadowings, setForeshadowings, "伏笔内容")}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>预计看点</label>
-              <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} placeholder="本章的爽点或看点" maxLength={200} />
+              <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} placeholder="本章的爽点或看点" maxLength={200} showCount />
             </div>
           </div>
         )}

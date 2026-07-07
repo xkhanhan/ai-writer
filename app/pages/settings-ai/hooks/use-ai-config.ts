@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import type { AiConfig } from "@/app/types";
-import { handleApiError, showSuccess } from "@/app/utils/error-handler";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import {
   saveAiConfig as saveAiConfigApi,
   fetchModels as fetchModelsApi,
@@ -57,8 +57,6 @@ export function useAiConfig(initialConfig?: AiConfig | null) {
   });
 
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-
 
   const syncFromJson = useCallback((json: string) => {
     const result = syncFromAdvancedJson(json);
@@ -162,97 +160,95 @@ export function useAiConfig(initialConfig?: AiConfig | null) {
 
   const handleFetchModels = useCallback(async () => {
     if (!state.providerId || !state.baseUrl || !state.apiKey) {
-      handleApiError(new Error("请填写厂商、Base URL 和 API Key"), "参数不完整");
+      showError("请填写厂商、Base URL 和 API Key");
       return;
     }
 
     setState((prev) => ({ ...prev, modelsLoading: true }));
-    try {
-      const result = await fetchModelsApi({
-        providerId: state.providerId,
-        baseUrl: state.baseUrl,
-        apiKey: state.apiKey,
-      });
+    const result = await fetchModelsApi({
+      providerId: state.providerId,
+      baseUrl: state.baseUrl,
+      apiKey: state.apiKey,
+    });
 
-      if (result.success) {
-        setState((prev) => ({
-          ...prev,
-          availableModels: result.models,
-          modelsLoading: false,
-        }));
-        showSuccess(result.message ?? `获取到 ${result.models.length} 个模型`);
-      } else {
-        handleApiError(new Error(result.message ?? "获取模型列表失败"), "拉取失败");
-        setState((prev) => ({ ...prev, modelsLoading: false }));
-      }
-    } catch (error) {
-      handleApiError(error, "拉取模型失败");
+    if (result.ok && result.data.success) {
+      setState((prev) => ({
+        ...prev,
+        availableModels: result.data.models,
+        modelsLoading: false,
+      }));
+      showSuccess(result.data.message ?? `获取到 ${result.data.models.length} 个模型`);
+    } else if (result.ok) {
+      showError(result.data.message ?? "获取模型列表失败");
+      setState((prev) => ({ ...prev, modelsLoading: false }));
+    } else {
+      showError(result.error || "拉取模型失败");
       setState((prev) => ({ ...prev, modelsLoading: false }));
     }
   }, [state.providerId, state.baseUrl, state.apiKey]);
 
   const handleTestConnection = useCallback(async () => {
     if (!state.baseUrl || !state.apiKey || !state.model) {
-      handleApiError(new Error("请填写 Base URL、API Key 和模型"), "参数不完整");
+      showError("请填写 Base URL、API Key 和模型");
       return;
     }
 
     setState((prev) => ({ ...prev, testStatus: "testing", testMessage: "正在测试连接..." }));
-    try {
-      const result = await testConnectionApi({
-        providerId: state.providerId,
-        baseUrl: state.baseUrl,
-        apiKey: state.apiKey,
-        model: state.model,
-        apiFormat: state.apiFormat,
-      });
+    const result = await testConnectionApi({
+      providerId: state.providerId,
+      baseUrl: state.baseUrl,
+      apiKey: state.apiKey,
+      model: state.model,
+      apiFormat: state.apiFormat,
+    });
 
+    if (result.ok) {
       setState((prev) => ({
         ...prev,
-        testStatus: result.success ? "success" : "error",
-        testMessage: result.message,
+        testStatus: result.data.success ? "success" : "error",
+        testMessage: result.data.message,
       }));
-    } catch (error) {
+    } else {
       setState((prev) => ({
         ...prev,
         testStatus: "error",
-        testMessage: error instanceof Error ? error.message : "测试连接失败",
+        testMessage: result.error || "测试连接失败",
       }));
     }
   }, [state.providerId, state.baseUrl, state.apiKey, state.model, state.apiFormat]);
 
   const handleSave = useCallback(async () => {
     setState((prev) => ({ ...prev, saving: true }));
-    try {
-      let advancedConfig: Record<string, unknown> | undefined;
 
-      if (state.jsonValid && state.advancedJson) {
-        try {
-          advancedConfig = JSON.parse(state.advancedJson) as Record<string, unknown>;
-        } catch (parseError) {
-          const message = parseError instanceof Error ? parseError.message : "高级配置 JSON 解析失败";
-          handleApiError(new Error(message), "保存配置失败");
-          setState((prev) => ({ ...prev, saving: false }));
-          return;
-        }
+    let advancedConfig: Record<string, unknown> | undefined;
+
+    if (state.jsonValid && state.advancedJson) {
+      try {
+        advancedConfig = JSON.parse(state.advancedJson) as Record<string, unknown>;
+      } catch (parseError) {
+        const msg = parseError instanceof Error ? parseError.message : "高级配置 JSON 解析失败";
+        showError(msg);
+        setState((prev) => ({ ...prev, saving: false }));
+        return;
       }
-
-      await saveAiConfigApi({
-        providerId: state.providerId,
-        apiKey: state.apiKey || undefined,
-        baseUrl: state.baseUrl,
-        model: state.model,
-        contextSize: state.contextSize,
-        temperature: state.temperature,
-        advancedConfig,
-      });
-
-      showSuccess("配置保存成功");
-    } catch (error) {
-      handleApiError(error, "保存配置失败");
-    } finally {
-      setState((prev) => ({ ...prev, saving: false }));
     }
+
+    const result = await saveAiConfigApi({
+      providerId: state.providerId,
+      apiKey: state.apiKey || undefined,
+      baseUrl: state.baseUrl,
+      model: state.model,
+      contextSize: state.contextSize,
+      temperature: state.temperature,
+      advancedConfig,
+    });
+
+    if (result.ok) {
+      showSuccess("配置保存成功");
+    } else {
+      showError(result.error || "保存配置失败");
+    }
+    setState((prev) => ({ ...prev, saving: false }));
   }, [state]);
 
   useEffect(() => {

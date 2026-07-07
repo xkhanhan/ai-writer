@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
+import { Button } from "antd";
 import { SaveOutlined } from "@ant-design/icons";
-import styles from "./index.module.css";
 
 interface SaveButtonProps {
   onClick?: () => void;
@@ -11,9 +10,14 @@ interface SaveButtonProps {
 
 export function SaveButton({ onClick, loading }: SaveButtonProps) {
   return (
-    <button className={styles.button} onClick={onClick} disabled={loading}>
-      <SaveOutlined />
-      <span>{loading ? "保存中…" : "保存"}</span>
-    </button>
+    <Button
+      size="small"
+      icon={<SaveOutlined />}
+      loading={loading}
+      onClick={onClick}
+      disabled={loading}
+    >
+      {loading ? "保存中…" : "保存"}
+    </Button>
   );
 }

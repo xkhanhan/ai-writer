@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世界规则 — 视觉稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary: #2F5D50;
+    --color-primary-hover: #1e4438;
+    --color-primary-bg: rgba(47,93,80,0.06);
+    --color-primary-border: rgba(47,93,80,0.20);
+    --color-success: #2E8B57;
+    --color-warning: #964400;
+    --color-error: #ba1a1a;
+    --bg-page: #f0ece4;
+    --bg-elevated: #faf8f4;
+    --bg-muted: #f5f2ec;
+    --bg-strong: #e8e4dc;
+    --text-primary: #1a1814;
+    --text-secondary: #4a4640;
+    --text-tertiary: #807b74;
+    --text-light: #b5b0a8;
+    --border: #ddd8d0;
+    --border-strong: #c0bbb3;
+    --border-light: #ebe7e0;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    --font-display: 'Noto Serif SC', serif;
+    --font-body: 'Noto Sans SC', -apple-system, sans-serif;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ===== Layout ===== */
+  .page { display: flex; height: 100vh; overflow: hidden; }
+  .left-panel {
+    width: 300px;
+    min-width: 300px;
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .left-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+  }
+  .left-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .left-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+  }
+  .right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-page);
+  }
+
+  /* ===== Category Group ===== */
+  .cat-group { margin-bottom: 4px; }
+  .cat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .cat-header:hover { background: var(--bg-muted); }
+  .cat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+  .cat-arrow {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+  }
+  .cat-arrow.open { transform: rotate(90deg); }
+  .cat-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .cat-count {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    background: var(--bg-strong);
+    padding: 1px 6px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+  .cat-add {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .cat-add:hover { background: var(--color-primary-bg); color: var(--color-primary); }
+
+  /* ===== Rule Items ===== */
+  .cat-items { padding: 2px 0 4px 22px; }
+  .rule-item {
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 2px;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .rule-item:hover { background: var(--bg-muted); }
+  .rule-item.active {
+    background: var(--color-primary-bg);
+    border-left-color: var(--color-primary);
+  }
+  .rule-item-name {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+  .rule-item-name.fixed {
+    color: var(--text-tertiary);
+  }
+  .rule-tag {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    font-weight: 500;
+  }
+  .rule-tag.text { background: #e8f5e9; color: #2e7d32; }
+  .rule-tag.select { background: #e3f2fd; color: #1565c0; }
+  .rule-tag.number { background: #fff3e0; color: #e65100; }
+  .rule-tag.fixed { background: #fce4ec; color: #c62828; }
+
+  /* ===== Right Panel Detail ===== */
+  .detail-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    font-size: 13px;
+  }
+  .detail-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+  .detail-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    background: var(--bg-elevated);
+  }
+  .detail-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .detail-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+  }
+  .detail-category-tag {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .detail-category-tag.global { background: #e8f5e9; color: #2e7d32; }
+  .detail-category-tag.writing { background: #e3f2fd; color: #1565c0; }
+  .detail-category-tag.setting { background: #fff3e0; color: #e65100; }
+  .detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+    margin-bottom: 10px;
+  }
+  .detail-meta span {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .detail-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+  .detail-content-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .detail-content-box {
+    background: var(--bg-muted);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .detail-setting-extra {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+  }
+  .detail-setting-extra .extra-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .detail-setting-extra .extra-value {
+    font-size: 13px;
+    color: var(--text-primary);
+    background: var(--bg-muted);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+  }
+
+  /* ===== Buttons ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+  .btn-primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+  .btn-danger { color: var(--color-error); }
+  .btn-danger:hover { background: #fef2f2; border-color: var(--color-error); }
+  .btn-sm { padding: 3px 8px; font-size: 11px; }
+
+  /* ===== Empty State ===== */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px 20px;
+    color: var(--text-tertiary);
+  }
+  .empty-icon { font-size: 32px; opacity: 0.4; }
+  .empty-title { font-size: 14px; font-weight: 500; }
+  .empty-desc { font-size: 12px; text-align: center; }
+
+  /* ===== Modal ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    width: 560px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-title {
+    padding: 16px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .form-label .required { color: var(--color-error); margin-left: 2px; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--color-primary);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; line-height: 1.7; }
+  .form-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 3px;
+  }
+  .form-row {
+    display: flex;
+    gap: 12px;
+  }
+  .form-row .form-group { flex: 1; }
+
+  /* ===== Scrollbar ===== */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+  /* ===== Annotations ===== */
+  .annotation {
+    position: absolute;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: #856404;
+    pointer-events: none;
+    z-index: 50;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .annotation::before {
+    content: "📝 ";
+  }
+</style>
+</head>
+<body>
+
+<div class="page" style="position: relative;">
+  <!-- ===== 左侧面板 ===== -->
+  <div class="left-panel">
+    <div class="left-header">
+      <div class="left-title">世界规则</div>
+    </div>
+    <div class="left-body">
+
+      <!-- 全局规则 -->
+      <div class="cat-group">
+        <div class="cat-header" onclick="toggleGroup(this)">
+          <div class="cat-header-left">
+            <span class="cat-arrow open">▶</span>
+            <span class="cat-name">全局规则</span>
+            <span class="cat-count">3</span>
+          </div>
+          <button class="cat-add" title="新建全局规则">＋</button>
+        </div>
+        <div class="cat-items">
+          <div class="rule-item active" onclick="showDetail('global-fixed')">
+            <span class="rule-item-name fixed">政治合规</span>
+            <span class="rule-tag fixed">固定</span>
+          </div>
+          <div class="rule-item" onclick="showDetail('global-1')">
+            <span class="rule-item-name">修仙世界观</span>
+          </div>
+          <div class="rule-item" onclick="showDetail('global-2')">
+            <span class="rule-item-name">力量体系上限</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 写作规则 -->
+      <div class="cat-group">
+        <div class="cat-header" onclick="toggleGroup(this)">
+          <div class="cat-header-left">
+            <span class="cat-arrow open">▶</span>
+            <span class="cat-name">写作规则</span>
+            <span class="cat-count">2</span>
+          </div>
+          <button class="cat-add" title="新建写作规则">＋</button>
+        </div>
+        <div class="cat-items">
+          <div class="rule-item" onclick="showDetail('writing-1')">
+            <span class="rule-item-name">文笔风格</span>
+          </div>
+          <div class="rule-item" onclick="showDetail('writing-2')">
+            <span class="rule-item-name">节奏控制</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设定规则 -->
+      <div class="cat-group">
+        <div class="cat-header" onclick="toggleGroup(this)">
+          <div class="cat-header-left">
+            <span class="cat-arrow open">▶</span>
+            <span class="cat-name">设定规则</span>
+            <span class="cat-count">4</span>
+          </div>
+          <button class="cat-add" title="新建设定规则">＋</button>
+        </div>
+        <div class="cat-items">
+          <div class="rule-item" onclick="showDetail('setting-1')">
+            <span class="rule-item-name">力量体系</span>
+            <span class="rule-tag text">文本</span>
+          </div>
+          <div class="rule-item" onclick="showDetail('setting-2')">
+            <span class="rule-item-name">境界上限</span>
+            <span class="rule-tag number">数字</span>
+          </div>
+          <div class="rule-item" onclick="showDetail('setting-3')">
+            <span class="rule-item-name">势力分类</span>
+            <span class="rule-tag select">下拉</span>
+          </div>
+          <div class="rule-item" onclick="showDetail('setting-4')">
+            <span class="rule-item-name">物品品阶</span>
+            <span class="rule-tag select">下拉</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== 右侧详情面板 ===== -->
+  <div class="right-panel" id="rightPanel">
+    <!-- 默认展示选中的规则 -->
+    <div class="detail-panel">
+      <div class="detail-header">
+        <div class="detail-title-row">
+          <h3 class="detail-title">政治合规</h3>
+          <span class="detail-category-tag global">全局规则</span>
+        </div>
+        <div class="detail-meta">
+          <span>固定规则 · 不可删除</span>
+        </div>
+        <div class="detail-actions">
+          <button class="btn btn-sm" disabled style="opacity:0.4">编辑</button>
+          <button class="btn btn-sm btn-danger" disabled style="opacity:0.4">删除</button>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-content-label">规则内容</div>
+        <div class="detail-content-box">本作品不包含政治敏感内容，不涉及真实政治人物、政治事件或政治立场的表达。作品中的国家、宗门等设定均为虚构，不代表任何现实政治实体。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 新建弹窗 Mock (全局规则) ===== -->
+<div class="modal-overlay show" id="modalGlobal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-title">新建全局规则</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">规则名称<span class="required">*</span></label>
+        <input class="form-input" placeholder="如：世界观设定" maxlength="60">
+        <div class="form-hint">最多 60 字</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">规则内容<span class="required">*</span></label>
+        <textarea class="form-textarea" rows="5" placeholder="描述这条全局规则的具体内容..." maxlength="300"></textarea>
+        <div class="form-hint">最多 300 字</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="document.getElementById('modalGlobal').classList.remove('show')">取消</button>
+      <button class="btn btn-primary" onclick="document.getElementById('modalGlobal').classList.remove('show'); document.getElementById('modalSetting').classList.add('show')">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 新建弹窗 Mock (设定规则 - 文本) ===== -->
+<div class="modal-overlay" id="modalSetting" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-title">新建设定规则</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">规则名称<span class="required">*</span></label>
+        <input class="form-input" placeholder="如：力量体系" maxlength="60">
+        <div class="form-hint">最多 60 字</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">值类型<span class="required">*</span></label>
+        <select class="form-select">
+          <option>文本</option>
+          <option>下拉选项</option>
+          <option>数字</option>
+        </select>
+        <div class="form-hint">设定规则支持三种字段类型</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">规则内容<span class="required">*</span></label>
+        <textarea class="form-textarea" rows="5" placeholder="描述这条设定规则的具体内容..." maxlength="300"></textarea>
+        <div class="form-hint">最多 300 字</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="document.getElementById('modalSetting').classList.remove('show')">取消</button>
+      <button class="btn btn-primary">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleGroup(header) {
+  const arrow = header.querySelector('.cat-arrow');
+  const items = header.nextElementSibling;
+  if (items.style.display === 'none') {
+    items.style.display = 'block';
+    arrow.classList.add('open');
+  } else {
+    items.style.display = 'none';
+    arrow.classList.remove('open');
+  }
+}
+
+function showDetail(id) {
+  // Remove active from all rule items
+  document.querySelectorAll('.rule-item').forEach(el => el.classList.remove('active'));
+  // Add active to clicked item
+  event.currentTarget.classList.add('active');
+}
+</script>
+
+</body>
+</html>

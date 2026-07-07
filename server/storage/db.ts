@@ -28,6 +28,9 @@ export async function getDb(): Promise<Database.Database> {
   // 迁移：为 volumes 表补充 stages 列
   migrateVolumeStages(db);
 
+  // 迁移：为 books 表补充目标总字数列
+  migrateBookTargetTotalWords(db);
+
   // 迁移：为 chapters 表补充新字段
   migrateChapterNewFields(db);
 
@@ -66,6 +69,14 @@ function migrateVolumeStages(db: Database.Database) {
   const existing = new Set(columns.map((c) => c.name));
   if (!existing.has("stages")) {
     db.exec("ALTER TABLE volumes ADD COLUMN stages TEXT DEFAULT '[]'");
+  }
+}
+
+function migrateBookTargetTotalWords(db: Database.Database) {
+  const columns = db.prepare("PRAGMA table_info(books)").all() as Array<{ name: string }>;
+  const existing = new Set(columns.map((c) => c.name));
+  if (!existing.has("target_total_words")) {
+    db.exec("ALTER TABLE books ADD COLUMN target_total_words INTEGER DEFAULT 0");
   }
 }
 
@@ -193,6 +204,29 @@ function initializeTables(db: Database.Database) {
     );
   `);
 
+  // 世界规则
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS world_rules (
+      id TEXT PRIMARY KEY,
+      book_id TEXT NOT NULL,
+      category TEXT NOT NULL,
+      name TEXT NOT NULL,
+      content TEXT DEFAULT '',
+      is_fixed INTEGER DEFAULT 0,
+      setting_type TEXT DEFAULT '',
+      select_options TEXT DEFAULT '[]',
+      number_min REAL,
+      number_max REAL,
+      number_unit TEXT DEFAULT '',
+      sort_order INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_world_rules_book_category ON world_rules(book_id, category);
+    CREATE INDEX IF NOT EXISTS idx_world_rules_sort ON world_rules(book_id, sort_order);
+  `);
+
   // 正文库 - 存稿
   db.exec(`
     CREATE TABLE IF NOT EXISTS archived_chapters (
@@ -207,6 +241,50 @@ function initializeTables(db: Database.Database) {
       FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS idx_archive_book_id ON archived_chapters(book_id);
+  `);
+
+  // 标签分类（系统标签库）
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tag_categories (
+      id          TEXT PRIMARY KEY,
+      book_id     TEXT NOT NULL,
+      parent_id   TEXT,
+      name        TEXT NOT NULL,
+      code        TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      sort_order  INTEGER DEFAULT 0,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_tag_categories_book_id ON tag_categories(book_id);
+    CREATE INDEX IF NOT EXISTS idx_tag_categories_parent_id ON tag_categories(parent_id);
+  `);
+
+  // 设定库 - 设定实体
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS setting_entities (
+      id              TEXT PRIMARY KEY,
+      book_id         TEXT NOT NULL,
+      category        TEXT NOT NULL,
+      name            TEXT NOT NULL,
+      level           TEXT NOT NULL DEFAULT 'general',
+      description     TEXT NOT NULL DEFAULT '',
+      appearance      TEXT NOT NULL DEFAULT '',
+      traits          TEXT NOT NULL DEFAULT '',
+      background      TEXT NOT NULL DEFAULT '',
+      abilities       TEXT NOT NULL DEFAULT '',
+      weaknesses      TEXT NOT NULL DEFAULT '',
+      tag_ids         TEXT NOT NULL DEFAULT '[]',
+      category_fields TEXT NOT NULL DEFAULT '{}',
+      status_fields   TEXT NOT NULL DEFAULT '{}',
+      deprecated      INTEGER NOT NULL DEFAULT 0,
+      created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_setting_entities_book_category ON setting_entities(book_id, category);
+    CREATE INDEX IF NOT EXISTS idx_setting_entities_book_level ON setting_entities(book_id, level);
   `);
 }
 

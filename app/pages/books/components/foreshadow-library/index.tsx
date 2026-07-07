@@ -203,6 +203,7 @@ export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
                 onChange={(e) => setFormName(e.target.value)}
                 placeholder="输入伏笔名称"
                 maxLength={60}
+                showCount
               />
             </div>
 
@@ -236,6 +237,7 @@ export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
                 placeholder="可选，输入章节编号"
                 style={{ width: 200 }}
                 maxLength={200}
+                showCount
               />
             </div>
 
