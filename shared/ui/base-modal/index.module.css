@@ -1,0 +1,27 @@
+/* BaseModal 三层布局骨架 */
+
+/* 弹窗内容容器：flex column 布局 */
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+
+/* 内容区：可滚动，留滚动条间距 */
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 16px 16px 16px 24px;
+}
+
+/* 操作栏：固定底部 */
+.modalFooter {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+}

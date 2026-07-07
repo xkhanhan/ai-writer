@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, Form, Input, Button, Typography } from "antd";
+import { Form, Input, Typography } from "antd";
 import { FolderOutlined } from "@ant-design/icons";
+import BaseModal from "@/shared/ui/base-modal";
 import type { Folder } from "@/app/types";
 
 interface CreateFolderModalProps {
@@ -29,7 +30,16 @@ export function CreateFolderModal({ onClose, onSubmit }: CreateFolderModalProps)
   };
 
   return (
-    <Modal open={true} title="新建文件夹" onCancel={onClose} footer={null} width={480} closable={false} maskClosable={false} keyboard={false}>
+    <BaseModal
+      title="新建文件夹"
+      open={true}
+      onCancel={onClose}
+      onOk={handleSubmit}
+      okText="创建"
+      confirmLoading={loading}
+      okButtonProps={{ disabled: !name.trim() }}
+      width={480}
+    >
       <Form layout="vertical">
         <Form.Item label="文件夹名称" required>
           <Input
@@ -43,14 +53,8 @@ export function CreateFolderModal({ onClose, onSubmit }: CreateFolderModalProps)
             prefix={<FolderOutlined style={{ color: "var(--text-light)" }} />}
           />
         </Form.Item>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24, paddingTop: 16 }}>
-          <Button onClick={onClose}>取消</Button>
-          <Button type="primary" loading={loading} disabled={!name.trim()} onClick={handleSubmit}>
-            创建
-          </Button>
-        </div>
       </Form>
-    </Modal>
+    </BaseModal>
   );
 }
 
@@ -79,7 +83,16 @@ export function CreateFileModal({ folder, onClose, onSubmit }: CreateFileModalPr
   };
 
   return (
-    <Modal open={true} title="新建文件" onCancel={onClose} footer={null} width={480} closable={false} maskClosable={false} keyboard={false}>
+    <BaseModal
+      title="新建文件"
+      open={true}
+      onCancel={onClose}
+      onOk={handleSubmit}
+      okText="创建"
+      confirmLoading={loading}
+      okButtonProps={{ disabled: !name.trim() }}
+      width={480}
+    >
       <Form layout="vertical">
         <div style={{ marginBottom: 20, padding: "10px 14px", background: "var(--bg-muted)", borderRadius: 6 }}>
           <Typography.Text type="secondary">
@@ -98,13 +111,7 @@ export function CreateFileModal({ folder, onClose, onSubmit }: CreateFileModalPr
             showCount
           />
         </Form.Item>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24, paddingTop: 16 }}>
-          <Button onClick={onClose}>取消</Button>
-          <Button type="primary" loading={loading} disabled={!name.trim()} onClick={handleSubmit}>
-            创建
-          </Button>
-        </div>
       </Form>
-    </Modal>
+    </BaseModal>
   );
 }

@@ -28,15 +28,25 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px;
+  padding: 6px 8px;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.15s;
   user-select: none;
+  position: relative;
 }
 
 .catHeader:hover {
   background: var(--bg-muted);
+}
+
+.addBtn {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.catHeader:hover .addBtn {
+  opacity: 1;
 }
 
 .catHeaderLeft {
@@ -54,8 +64,8 @@
   flex-shrink: 0;
 }
 
-.catArrowOpen {
-  transform: rotate(90deg);
+.catArrowClosed {
+  transform: rotate(-90deg);
 }
 
 .catName {
@@ -70,12 +80,12 @@
 }
 
 .catItems {
-  padding: 2px 0 4px 12px;
+  padding-left: 12px;
 }
 
 /* Entity list items */
 .entityItem {
-  padding: 5px 8px;
+  padding: 6px 10px;
   border-radius: var(--radius-md);
   margin-bottom: 2px;
   border-left: 3px solid transparent;

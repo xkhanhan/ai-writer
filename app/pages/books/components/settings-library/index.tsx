@@ -5,7 +5,6 @@ import {
   Button,
   Form,
   Input,
-  Modal,
   Select,
   Tag,
   Tooltip,
@@ -15,7 +14,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlusOutlined,
-  RightOutlined,
+  DownOutlined,
   InfoCircleOutlined,
   UserOutlined,
   EnvironmentOutlined,
@@ -29,6 +28,7 @@ import {
   FallOutlined,
 } from "@ant-design/icons";
 import { SplitPanel } from "@/shared/ui/split-panel";
+import BaseModal from "@/shared/ui/base-modal";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type {
   Book,
@@ -47,6 +47,7 @@ import {
   updateSettingEntity,
   deleteSettingEntity,
 } from "../../api/setting-entities";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import styles from "./index.module.css";
 
 // ============ 常量 ============
@@ -150,10 +151,10 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
   // ============ 数据加载 ============
 
   const loadEntities = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await fetchSettingEntities(book.id);
-      setEntities(data);
+    setLoading(true);
+    const result = await fetchSettingEntities(book.id);
+    if (result.ok) {
+      setEntities(result.data);
       // 自动展开有内容的分类
       const newOpen: Record<SettingCategory, boolean> = {
         character: false,
@@ -163,16 +164,13 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
         other: false,
       };
       for (const cat of CAT_ORDER) {
-        if (data.some((e) => e.category === cat)) {
+        if (result.data.some((e) => e.category === cat)) {
           newOpen[cat] = true;
         }
       }
       setOpenGroups(newOpen);
-    } catch (err) {
-      console.error("加载设定实体失败:", err);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }, [book.id]);
 
   useEffect(() => {
@@ -235,98 +233,105 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
   };
 
   const handleSave = async () => {
-    try {
-      const values = await form.validateFields();
-      const {
-        name,
-        level,
+    const values = await form.validateFields().catch(() => null);
+    if (!values) return;
+
+    const {
+      name,
+      level,
+      description,
+      appearance,
+      traits,
+      background,
+      abilities,
+      weaknesses,
+      ...rest
+    } = values;
+
+    // 分类专属字段
+    const categoryFields: Record<string, string> = {};
+    for (const f of CATEGORY_FIELD_TEMPLATES[modalCat]) {
+      if (rest[f] !== undefined) categoryFields[f] = rest[f];
+    }
+
+    // 状态字段
+    const statusFields: Record<string, string> = {};
+    for (const f of STATUS_FIELD_TEMPLATES[modalCat]) {
+      if (rest[f] !== undefined) statusFields[f] = rest[f];
+    }
+
+    if (editing) {
+      const dto = {
+        name: name.trim(),
+        level: level as SettingLevel,
         description,
         appearance,
         traits,
         background,
         abilities,
         weaknesses,
-        ...rest
-      } = values;
-
-      // 分类专属字段
-      const categoryFields: Record<string, string> = {};
-      for (const f of CATEGORY_FIELD_TEMPLATES[modalCat]) {
-        if (rest[f] !== undefined) categoryFields[f] = rest[f];
+        categoryFields,
+        statusFields,
+      };
+      const result = await updateSettingEntity(editing.id, dto);
+      if (!result.ok) {
+        showError(result.error || "保存失败");
+        return;
       }
-
-      // 状态字段
-      const statusFields: Record<string, string> = {};
-      for (const f of STATUS_FIELD_TEMPLATES[modalCat]) {
-        if (rest[f] !== undefined) statusFields[f] = rest[f];
+      setEntities((prev) =>
+        prev.map((e) => (e.id === result.data.id ? result.data : e))
+      );
+    } else {
+      const dto: CreateSettingEntityDTO = {
+        category: modalCat,
+        name: name.trim(),
+        level: level as SettingLevel,
+        description,
+        appearance,
+        traits,
+        background,
+        abilities,
+        weaknesses,
+        categoryFields,
+        statusFields,
+      };
+      const result = await createSettingEntity(book.id, dto);
+      if (!result.ok) {
+        showError(result.error || "创建失败");
+        return;
       }
-
-      if (editing) {
-        const dto = {
-          name: name.trim(),
-          level: level as SettingLevel,
-          description,
-          appearance,
-          traits,
-          background,
-          abilities,
-          weaknesses,
-          categoryFields,
-          statusFields,
-        };
-        const updated = await updateSettingEntity(editing.id, dto);
-        setEntities((prev) =>
-          prev.map((e) => (e.id === updated.id ? updated : e))
-        );
-      } else {
-        const dto: CreateSettingEntityDTO = {
-          category: modalCat,
-          name: name.trim(),
-          level: level as SettingLevel,
-          description,
-          appearance,
-          traits,
-          background,
-          abilities,
-          weaknesses,
-          categoryFields,
-          statusFields,
-        };
-        const created = await createSettingEntity(book.id, dto);
-        setEntities((prev) => [...prev, created]);
-        setActiveId(created.id);
-        setOpenGroups((prev) => ({ ...prev, [modalCat]: true }));
-      }
-
-      setModalOpen(false);
-    } catch (err) {
-      if (err && typeof err === "object" && "errorFields" in err) return;
-      console.error("保存设定实体失败:", err);
+      setEntities((prev) => [...prev, result.data]);
+      setActiveId(result.data.id);
+      setOpenGroups((prev) => ({ ...prev, [modalCat]: true }));
     }
+
+    showSuccess(editing ? "保存成功" : "创建成功");
+    setModalOpen(false);
   };
 
   const handleDelete = (entity: SettingEntity) => {
     confirmDelete(entity.name, async () => {
-      try {
-        await deleteSettingEntity(entity.id);
+      const result = await deleteSettingEntity(entity.id);
+      if (result.ok) {
         setEntities((prev) => prev.filter((e) => e.id !== entity.id));
         if (activeId === entity.id) setActiveId(null);
-      } catch (err) {
-        console.error("删除设定实体失败:", err);
+        showSuccess("删除成功");
+      } else {
+        showError(result.error || "删除失败");
       }
     });
   };
 
   const handleToggleDeprecated = async (entity: SettingEntity) => {
-    try {
-      const updated = await updateSettingEntity(entity.id, {
-        deprecated: !entity.deprecated,
-      });
+    const result = await updateSettingEntity(entity.id, {
+      deprecated: !entity.deprecated,
+    });
+    if (result.ok) {
       setEntities((prev) =>
-        prev.map((e) => (e.id === updated.id ? updated : e))
+        prev.map((e) => (e.id === result.data.id ? result.data : e))
       );
-    } catch (err) {
-      console.error("更新废弃状态失败:", err);
+    } else {
+      showError(result.error || "更新废弃状态失败");
     }
   };
 
@@ -359,9 +364,9 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
                 >
                   <div className={styles.catHeaderLeft}>
                     <span
-                      className={`${styles.catArrow} ${isOpen ? styles.catArrowOpen : ""}`}
+                      className={`${styles.catArrow} ${isOpen ? "" : styles.catArrowClosed}`}
                     >
-                      <RightOutlined style={{ fontSize: 10 }} />
+                      <DownOutlined style={{ fontSize: 10 }} />
                     </span>
                     <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
                       {meta.icon}
@@ -374,6 +379,7 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
                       type="text"
                       size="small"
                       icon={<PlusOutlined />}
+                      className={styles.addBtn}
                       onClick={(e) => {
                         e.stopPropagation();
                         openCreate(cat);
@@ -681,22 +687,17 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
   return (
     <>
       <SplitPanel left={leftPanel} right={rightPanel} />
-      <Modal
-        className={styles.settingsModal}
+      <BaseModal
         title={modalTitle}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={handleSave}
         okText="保存"
-        cancelText="取消"
         width={600}
         destroyOnClose
-        closable={false}
-        maskClosable={false}
-        keyboard={false}
       >
         {modalContent}
-      </Modal>
+      </BaseModal>
     </>
   );
 }

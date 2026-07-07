@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Button, Empty, Modal, message, Tag } from "antd";
+import { Button, Empty, Modal, Tag } from "antd";
+import BaseModal from "@/shared/ui/base-modal";
 import { InboxOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 import { fetchArchives, deleteArchive, getArchive } from "@/app/pages/books/api/creation";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import type { ArchivedChapter } from "@/app/types";
 import styles from "./index.module.css";
 
@@ -14,11 +16,11 @@ export function ArchiveView({ bookId }: { bookId: string }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try {
-      setArchives(await fetchArchives(bookId));
-    } finally {
-      setLoading(false);
+    const result = await fetchArchives(bookId);
+    if (result.ok) {
+      setArchives(result.data);
     }
+    setLoading(false);
   }, [bookId]);
 
   useEffect(() => {
@@ -34,17 +36,25 @@ export function ArchiveView({ bookId }: { bookId: string }) {
       okText: "删除",
       okType: "danger",
       cancelText: "取消",
-      onOk: async () => {
-        await deleteArchive(id);
-        message.success("已删除");
-        load();
+      async onOk() {
+        const result = await deleteArchive(id);
+        if (result.ok) {
+          showSuccess("已删除");
+          load();
+        } else {
+          showError(result.error || "删除失败");
+        }
       },
     });
   };
 
   const handlePreview = async (id: string) => {
-    const a = await getArchive(id);
-    setPreview(a);
+    const result = await getArchive(id);
+    if (result.ok) {
+      setPreview(result.data);
+    } else {
+      showError(result.error || "获取内容失败");
+    }
   };
 
   const totalWords = archives.reduce((sum, a) => sum + a.wordCount, 0);
@@ -81,21 +91,21 @@ export function ArchiveView({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      <Modal
+      <BaseModal
         open={!!preview}
         title={preview ? `第${preview.sortOrder + 1}章 ${preview.title}` : ""}
         onCancel={() => setPreview(null)}
-        footer={[
-          <Button key="close" onClick={() => setPreview(null)}>关闭</Button>,
-        ]}
+        okText="关闭"
+        cancelText=""
         width={720}
+        destroyOnClose={false}
       >
         {preview && (
-          <pre style={{ whiteSpace: "pre-wrap", fontFamily: "var(--font-body)", fontSize: 13, lineHeight: 1.8, maxHeight: "60vh", overflow: "auto", margin: 0 }}>
+          <pre style={{ whiteSpace: "pre-wrap", fontFamily: "var(--font-body)", fontSize: 13, lineHeight: 1.8, margin: 0 }}>
             {preview.content}
           </pre>
         )}
-      </Modal>
+      </BaseModal>
     </div>
   );
 }

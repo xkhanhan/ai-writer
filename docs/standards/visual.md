@@ -200,6 +200,55 @@
 | 表单提交按钮 | 不设（默认 default） |
 | SplitPanel 新建/编辑/删除 | `size="small"` |
 
+### 5.4 按钮交互规范（漏斗架构）
+
+#### 5.4.1 错误处理漏斗
+
+```
+API Client (client.ts)     → 拦截所有异常，返回 Result<T>
+API 函数 (api/*.ts)         → 透传 Result<T>
+Hooks (hooks/*.ts)          → 检查 result.ok，调用 showError/showSuccess
+页面组件                     → 仅处理业务逻辑，无 try/catch
+```
+
+**Result 类型定义** (`app/api-client/client.ts`):
+```typescript
+type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string };
+```
+
+#### 5.4.2 异步按钮统一行为
+
+| 阶段 | 行为 | 实现 |
+|------|------|------|
+| 点击 | 立即禁用，防止重复提交 | `loading={submitting}` 或 `disabled={loading}` |
+| 请求中 | 展示加载状态 | antd Button `loading` prop |
+| 成功 | 展示成功提示 | `showSuccess("xxx成功")` |
+| 失败 | 展示错误提示 | `showError(result.error)` |
+| 完成 | 恢复按钮状态 | `setLoading(false)` |
+
+#### 5.4.3 删除操作规范
+
+- 统一使用 `confirmDelete(name, onOk)` 组件
+- `confirmDelete` 内部处理 loading 状态，点击确认后按钮显示加载态
+- 确认弹窗期间禁止重复点击
+- `onOk` 回调内仅处理 Result，不使用 try/catch
+
+#### 5.4.4 保存操作规范
+
+- 表单保存：antd Modal `confirmLoading` 控制确认按钮加载态
+- 独立保存按钮：使用 `SaveButton` 组件（antd Button + loading）
+- 自动保存（如文件编辑器）：`saveStatus` 状态控制提示文案
+
+#### 5.4.5 禁止事项
+
+- **禁止**在 hooks/components 中使用 try/catch 处理 API 错误
+- **禁止**在 API 函数层抛出异常（所有异常在 client 层拦截）
+- **禁止**按钮无 loading 状态的异步操作
+- **禁止**删除操作无二次确认
+- **禁止**使用 `message.error` / `message.success`（统一用 `showError` / `showSuccess`）
+
 ---
 
 ## 6. 标签规范 (Tag)
@@ -282,43 +331,95 @@
 
 ## 9. 弹窗规范 (Modal)
 
-### 9.1 尺寸
+### 9.1 BaseModal 基础弹窗模板
 
-| 场景 | 宽度 |
-|------|------|
-| 小型弹窗 | 480px |
-| 中型弹窗（默认） | 600px |
-| 大型弹窗 | 720px |
-| SplitPanel 内 Modal | 560px |
-| 全屏弹窗 | `calc(100vw - 48px)` |
+所有编辑/创建类弹窗（删除确认除外）必须基于 `shared/ui/base-modal` 封装。禁止直接使用 Ant Design `Modal` 构建表单/内容弹窗。
 
-### 9.2 标题格式
+**布局结构（三层固定）：**
+
+```
+┌─────────────────────────────────┐
+│  标题栏 (flex-shrink: 0)         │  ← 固定不动
+├─────────────────────────────────┤
+│                                 │
+│  内容区 (flex: 1, overflow-y)   │  ← 可纵向滚动
+│  内边距: 16px 24px              │
+│  滚动条距内容: 8px              │
+│                                 │
+├─────────────────────────────────┤
+│  操作栏 (flex-shrink: 0)        │  ← 固定在底部
+│  [取消]              [确认]     │
+└─────────────────────────────────┘
+```
+
+**核心约束：**
+
+| 约束 | 值 | 说明 |
+|------|-----|------|
+| 最大高度 | `85vh` | 弹窗整体不突破视口 |
+| 内容滚动 | `overflow-y: auto` | 仅内容区滚动 |
+| 底部固定 | `flex-shrink: 0` | 操作栏不随内容移动 |
+| 滚动条间距 | `padding-right: 8px` | 滚动条不紧贴内容 |
+| 锁定行为 | `closable=false, maskClosable=false, keyboard=false` | 编辑/创建弹窗统一锁定 |
+
+**Props 接口：**
+
+```typescript
+interface BaseModalProps {
+  open: boolean;
+  title: string;
+  onCancel: () => void;
+  onOk?: () => void | Promise<void>;
+  okText?: string;           // 默认 "确认"
+  cancelText?: string;       // 默认 "取消"
+  okButtonProps?: ButtonProps;
+  confirmLoading?: boolean;
+  width?: number;            // 默认 600
+  destroyOnClose?: boolean;  // 默认 true
+  children: React.ReactNode;
+}
+```
+
+### 9.2 尺寸规范
+
+| 场景 | 宽度 | 说明 |
+|------|------|------|
+| 小型弹窗 | 480px | 简单表单（新建文件夹/文件） |
+| 中型弹窗（默认） | 600px | 常规编辑/创建表单 |
+| 大型弹窗 | 720px | 预览、内容展示 |
+| SplitPanel 内 Modal | 560px | SplitPanel 工作区内弹窗 |
+
+移动端自动适配：`width: min(宽度, calc(100vw - 32px))`
+
+### 9.3 标题格式
 
 - 弹窗标题使用中文四字或五字短语，统一「动词 + 名词」格式
-- 标准示例：创建新书、编辑书籍、确认删除、编辑卷纲
+- 标准示例：创建新书、编辑书籍、编辑卷纲、新建人物
 - **禁止**使用英文标题
 - **禁止**在标题中使用图标
 
-### 9.3 Footer 布局
-
-| 模式 | 使用场景 | 布局 |
-|------|----------|------|
-| `footer={null}` | 自定义底部操作栏 | 在 `<form>` 内手动放置按钮 |
-| `footer={[Button, ...]}` | 简单关闭按钮 | 数组传递按钮 |
-| `Modal.confirm` | 删除确认等危险操作 | Ant Design 内置确认弹窗 |
+### 9.4 Footer 操作栏
 
 - **取消按钮在左，确认按钮在右**
-- 取消：默认样式（无 type），确认：`type="primary"`
-- 删除确认：`Modal.confirm`，`okType="danger"`，`okText="删除"`
+- 取消：默认样式（`type="default"`），确认：`type="primary"`
+- 操作栏通过 `border-top` 与内容区视觉分隔
+- 禁止使用 `footer={null}` 自定义底部按钮
 
-### 9.4 规则
+### 9.5 适配范围
 
-- 弹窗统一使用 `Modal` 组件，**禁止**自定义弹窗实现
-- 确认删除操作统一使用 `Modal.confirm` 或 `confirmDelete`
-- 弹窗内表单使用 `footer={null}`，底部按钮通过自定义 `modalFooter` 样式类布局
-- `onCancel` 统一关闭弹窗并重置表单状态
-- 弹窗标题使用 `title` 属性，**禁止**在弹窗内容区重复显示标题
-- 弹窗宽度在移动端自动适配为 `calc(100vw - 32px)`
+| 弹窗 | 位置 | 宽度 | 改造方式 |
+|------|------|------|----------|
+| 创建新书 | `app/pages/home/index.tsx` | 600px | 替换为 BaseModal |
+| 编辑书籍 | `app/pages/home/index.tsx` | 600px | 替换为 BaseModal |
+| 新建/编辑世界规则 | `world-rules/index.tsx` | 560px | 替换为 BaseModal |
+| 新建/编辑设定实体 | `settings-library/index.tsx` | 600px | 替换为 BaseModal |
+| 编辑书籍信息 | `book-info-form/index.tsx` | 640px | 替换为 BaseModal |
+| 新建文件夹 | `folder-file-editor/create-modal/` | 480px | 替换为 BaseModal |
+| 新建文件 | `folder-file-editor/create-modal/` | 480px | 替换为 BaseModal |
+| 正文预览 | `content-library/index.tsx` | 720px | 替换为 BaseModal |
+| 正文预览 | `archive-view/index.tsx` | 720px | 替换为 BaseModal |
+
+**不受影响：** `Modal.confirm` 删除确认弹窗（使用 `confirmDelete`）
 
 ---
 
@@ -608,6 +709,157 @@ SplitPanel 不使用显式分割线元素。分隔效果通过父容器实现：
 --scrollbar-thumb-hover:  #a8a098
 ```
 
+## 10. 侧边栏规范 (Sidebar)
+
+### 10.1 适用范围
+
+| 页面 | 布局方式 | 有折叠分组 |
+|------|---------|-----------|
+| 设定库 settings-library | SplitPanel | 有（分类组） |
+| 世界规则 world-rules | SplitPanel | 有（规则分组） |
+| 标签库 tag-library | 自建 sidebar | 无（选中切换） |
+| 文件编辑器 folder-file-editor | 自建 sidebar | 有（文件夹→文件嵌套） |
+
+创作区导航树结构特殊（批量选择、状态色条），不在此规范范围内。
+
+### 10.2 侧边栏容器
+
+| 属性 | 统一值 |
+|------|--------|
+| 宽度 | 280px |
+| 背景 | `var(--panel)` |
+| 边框 | 右侧 `1px solid var(--border)` |
+| 布局 | `flex-direction: column` |
+| 溢出 | `overflow: hidden` |
+
+### 10.3 工具栏 / 头部
+
+| 属性 | 统一值 |
+|------|--------|
+| padding | `12px 12px 8px` |
+| 底部分隔 | `border-bottom: 1px solid var(--border)` |
+| 布局 | `display: flex; align-items: center; justify-content: space-between` |
+| 固定 | `flex-shrink: 0` |
+
+- 标题：`font-weight: 600; font-size: 13px; color: var(--text)`
+- 总计数：`font-weight: 600; font-size: 13px; color: var(--text-secondary)`
+- 主操作按钮（如"+ 新建大类"）：始终可见
+
+### 10.4 分组折叠条
+
+**容器：**
+
+| 属性 | 值 |
+|------|-----|
+| margin-bottom | `4px` |
+
+**分组头 (groupHeader)：**
+
+| 属性 | 值 |
+|------|-----|
+| display | `flex; align-items: center; gap: 6px` |
+| padding | `6px 8px` |
+| border-radius | `var(--radius-md)` |
+| cursor | `pointer` |
+| user-select | `none` |
+| transition | `background 0.15s ease` |
+| hover | `background: var(--bg-muted)` |
+
+**折叠箭头：**
+
+| 属性 | 值 |
+|------|-----|
+| 图标 | `DownOutlined`（Ant Design） |
+| 大小 | `font-size: 10px` |
+| 颜色 | `var(--text-secondary)` |
+| 动画 | `transition: transform 0.2s ease` |
+| 展开态 | 无旋转（默认 0deg） |
+| 折叠态 | `transform: rotate(-90deg)` |
+| flex | `flex-shrink: 0` |
+
+**分组名称：**
+
+| 属性 | 值 |
+|------|-----|
+| font-size | `13px` |
+| font-weight | `600` |
+| color | `var(--text)` |
+| flex | `1` |
+| 溢出 | `overflow: hidden; text-overflow: ellipsis; white-space: nowrap` |
+
+**计数：**
+
+| 属性 | 值 |
+|------|-----|
+| font-size | `11px` |
+| color | `var(--text-secondary)` |
+
+**+添加按钮：**
+
+| 属性 | 值 |
+|------|-----|
+| 组件 | `Button type="text" size="small"` |
+| 图标 | `PlusOutlined` |
+| 可见性 | hover 分组头时渐显（`opacity: 0 → 1`，transition 0.15s） |
+
+### 10.5 子项列表
+
+**容器 (groupItems)：**
+
+| 属性 | 值 |
+|------|-----|
+| padding-left | `12px` |
+
+**条目 (listItem)：**
+
+| 属性 | 值 |
+|------|-----|
+| display | `flex; align-items: center; gap: 4px` |
+| padding | `6px 10px` |
+| border-radius | `var(--radius-md)` |
+| margin-bottom | `2px` |
+| border-left | `3px solid transparent` |
+| cursor | `pointer` |
+| transition | `all 0.15s ease` |
+
+**条目 hover：** `background: var(--bg-muted)`
+
+**条目 active：**
+
+| 属性 | 值 |
+|------|-----|
+| background | `var(--color-primary-bg)` |
+| border-left-color | `var(--color-primary)` |
+
+**条目名称：**
+
+| 属性 | 值 |
+|------|-----|
+| font-size | `13px` |
+| font-weight | `500` |
+| color | `var(--text)` |
+| 溢出 | `overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0` |
+
+**空态文本：**
+
+| 属性 | 值 |
+|------|-----|
+| font-size | `12px` |
+| color | `var(--text-secondary)` |
+| font-style | `italic` |
+| padding | `6px 0` |
+
+### 10.6 嵌套结构（文件编辑器）
+
+文件夹→文件为两级嵌套，额外规范：
+
+| 属性 | 值 |
+|------|-----|
+| 文件夹图标 | `FolderOutlined` 16px，`var(--text-secondary)` |
+| 文件图标 | `FileOutlined` 14px，`var(--text-secondary)` |
+| 操作按钮 | hover 文件夹/文件项时渐显（opacity 0→1） |
+| 文件 active 名称 | `color: var(--color-primary); font-weight: 500` |
+
 ---
 
-**最后更新**: 2026-07-05
+**最后更新**: 2026-07-06

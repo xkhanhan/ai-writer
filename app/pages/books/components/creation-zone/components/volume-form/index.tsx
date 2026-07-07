@@ -10,9 +10,9 @@ const { TextArea } = Input;
 
 interface Props {
   volume?: VolumeOutline;
-  onSave: (data: { id?: string; title: string; coreConflict?: string; stages?: string[]; highlights?: string }) => Promise<VolumeOutline>;
+  onSave: (data: { id?: string; title: string; coreConflict?: string; stages?: string[]; highlights?: string }) => Promise<VolumeOutline | null>;
   onCancel: () => void;
-  onDelete?: (id: string) => Promise<void>;
+  onDelete?: (id: string) => Promise<boolean>;
 }
 
 export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {

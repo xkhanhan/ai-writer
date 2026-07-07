@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Modal, Form, Input, InputNumber, Select, Button, Spin, Descriptions, Tag, Typography, Tooltip } from "antd";
+import { Form, Input, InputNumber, Select, Button, Spin, Descriptions, Tag, Typography, Tooltip } from "antd";
+import BaseModal from "@/shared/ui/base-modal";
 import { EditOutlined } from "@ant-design/icons";
 import { client } from "@/app/api-client";
 import { BOOK_GENRES, BOOK_PLATFORMS } from "@/app/constants";
@@ -31,41 +32,34 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
   useEffect(() => {
     client
       .get<{ success: boolean; options: BookOptions }>("/api/book-options")
-      .then((res) => setOptions(res.success ? res.options : null))
-      .catch(() => {});
+      .then((res) => setOptions(res.ok && res.data.success ? res.data.options : null));
   }, []);
 
   // 加载统计相关数据（mount 时执行一次）
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const volRes = await client.get<{ volumes: VolumeOutline[] }>(
-          `/api/volumes?bookId=${book.id}`
+      const volRes = await client.get<{ volumes: VolumeOutline[] }>(
+        `/api/volumes?bookId=${book.id}`
+      );
+      const vols = volRes.ok ? (volRes.data.volumes ?? []) : [];
+
+      const allChapters: ChapterOutline[] = [];
+      for (const vol of vols) {
+        const chRes = await client.get<{ chapters: ChapterOutline[] }>(
+          `/api/chapters?volumeId=${vol.id}`
         );
-        const vols = volRes.volumes ?? [];
+        if (chRes.ok) allChapters.push(...(chRes.data.chapters ?? []));
+      }
 
-        const allChapters: ChapterOutline[] = [];
-        for (const vol of vols) {
-          try {
-            const chRes = await client.get<{ chapters: ChapterOutline[] }>(
-              `/api/chapters?volumeId=${vol.id}`
-            );
-            allChapters.push(...(chRes.chapters ?? []));
-          } catch { /* skip */ }
-        }
+      const arcRes = await client.get<{ archives: ArchivedChapter[] }>(
+        `/api/archive?bookId=${book.id}`
+      );
 
-        const arcRes = await client.get<{ archives: ArchivedChapter[] }>(
-          `/api/archive?bookId=${book.id}`
-        );
-
-        if (!cancelled) {
-          setChapters(allChapters);
-          setArchives(arcRes.archives ?? []);
-          setStatsLoading(false);
-        }
-      } catch {
-        if (!cancelled) setStatsLoading(false);
+      if (!cancelled) {
+        setChapters(allChapters);
+        setArchives(arcRes.ok ? (arcRes.data.archives ?? []) : []);
+        setStatsLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -559,7 +553,7 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
   };
 
   return (
-    <Modal
+    <BaseModal
       title="编辑书籍信息"
       open={open}
       onCancel={onClose}
@@ -567,9 +561,6 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
       confirmLoading={loading}
       width={640}
       destroyOnClose
-      closable={false}
-      maskClosable={false}
-      keyboard={false}
     >
       <Form
         form={form}
@@ -647,6 +638,6 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
           <Input.TextArea rows={4} maxLength={300} showCount placeholder="请输入书籍简介" />
         </Form.Item>
       </Form>
-    </Modal>
+    </BaseModal>
   );
 }

@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Modal, Button, Breadcrumb } from "antd";
+import { Breadcrumb } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 import { AiDropdown } from "@/shared/ui/ai-dropdown";
 import { EmptyState } from "@/shared/ui/empty-state";
+import BaseModal from "@/shared/ui/base-modal";
 import {
   fetchArchives,
   getArchive,
 } from "@/app/pages/books/api/creation";
+import { showError } from "@/app/utils/error-handler";
 import type { Book, ArchivedChapter } from "@/app/types";
 import styles from "./index.module.css";
 
@@ -23,11 +25,11 @@ export default function ContentLibrary({ book }: ContentLibraryProps) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try {
-      setArchives(await fetchArchives(book.id));
-    } finally {
-      setLoading(false);
+    const result = await fetchArchives(book.id);
+    if (result.ok) {
+      setArchives(result.data);
     }
+    setLoading(false);
   }, [book.id]);
 
   useEffect(() => {
@@ -37,8 +39,12 @@ export default function ContentLibrary({ book }: ContentLibraryProps) {
   }, [load]);
 
   const handlePreview = async (id: string) => {
-    const a = await getArchive(id);
-    setPreview(a);
+    const result = await getArchive(id);
+    if (result.ok) {
+      setPreview(result.data);
+    } else {
+      showError(result.error || "获取内容失败");
+    }
   };
 
   return (
@@ -88,21 +94,19 @@ export default function ContentLibrary({ book }: ContentLibraryProps) {
         </div>
       )}
 
-      <Modal
+      <BaseModal
         open={!!preview}
         title={preview ? `第${preview.sortOrder + 1}章 ${preview.title}` : ""}
         onCancel={() => setPreview(null)}
-        footer={
-          <Button key="close" onClick={() => setPreview(null)}>
-            关闭
-          </Button>
-        }
+        okText="关闭"
+        cancelText=""
         width={720}
+        destroyOnClose={false}
       >
         {preview && (
           <pre className={styles.modalContent}>{preview.content}</pre>
         )}
-      </Modal>
+      </BaseModal>
     </div>
   );
 }

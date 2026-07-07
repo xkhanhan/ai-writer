@@ -32,9 +32,9 @@ interface Props {
     highlights?: string;
     expectedWords?: number;
     note?: string;
-  }) => Promise<ChapterOutline>;
+  }) => Promise<ChapterOutline | null>;
   onCancel: () => void;
-  onDelete?: (volumeId: string, chapterId: string) => Promise<void>;
+  onDelete?: (volumeId: string, chapterId: string) => Promise<boolean>;
 }
 
 export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: Props) {

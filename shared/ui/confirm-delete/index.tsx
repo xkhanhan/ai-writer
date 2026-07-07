@@ -1,7 +1,9 @@
 import { Modal } from "antd";
 
 export function confirmDelete(name: string, onOk: () => void | Promise<void>) {
-  Modal.confirm({
+  let loading = false;
+
+  const modal = Modal.confirm({
     title: "确认删除",
     content: (
       <span>
@@ -11,6 +13,16 @@ export function confirmDelete(name: string, onOk: () => void | Promise<void>) {
     okText: "删除",
     okType: "danger",
     cancelText: "取消",
-    onOk,
+    async onOk() {
+      if (loading) return false;
+      loading = true;
+      modal.update({ okButtonProps: { loading: true } });
+      try {
+        await onOk();
+      } finally {
+        loading = false;
+        modal.update({ okButtonProps: { loading: false } });
+      }
+    },
   });
 }

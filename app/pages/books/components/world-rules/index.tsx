@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Button,
   Input,
-  Modal,
   Tag,
   Tooltip,
   Spin,
@@ -18,6 +17,7 @@ import {
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import { SplitPanel } from "@/shared/ui/split-panel";
+import BaseModal from "@/shared/ui/base-modal";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type {
@@ -32,6 +32,7 @@ import {
   updateWorldRule,
   deleteWorldRule,
 } from "../../api/world-rules";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import styles from "./index.module.css";
 
 // ============ 常量 ============
@@ -98,15 +99,12 @@ export default function WorldRules({ book }: WorldRulesProps) {
   // ============ 数据加载 ============
 
   const loadRules = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await fetchWorldRules(book.id);
-      setRules(data);
-    } catch (err) {
-      console.error("加载世界规则失败:", err);
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const result = await fetchWorldRules(book.id);
+    if (result.ok) {
+      setRules(result.data);
     }
+    setLoading(false);
   }, [book.id]);
 
   useEffect(() => {
@@ -142,43 +140,48 @@ export default function WorldRules({ book }: WorldRulesProps) {
   const handleSave = async () => {
     if (!formName.trim()) return;
 
-    try {
-      if (modalMode === "create") {
-        const dto: CreateWorldRuleDTO = {
-          category: modalCategory,
-          name: formName.trim(),
-          content: formContent,
-        };
+    if (modalMode === "create") {
+      const dto: CreateWorldRuleDTO = {
+        category: modalCategory,
+        name: formName.trim(),
+        content: formContent,
+      };
 
-        const newRule = await createWorldRule(book.id, dto);
-        setRules((prev) => [...prev, newRule]);
-        setActiveRuleId(newRule.id);
-      } else if (editingRule) {
-        const updated = await updateWorldRule(editingRule.id, {
-          name: formName.trim(),
-          content: formContent,
-        });
-        if (updated) {
-          setRules((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-        }
+      const result = await createWorldRule(book.id, dto);
+      if (!result.ok) {
+        showError(result.error || "创建失败");
+        return;
       }
-
-      setModalOpen(false);
-      resetForm();
-    } catch (err) {
-      console.error("保存世界规则失败:", err);
+      setRules((prev) => [...prev, result.data]);
+      setActiveRuleId(result.data.id);
+    } else if (editingRule) {
+      const result = await updateWorldRule(editingRule.id, {
+        name: formName.trim(),
+        content: formContent,
+      });
+      if (result.ok) {
+        setRules((prev) => prev.map((r) => (r.id === result.data.id ? result.data : r)));
+      } else {
+        showError(result.error || "保存失败");
+        return;
+      }
     }
+
+    showSuccess(modalMode === "create" ? "创建成功" : "保存成功");
+    setModalOpen(false);
+    resetForm();
   };
 
   const handleDelete = (rule: WorldRule) => {
     if (rule.isFixed) return;
     confirmDelete(rule.name, async () => {
-      try {
-        await deleteWorldRule(rule.id);
+      const result = await deleteWorldRule(rule.id);
+      if (result.ok) {
         setRules((prev) => prev.filter((r) => r.id !== rule.id));
         if (activeRuleId === rule.id) setActiveRuleId(null);
-      } catch (err) {
-        console.error("删除世界规则失败:", err);
+        showSuccess("删除成功");
+      } else {
+        showError(result.error || "删除失败");
       }
     });
   };
@@ -407,7 +410,7 @@ export default function WorldRules({ book }: WorldRulesProps) {
       />
 
       {/* 新建/编辑弹窗 */}
-      <Modal
+      <BaseModal
         title={
           modalMode === "create"
             ? `新建${CATEGORY_META[modalCategory].label}`
@@ -421,12 +424,8 @@ export default function WorldRules({ book }: WorldRulesProps) {
         onOk={handleSave}
         okButtonProps={{ disabled: !formName.trim() }}
         okText="保存"
-        cancelText="取消"
         width={560}
         destroyOnClose
-        closable={false}
-        maskClosable={false}
-        keyboard={false}
       >
         <div className={styles.modalForm}>
           {/* 规则名称 */}
@@ -458,7 +457,7 @@ export default function WorldRules({ book }: WorldRulesProps) {
             />
           </div>
         </div>
-      </Modal>
+      </BaseModal>
     </>
   );
 }

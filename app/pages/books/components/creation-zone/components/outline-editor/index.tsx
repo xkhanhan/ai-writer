@@ -9,7 +9,7 @@ const { TextArea } = Input;
 
 interface Props {
   outline: BookOutline | null;
-  onSave: (data: { direction: string; stages: string; sellingPoints: string }) => Promise<BookOutline>;
+  onSave: (data: { direction: string; stages: string; sellingPoints: string }) => Promise<BookOutline | null>;
   onCancel: () => void;
 }
 

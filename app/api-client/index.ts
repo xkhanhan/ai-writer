@@ -1,2 +1,2 @@
-export { client, ApiError } from "./client";
-export type { RequestConfig } from "./client";
+export { client } from "./client";
+export type { Result, RequestConfig } from "./client";

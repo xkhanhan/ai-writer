@@ -32,8 +32,8 @@
 
 /* ===== 左侧边栏 ===== */
 .sidebar {
-  width: 220px;
-  min-width: 220px;
+  width: 280px;
+  min-width: 280px;
   border-right: 1px solid var(--line);
   display: flex;
   flex-direction: column;
@@ -45,52 +45,50 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--line);
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .sidebarTitle {
-  font-family: var(--font-display);
   font-weight: 600;
   font-size: 13px;
   color: var(--text);
-  letter-spacing: 0.03em;
 }
 
 .categoryList {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 4px 8px 12px;
 }
 
 .emptyList {
-  padding: 24px 12px;
+  padding: 6px 0;
   text-align: center;
   font-size: 12px;
-  color: var(--ink-tertiary);
-  font-family: var(--font-body);
+  color: var(--text-secondary);
+  font-style: italic;
 }
 
 .categoryItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 6px 10px;
   border-radius: var(--radius-md);
+  border-left: 3px solid transparent;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .categoryItem:hover {
-  background: var(--panel-soft);
+  background: var(--bg-muted);
 }
 
 .categoryItemActive {
-  background: var(--accent-soft);
-  border-left: 3px solid var(--accent);
-  padding-left: 9px;
+  background: var(--color-primary-bg);
+  border-left: 3px solid var(--color-primary);
 }
 
 .categoryName {
@@ -100,7 +98,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 13px;
-  font-family: var(--font-body);
   color: var(--text);
 }
 
@@ -162,12 +159,12 @@
 }
 
 .tagNode:hover {
-  background: var(--panel-soft);
+  background: var(--bg-muted);
 }
 
 .tagNodeActive {
-  background: var(--accent-soft);
-  border-left: 3px solid var(--accent);
+  background: var(--color-primary-bg);
+  border-left: 3px solid var(--color-primary);
 }
 
 .expandArrow {
@@ -177,7 +174,7 @@
   width: 16px;
   flex-shrink: 0;
   font-size: 12px;
-  color: var(--ink-tertiary);
+  color: var(--text-secondary);
   user-select: none;
 }
 
@@ -188,14 +185,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 13px;
-  font-family: var(--font-body);
   color: var(--text);
 }
 
 .tagEditLink {
   flex-shrink: 0;
   font-size: 12px;
-  color: var(--accent);
+  color: var(--color-primary);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -258,8 +254,8 @@
 /* ===== 响应式 ===== */
 @media (max-width: 1024px) {
   .sidebar {
-    width: 180px;
-    min-width: 180px;
+    width: 240px;
+    min-width: 240px;
   }
 }
 

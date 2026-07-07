@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TextAreaRef } from "antd/es/input/TextArea";
-import { handleApiError, showSuccess } from "@/app/utils/error-handler";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import type { BookFile, Folder } from "@/app/types";
 import {
   createFile,
@@ -36,14 +36,13 @@ export function useFolderFileEditor({ bookId, category }: UseFolderFileEditorOpt
         setIsLoading(true);
       }
 
-      try {
-        const data = await getFoldersByBookAndCategory(bookId, category);
-        setFolders(data);
-      } catch (error) {
-        handleApiError(error, "获取文件夹失败");
-      } finally {
-        setIsLoading(false);
+      const result = await getFoldersByBookAndCategory(bookId, category);
+      if (result.ok) {
+        setFolders(result.data);
+      } else {
+        showError(result.error || "获取文件夹失败");
       }
+      setIsLoading(false);
     },
     [bookId, category]
   );
@@ -68,41 +67,39 @@ export function useFolderFileEditor({ bookId, category }: UseFolderFileEditorOpt
 
   const addFolder = useCallback(
     async (name: string) => {
-      try {
-        await createFolder(bookId, category, name.trim());
+      const result = await createFolder(bookId, category, name.trim());
+      if (result.ok) {
         showSuccess("文件夹创建成功");
         await fetchFolders(false);
         return true;
-      } catch (error) {
-        handleApiError(error, "创建文件夹失败");
-        return false;
       }
+      showError(result.error || "创建文件夹失败");
+      return false;
     },
     [bookId, category, fetchFolders]
   );
 
   const addFile = useCallback(
     async (folderId: string, name: string) => {
-      try {
-        const newFile = await createFile(folderId, name.trim());
+      const result = await createFile(folderId, name.trim());
+      if (result.ok) {
         showSuccess("文件创建成功");
         await fetchFolders(false);
-        setSelectedFile(newFile);
+        setSelectedFile(result.data);
         return true;
-      } catch (error) {
-        handleApiError(error, "创建文件失败");
-        return false;
       }
+      showError(result.error || "创建文件失败");
+      return false;
     },
     [fetchFolders]
   );
 
   const selectFile = useCallback(async (file: BookFile) => {
-    try {
-      const fullFile = await getFileById(file.id);
-      setSelectedFile(fullFile);
-    } catch (error) {
-      handleApiError(error, "获取文件内容失败");
+    const result = await getFileById(file.id);
+    if (result.ok) {
+      setSelectedFile(result.data);
+    } else {
+      showError(result.error || "获取文件内容失败");
       setSelectedFile(file);
     }
   }, []);
@@ -125,12 +122,12 @@ export function useFolderFileEditor({ bookId, category }: UseFolderFileEditorOpt
 
       saveTimerRef.current = setTimeout(async () => {
         setSaveStatus("saving");
-        try {
-          await updateFileContent(selectedFile.id, content);
+        const result = await updateFileContent(selectedFile.id, content);
+        if (result.ok) {
           setSaveStatus("saved");
           setTimeout(() => setSaveStatus("idle"), 2000);
-        } catch (error) {
-          handleApiError(error, "保存失败");
+        } else {
+          showError(result.error || "保存失败");
           setSaveStatus("idle");
         }
       }, 500);
@@ -140,15 +137,15 @@ export function useFolderFileEditor({ bookId, category }: UseFolderFileEditorOpt
 
   const removeFile = useCallback(
     async (fileId: string) => {
-      try {
-        await deleteFile(fileId);
+      const result = await deleteFile(fileId);
+      if (result.ok) {
         if (selectedFile?.id === fileId) {
           setSelectedFile(null);
         }
         showSuccess("文件删除成功");
         await fetchFolders(false);
-      } catch (error) {
-        handleApiError(error, "删除文件失败");
+      } else {
+        showError(result.error || "删除文件失败");
       }
     },
     [fetchFolders, selectedFile]
@@ -156,9 +153,8 @@ export function useFolderFileEditor({ bookId, category }: UseFolderFileEditorOpt
 
   const removeFolder = useCallback(
     async (folderId: string) => {
-      try {
-        await deleteFolder(folderId);
-
+      const result = await deleteFolder(folderId);
+      if (result.ok) {
         if (
           selectedFile &&
           folders
@@ -167,11 +163,10 @@ export function useFolderFileEditor({ bookId, category }: UseFolderFileEditorOpt
         ) {
           setSelectedFile(null);
         }
-
         showSuccess("文件夹删除成功");
         await fetchFolders(false);
-      } catch (error) {
-        handleApiError(error, "删除文件夹失败");
+      } else {
+        showError(result.error || "删除文件夹失败");
       }
     },
     [fetchFolders, folders, selectedFile]
