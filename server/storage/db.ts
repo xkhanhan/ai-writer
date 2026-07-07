@@ -19,6 +19,9 @@ export async function getDb(): Promise<Database.Database> {
   // 启用 WAL 模式提高性能
   db.pragma("journal_mode = WAL");
 
+  // 启用外键约束，确保 ON DELETE CASCADE 生效
+  db.pragma("foreign_keys = ON");
+
   // 初始化表结构
   initializeTables(db);
 
@@ -190,6 +193,7 @@ function initializeTables(db: Database.Database) {
       FOREIGN KEY (volume_id) REFERENCES volumes(id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS idx_chapters_volume_id ON chapters(volume_id);
+    CREATE INDEX IF NOT EXISTS idx_chapters_volume_sort ON chapters(volume_id, sort_order);
   `);
 
   // 创作区 - 总纲（每本书一条）
@@ -288,9 +292,4 @@ function initializeTables(db: Database.Database) {
   `);
 }
 
-export function closeDb() {
-  if (db) {
-    db.close();
-    db = null;
-  }
-}
+

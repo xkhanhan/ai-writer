@@ -68,13 +68,13 @@ export async function createFolder(
 ): Promise<Folder> {
   const db = await getDb();
   const id = randomUUID();
-  const now = new Date().toISOString();
 
   db.prepare(`
-    INSERT INTO folders (id, name, book_id, category, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(id, name, bookId, category, now, now);
+    INSERT INTO folders (id, name, book_id, category)
+    VALUES (?, ?, ?, ?)
+  `).run(id, name, bookId, category);
 
+  const now = new Date().toISOString();
   return {
     id,
     name,
@@ -109,17 +109,19 @@ export async function createFile(
   }
 
   const id = randomUUID();
+
+  db.transaction(() => {
+    db.prepare(`
+      INSERT INTO files (id, name, content, folder_id)
+      VALUES (?, ?, ?, ?)
+    `).run(id, name, "", folderId);
+
+    db.prepare(`
+      UPDATE folders SET updated_at = datetime('now') WHERE id = ?
+    `).run(folderId);
+  })();
+
   const now = new Date().toISOString();
-
-  db.prepare(`
-    INSERT INTO files (id, name, content, folder_id, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(id, name, "", folderId, now, now);
-
-  db.prepare(`
-    UPDATE folders SET updated_at = ? WHERE id = ?
-  `).run(now, folderId);
-
   return {
     id,
     name,
@@ -135,11 +137,10 @@ export async function updateFileContent(
   content: string
 ): Promise<boolean> {
   const db = await getDb();
-  const now = new Date().toISOString();
 
   const result = db.prepare(`
-    UPDATE files SET content = ?, updated_at = ? WHERE id = ?
-  `).run(content, now, fileId);
+    UPDATE files SET content = ?, updated_at = datetime('now') WHERE id = ?
+  `).run(content, fileId);
 
   if (result.changes > 0) {
     const file = db.prepare(`
@@ -148,8 +149,8 @@ export async function updateFileContent(
 
     if (file) {
       db.prepare(`
-        UPDATE folders SET updated_at = ? WHERE id = ?
-      `).run(now, file.folder_id);
+        UPDATE folders SET updated_at = datetime('now') WHERE id = ?
+      `).run(file.folder_id);
     }
   }
 

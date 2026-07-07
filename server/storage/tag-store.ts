@@ -125,7 +125,7 @@ function uniqueCode(
   let code = baseCode;
   let suffix = 1;
 
-  while (true) {
+  for (let attempt = 0; attempt < 100; attempt++) {
     const whereParent = parentId
       ? "AND parent_id = ?"
       : "AND parent_id IS NULL";
@@ -140,6 +140,7 @@ function uniqueCode(
     code = `${baseCode}-${suffix}`;
     suffix++;
   }
+  throw new Error(`无法生成唯一编码（bookId=${bookId}, baseCode=${baseCode}），已尝试 100 次`);
 }
 
 // ============ 创建 ============
@@ -303,19 +304,21 @@ export async function deleteTagCategory(id: string): Promise<boolean> {
   // 收集所有要删除的 ID（含子节点）
   const allIds = [id, ...collectDescendantIds(db, id)];
 
-  // 递归删除所有子节点
-  const deleteChildren = (parentId: string) => {
-    const children = db
-      .prepare("SELECT id FROM tag_categories WHERE parent_id = ?")
-      .all(parentId) as { id: string }[];
-    for (const child of children) {
-      deleteChildren(child.id);
-    }
-    db.prepare("DELETE FROM tag_categories WHERE parent_id = ?").run(parentId);
-  };
+  const result = db.transaction(() => {
+    // 递归删除所有子节点
+    const deleteChildren = (parentId: string) => {
+      const children = db
+        .prepare("SELECT id FROM tag_categories WHERE parent_id = ?")
+        .all(parentId) as { id: string }[];
+      for (const child of children) {
+        deleteChildren(child.id);
+      }
+      db.prepare("DELETE FROM tag_categories WHERE parent_id = ?").run(parentId);
+    };
 
-  deleteChildren(id);
-  const result = db.prepare("DELETE FROM tag_categories WHERE id = ?").run(id);
+    deleteChildren(id);
+    return db.prepare("DELETE FROM tag_categories WHERE id = ?").run(id);
+  })();
 
   // 级联清理 setting_entities 中的孤立引用
   await cleanOrphanRefs(tag.book_id, allIds);

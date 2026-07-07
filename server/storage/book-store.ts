@@ -121,13 +121,13 @@ export async function createBook(input: {
 
   const db = await getDb();
   const id = randomUUID();
-  const now = new Date().toISOString();
 
   db.prepare(`
-    INSERT INTO books (id, title, description, genre, platform, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(id, title, description, genre, platform, now, now);
+    INSERT INTO books (id, title, description, genre, platform)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(id, title, description, genre, platform);
 
+  const now = new Date().toISOString();
   return {
     id,
     title,
@@ -169,7 +169,6 @@ export async function updateBook(
   }
 ): Promise<boolean> {
   const db = await getDb();
-  const now = new Date().toISOString();
   const fields: string[] = [];
   const values: Array<string | number> = [];
 
@@ -236,8 +235,8 @@ export async function updateBook(
     return false;
   }
 
-  fields.push("updated_at = ?");
-  values.push(now, id);
+  fields.push("updated_at = datetime('now')");
+  values.push(id);
 
   const result = db.prepare(`
     UPDATE books SET ${fields.join(", ")} WHERE id = ?
