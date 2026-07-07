@@ -13,6 +13,7 @@
 | [components.md](./components.md) | Button/form/modal/sidebar interaction rules |
 | [utils.md](./utils.md) | Message tools, shared UI component inventory, BaseModal/ConfirmDelete API |
 | [workflow.md](./workflow.md) | Git branching, commit format, PR requirements |
+| [engineering.md](./engineering.md) | New module checklists, scaling guide, performance budget, module split rules |
 
 ## Design Docs
 
