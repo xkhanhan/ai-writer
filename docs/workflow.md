@@ -2,7 +2,9 @@
 
 ## 适用场景
 
-本规范适用于 AI Writer 项目的 Git 分支管理、提交格式、PR 流程、代码审查要求及数据库迁移规范。
+本规范适用于 AI Writer 项目的 Git 分支管理、提交格式、合并流程、角色权限及数据库迁移规范。
+
+> **开发模式**：单人开发 + AI 协作。所有脚本命令以 `.ps1` 为准，禁止使用 bash/Linux 语法。
 
 ---
 
@@ -12,21 +14,48 @@
 
 | 类型 | 模式 | 用途 |
 |------|------|------|
-| 主分支 | `master` | 生产分支 — 仅 PR 合并 |
-| 功能 | `feature/*` | 新功能开发 |
+| 主分支 | `master` | 稳定分支，始终保持可运行状态 |
+| 功能 | `feature/*` | 新功能开发（AI 在此分支提交） |
 | 修复 | `fix/*` | Bug 修复 |
-| 文档 | `docs/*` | 纯文档变更 |
 
-命名：kebab-case 小写，如 `feature/creation-zone`。
+命名：kebab-case 小写，如 `feature/creation-zone`、`fix/scroll-overflow`。
 
-## 工作流
+## 角色与权限
 
-1. 从最新 master 切分支：`git checkout -b feature/xxx master`
-2. 每个任务完成后提交（typecheck → lint → add → commit）
-3. 推送：`git push -u origin feature/xxx`
-4. 创建 PR（标题：模块 + 摘要）
-5. Review → Squash and merge
-6. 合并后立即删除分支（本地 + 远程）
+| 角色 | 可以做 | 禁止做 |
+|------|--------|--------|
+| AI | 在 `feature/*` 上 commit | 直接 commit/push/merge `master` |
+| 人 | 在 `master` 上直接编辑、merge feature 分支 | — |
+
+## AI 提交流程
+
+AI 每次完成一个独立任务后，在 feature 分支上提交：
+
+```powershell
+npm run typecheck
+npm run lint
+git add <相关文件>
+git commit -m "type(scope): summary" -m "详细说明"
+```
+
+**禁止** AI 直接操作 `master` 分支（不 commit、不 push、不 merge）。
+
+## 人（你）的合并流程
+
+feature 分支开发完成、确认功能正常后，一条命令合并到 master：
+
+```powershell
+# 在 feature 分支上直接执行，自动推送到 master 并同步本地指针
+.\scripts\merge-to-master.ps1
+```
+
+> 合并前建议跑一下 `npm run typecheck && npm run lint` 确认无误。
+
+## 回滚方式
+
+- **回滚单个 commit**：`git revert <commit-hash>`
+- **回滚整个 feature**：合并前直接删除分支，master 不受影响
+- **回滚已合并的 feature**：`git revert <merge-commit>`
 
 ## Commit 格式
 
@@ -46,22 +75,11 @@
 - 提交前必须通过 typecheck + lint
 - **禁止提交：** `.env`、`node_modules`、`.next`、`data/` 运行时文件
 
-## PR 要求
-
-标题：`feat(scope): 简要描述`
-
-描述必须包含：
-- 变更摘要
-- 影响的文件路径
-- UI 变更截图（如适用）
-- 验证命令及结果
-
 ## 禁止事项
 
-- **禁止**直接 push 到 master
-- **禁止**在 master 上修改文件
-- **禁止**跳过 PR review
-- **禁止**合并未通过验证的代码
+- **禁止** AI 直接 commit/push `master` 分支
+- **禁止**合并未通过验证（typecheck + lint + build）的代码
+- **禁止**使用 bash/Linux 语法（Windows + PowerShell 环境）
 
 ## 数据库迁移规范
 
@@ -94,7 +112,7 @@ function migrateV5(db: Database.Database) {
 | W-2 | Commit 格式符合 type(scope): summary | Commitlint | — |
 | W-3 | 提交前通过 typecheck + lint | CI 流水线 | — |
 | W-4 | 未提交 .env / data/ 等敏感文件 | CI 检查脚本 | — |
-| W-5 | PR 描述包含变更摘要和验证命令 | PR 模板 | — |
+| W-5 | AI 未直接操作 master 分支 | Git hooks | Code Review |
 | W-6 | 数据库迁移幂等 | Code Review | — |
 | W-7 | 新表有外键约束 | 迁移脚本审查 | — |
 | W-8 | 迁移在 db.ts 中注册 | Code Review | — |
@@ -103,7 +121,7 @@ function migrateV5(db: Database.Database) {
 
 | 违规 | 整改方式 | 时限 |
 |------|---------|------|
-| 直接 push 到 master | 立即停止，改为 PR 流程 | 立即 |
+| AI 直接 commit master | 立即停止，改在 feature 分支操作 | 立即 |
 | Commit 格式不规范 | 使用 `git commit --amend` 修正 | 提交前 |
 | 提交未通过验证的代码 | 回退 → 修复 → 重新验证 → 提交 | 立即 |
 | 迁移不幂等 | 重构为幂等迁移（PRAGMA 检查） | 当前迭代 |

@@ -51,7 +51,7 @@ Use these before merging feature branches into master.
 - **Theme System**: 4 preset themes (暖纸色 / 冷灰调 / 纯白 / 深色) via React Context + CSS variable injection.
 - **SplitPanel**: reusable left-right split component at `shared/ui/split-panel/`. All list+detail pages must use it.
 - **Component Rules**: use `size="small"` for inline buttons; new-entity buttons use `type="primary"`; delete buttons use `danger`.
-- Full visual specifications are in `docs/standards/visual.md`.
+- Full visual specifications are in `docs/visual.md`.
 
 ## Testing Guidelines
 
