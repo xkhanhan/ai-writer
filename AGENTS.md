@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+> **开发环境**: Windows + PowerShell。所有脚本命令以 `.ps1` 为准，禁止使用 bash/Linux 语法。
+
 ## Project Structure & Module Organization
 
 This is a Next.js application using a four-layer architecture:
@@ -98,21 +100,11 @@ typecheck → lint → git add → git commit
 
 ### 人（你）的合并流程
 
-feature 分支开发完成、确认功能正常后，手动合并到 master：
+feature 分支开发完成、确认功能正常后，一条命令合并到 master（无需切换分支）：
 
-```bash
-# 1. 同步远程 master
-git checkout master
-git pull origin master
-
-# 2. 合并 feature 分支
-git merge feature/xxx
-
-# 3. 推送远程
-git push origin master
-
-# 4. 清理分支（可选，保持整洁）
-git branch -d feature/xxx
+```powershell
+# 在 feature 分支上直接执行，自动推送到 master 并同步本地指针
+.\scripts\merge-to-master.ps1
 ```
 
 > 合并前建议跑一下 `npm run typecheck && npm run lint` 确认无误。
