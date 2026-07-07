@@ -114,98 +114,394 @@ interface WorldRule {
 
 ### 2.2 设定库
 
-**定位**：世界观构建的基础实体库，为创作台和 AI 生成提供设定数据。
+**定位**：世界观构建的基础实体库，为创作台和 AI 生成提供设定数据。所有设定实体以「书」为单位隔离。
 
 #### 五大固定分类
 
-| 分类 | key | 说明 |
-|------|-----|------|
-| 人物 | character | 故事中的角色 |
-| 地点 | location | 场景、场所、地域 |
-| 势力 | faction | 组织、宗门、家族、国家 |
-| 物品 | item | 法宝、灵器、道具 |
-| 其他 | other | 无法归类的设定 |
+| 分类 | key | 说明 | 创建后可改分类？ |
+|------|-----|------|:---:|
+| 人物 | `character` | 角色、NPC、反派等 | 否 |
+| 地点 | `location` | 宗门、秘境、城镇等 | 否 |
+| 势力 | `faction` | 组织、家族、帝国等 | 否 |
+| 物品 | `item` | 法宝、丹药、灵器等 | 否 |
+| 其他 | `other` | 兜底分类 | 否 |
 
-#### 两类信息抽象
+#### 三层信息架构
 
-每个设定实体包含两类信息：
+每个设定实体由三层信息组成：
 
-**基础信息**：不随正文变化，可随时修改
-- 名称*（必填）
-- 分类*（创建后不可改）
-- 标签（从标签库选择，上限 20 个）
-- 描述（大文本域）
-- 分类专属基础字段（见下表）
+**第一层：通用固定字段（9 个，所有分类共有）**
 
-**状态信息**：随正文变化，仅记录当前创作状态，不记录历史
-- 状态字段（分类不同字段不同，见下表）
-- 状态仅反映"当前故事进展到哪里时的状态"
+不随正文变化，用户可随时编辑。
 
-> 注意：状态变更的历史记录和回滚由创作台的「过审」流程处理，设定库本身只存"当前态"。
+| # | 字段 | 类型 | 回答的问题 | 人物示例 | 地点示例 | 势力示例 | 物品示例 |
+|---|------|------|----------|---------|---------|---------|---------|
+| 1 | 名称 | Input（必填，≤60 字） | 它是谁/是什么？ | 李凡 | 落星渊 | 天魔宗 | 破妄玉佩 |
+| 2 | 级别 | Select | 它有多重要？ | 核心 | 重要 | 重要 | 核心 |
+| 3 | 描述 | TextArea（≤2000 字） | 它的基本介绍 | 山村少年，天赋平平 | 远古秘境，百年一开 | 魔道第一宗门 | 上古大能遗留 |
+| 4 | 外观 | TextArea（≤1000 字） | 它长什么样？ | 身材瘦削，剑眉星目 | 幽深峡谷，星光点点 | 黑雾缭绕，魔气冲天 | 玉质温润，隐有光华 |
+| 5 | 特点 | TextArea（≤1000 字） | 它有什么独特之处？ | 毅力过人，重情重义 | 阵法封锁，传承所在 | 吞噬功法，化神宗主 | 净化心魔，提升神识 |
+| 6 | 背景 | TextArea（≤1000 字） | 它从哪来的？ | 出生偏远山村 | 远古修士开辟 | 千年前魔修创建 | 上古大能炼制 |
+| 7 | 能力 | TextArea（≤1000 字） | 它能做什么？ | 修炼剑法，领悟天赋 | 灵气浓郁，利于修炼 | 掌控一域，资源丰富 | 净化心魔，识海增幅 |
+| 8 | 弱点 | TextArea（≤1000 字） | 它的短板是什么？ | 性格冲动，修为尚浅 | 入口隐蔽，百年一开 | 内部派系斗争 | 需灵力激活 |
+| 9 | 标签 | Tag 多选（上限 20 个） | 怎么分类？ | 种族/人族 | 地点/秘境 | 势力/宗门 | 物品/法宝 |
 
-#### 各分类专属字段
+> **通用性验证**：9 个字段在所有 5 个分类中均有明确含义。「外观」对人物=外貌体型、地点=建筑环境、势力=总部形象、物品=材质形态；「能力」对人物=技能修为、地点=功效作用、势力=实力资源、物品=功效威力；「弱点」对人物=性格缺陷、地点=安全隐患、势力=内部矛盾、物品=使用限制。
 
-| 分类 | 基础信息字段（固定） | 状态信息字段（动态） |
-|------|---------------------|---------------------|
-| **人物** | 性别（男/女/其他） | 身份、年龄、修炼境界、所属势力 |
-| **地点** | 地点类型（宗门/秘境/城镇/其他） | 控制势力、繁荣度 |
-| **势力** | 组织类型（宗门/家族/帝国/散修联盟） | 势力规模、实力等级 |
-| **物品** | 品阶（凡器/灵器/仙器/神器/其他） | 持有者、当前状态（完整/损坏/封印） |
-| **其他** | 无专属字段 | 自由文本域 |
+**第二层：分类专属字段（JSON 存储）**
 
-> 状态信息字段均为可选，用户按需填写。字段类型以文本为主，不做强制下拉约束（与设定规则的结构化校验互补）。
+仅在特定分类下出现的固定字段：
+
+| 分类 | 专属字段 | 说明 |
+|------|---------|------|
+| **人物** `character` | 性格（≤500 字） | 人物特有的心理特征维度 |
+| 地点 `location` | 无 | 通用字段已覆盖 |
+| 势力 `faction` | 无 | 通用字段已覆盖 |
+| 物品 `item` | 无 | 通用字段已覆盖 |
+| 其他 `other` | 无 | 兜底分类 |
+
+> 分类专属字段存储在 `category_fields` JSON 列中，如人物：`{"性格": "坚韧内敛，不善言辞"}`。后续如需为其他分类增加专属字段，只需在此 JSON 中扩展，无需改表结构。
+
+**第三层：状态信息（动态 key-value）**
+
+创建时填写**初始状态**（可留空），后续由创作台「过审」流程自动更新为当前状态。
+
+| 分类 | 预定义状态字段 | 说明 |
+|------|-------------|------|
+| **人物** | 性别、年龄、修炼境界、所属势力、当前状态 | "当前状态"如：存活/死亡/失踪/闭关 |
+| **地点** | 地点类型、所属势力、当前状态 | 如：安全/被占/毁灭 |
+| **势力** | 组织类型、势力规模、当前状态 | 如：鼎盛/衰落/覆灭 |
+| **物品** | 品阶、当前持有者、当前状态 | 如：完好/损毁/遗失 |
+| **其他** | 无预定义 | 用户按需 |
+
+> **关键原则**：状态信息只记录「当前快照」，不记录历史变更。历史变更由创作台「过审」流程的回滚信息记录。创建时为「初始状态」，可留空，系统后续自动填充。状态字段均为文本 Input，不做下拉约束。
 
 #### AI 规则检查
 
-设定库中的每个实体可以触发 AI 检查：
+设定库中的每个实体可触发 AI 检查，校验设定与世界规则中「设定规则」的一致性：
 
 ```
 触发：用户点击设定实体的「检查」按钮
-组装：设定规则（来自世界规则） + 设定实体信息 + 提示词模板
-发送：调用 AI 接口
-返回：检查结果（问题列表 + 修改建议）
+    ↓
+组装：设定规则（来自世界规则 category=setting）
+    + 设定实体完整信息（基础信息 + 状态信息）
+    + 提示词模板（来自 AI 提示词系统，key=setting_check）
+    ↓
+调用 AI 接口
+    ↓
+返回：是否符合规则 + 问题列表 + 修改建议
+    ↓
 操作：一键修改（将 AI 建议应用到设定实体）
 ```
 
 #### 数据模型
 
 ```typescript
+// ── 分类定义 ──
+
 type SettingCategory = "character" | "location" | "faction" | "item" | "other";
 
+type SettingLevel = "core" | "important" | "general";
+
+// ── 各分类的状态字段模板 ──
+
+const STATUS_FIELD_TEMPLATES: Record<SettingCategory, string[]> = {
+  character: ["性别", "年龄", "修炼境界", "所属势力", "当前状态"],
+  location:  ["地点类型", "所属势力", "当前状态"],
+  faction:   ["组织类型", "势力规模", "当前状态"],
+  item:      ["品阶", "当前持有者", "当前状态"],
+  other:     [],
+};
+
+// ── 分类专属字段模板 ──
+
+const CATEGORY_FIELD_TEMPLATES: Record<SettingCategory, string[]> = {
+  character: ["性格"],
+  location:  [],
+  faction:   [],
+  item:      [],
+  other:     [],
+};
+
+// ── 核心实体 ──
+
 interface SettingEntity {
-  id: string;              // 前缀 "se_"
-  bookId: string;
-  category: SettingCategory;
-  name: string;            // ≤60 字
-  tags: string[];          // 从标签库选择，上限 20 个，显示为 "种族/人族/修仙者" 格式
-  description: string;     // 大文本域
+  id: string;                          // UUID
+  bookId: string;                      // 所属书籍
+  category: SettingCategory;           // 分类（创建后不可改）
 
-  // 分类专属字段（按需填写）
-  gender?: string;         // 人物：性别
-  locationType?: string;   // 地点：地点类型
-  orgType?: string;        // 势力：组织类型
-  itemGrade?: string;      // 物品：品阶
+  // ── 通用固定字段（9 个，所有分类共有）──
+  name: string;                        // ≤60 字
+  level: SettingLevel;                 // 默认 "general"
+  description: string;                 // ≤2000 字 — 它的基本介绍
+  appearance: string;                  // ≤1000 字 — 它长什么样（外貌/建筑/总部/材质）
+  traits: string;                      // ≤1000 字 — 它的独特之处
+  background: string;                  // ≤1000 字 — 它从哪来的（身世/历史/起源）
+  abilities: string;                   // ≤1000 字 — 它能做什么（技能/功效/实力）
+  weaknesses: string;                  // ≤1000 字 — 它的短板（缺陷/隐患/限制）
+  tagIds: string[];                    // 引用标签库 ID，上限 20 个
 
-  // 状态信息（动态，随正文变化）
+  // ── 分类专属字段（JSON）──
+  categoryFields: Record<string, string>;
+  // 人物示例：{ "性格": "坚韧内敛，不善言辞" }
+  // 其他分类：{}
+
+  // ── 状态信息（动态 key-value，初始值可留空）──
   statusFields: Record<string, string>;
-  // 示例（人物）：{ "身份": "外门弟子", "年龄": "17", "修炼境界": "练气三层", "所属势力": "青云宗" }
-  // 示例（物品）：{ "持有者": "李凡", "当前状态": "完整" }
+  // 人物示例：{ "修炼境界": "练气三层", "所属势力": "青云宗", "当前状态": "存活" }
+  // 物品示例：{ "品阶": "灵器", "当前持有者": "李凡", "当前状态": "完整" }
 
-  deprecated: boolean;
+  deprecated: boolean;                 // 废弃标记
   createdAt: string;
   updatedAt: string;
 }
+
+// ── DTO ──
+
+interface CreateSettingEntityDTO {
+  category: SettingCategory;
+  name: string;
+  level?: SettingLevel;
+  description?: string;
+  appearance?: string;
+  traits?: string;
+  background?: string;
+  abilities?: string;
+  weaknesses?: string;
+  tagIds?: string[];
+  categoryFields?: Record<string, string>;
+  statusFields?: Record<string, string>;
+}
+
+interface UpdateSettingEntityDTO {
+  name?: string;
+  level?: SettingLevel;
+  description?: string;
+  appearance?: string;
+  traits?: string;
+  background?: string;
+  abilities?: string;
+  weaknesses?: string;
+  tagIds?: string[];
+  categoryFields?: Record<string, string>;
+  statusFields?: Record<string, string>;
+  deprecated?: boolean;
+}
 ```
+
+#### 数据库表设计
+
+```sql
+CREATE TABLE IF NOT EXISTS setting_entities (
+  id              TEXT PRIMARY KEY,
+  book_id         TEXT NOT NULL,
+  category        TEXT NOT NULL,          -- character | location | faction | item | other
+  name            TEXT NOT NULL,
+  level           TEXT NOT NULL DEFAULT 'general',  -- core | important | general
+
+  -- 通用固定字段
+  description     TEXT NOT NULL DEFAULT '',   -- ≤2000 字 — 基本介绍
+  appearance      TEXT NOT NULL DEFAULT '',   -- ≤1000 字 — 外观
+  traits          TEXT NOT NULL DEFAULT '',   -- ≤1000 字 — 特点
+  background      TEXT NOT NULL DEFAULT '',   -- ≤1000 字 — 背景
+  abilities       TEXT NOT NULL DEFAULT '',   -- ≤1000 字 — 能力
+  weaknesses      TEXT NOT NULL DEFAULT '',   -- ≤1000 字 — 弱点
+  tag_ids         TEXT NOT NULL DEFAULT '[]', -- JSON array of tag IDs
+
+  -- 分类专属字段
+  category_fields TEXT NOT NULL DEFAULT '{}', -- JSON { fieldName: value }
+
+  -- 动态状态信息（初始值可留空，过审时系统更新）
+  status_fields   TEXT NOT NULL DEFAULT '{}', -- JSON { fieldName: value }
+
+  deprecated      INTEGER NOT NULL DEFAULT 0, -- 0=正常 1=已废弃
+  created_at      TEXT NOT NULL,
+  updated_at      TEXT NOT NULL
+);
+
+-- 索引
+CREATE INDEX IF NOT EXISTS idx_setting_entities_book_category
+  ON setting_entities(book_id, category);
+CREATE INDEX IF NOT EXISTS idx_setting_entities_book_level
+  ON setting_entities(book_id, level);
+```
+
+#### 四层架构
+
+遵循项目统一架构（参考 world-rules 实现），自底向上：
+
+**1. 数据层** `server/storage/db.ts`
+
+```sql
+-- 在 initializeTables() 中创建 setting_entities 表（见上方建表语句）
+-- 索引：(book_id, category) 加速分类查询，(book_id, level) 加速级别筛选
+```
+
+**2. 存储层** `server/storage/setting-entity-store.ts`
+
+```
+职责：Row 类型 (snake_case) ↔ TS 类型 (camelCase) 映射 + CRUD
+
+导出函数：
+├── getSettingEntitiesByBookId(bookId, category?)
+│   按书查询，可选按分类筛选
+│   排序：level ASC (core→important→general), created_at ASC
+│
+├── getSettingEntityById(id)
+│   查询单条实体
+│
+├── createSettingEntity(bookId, data: CreateSettingEntityDTO)
+│   创建实体，自动填充默认值（level=general, tagIds=[], categoryFields={}, statusFields={}）
+│   tag_ids、category_fields、status_fields 存储为 JSON 字符串
+│
+├── updateSettingEntity(id, data: UpdateSettingEntityDTO)
+│   动态字段更新，仅更新传入的字段
+│   tag_ids、category_fields、status_fields 序列化为 JSON
+│
+└── deleteSettingEntity(id)
+    物理删除（软删除通过 deprecated 字段实现）
+```
+
+> 参考实现：`server/storage/world-rule-store.ts`（Row 映射 + 动态字段更新模式）
+
+**3. API 路由层**
+
+```
+集合路由  app/api/setting-entities/route.ts
+├── GET  ?bookId=xxx[&category=xxx]
+│   返回该书所有设定实体，可按分类筛选
+│
+└── POST { bookId, ...CreateSettingEntityDTO }
+    创建新设定实体
+
+单条路由  app/api/setting-entities/[id]/route.ts
+├── GET
+│   返回单条实体完整信息
+│
+├── PUT { ...UpdateSettingEntityDTO }
+│   更新实体（动态字段）
+│
+└── DELETE
+    删除实体（物理删除）
+```
+
+> 参考实现：`app/api/world-rules/route.ts` + `app/api/world-rules/[id]/route.ts`
+
+**4. 客户端 API helper** `app/pages/books/api/setting-entities.ts`
+
+```typescript
+import { client } from "@/app/api-client";
+import type { SettingEntity, CreateSettingEntityDTO, UpdateSettingEntityDTO } from "@/app/types";
+
+export async function fetchSettingEntities(bookId: string, category?: string): Promise<SettingEntity[]>
+export async function getSettingEntity(id: string): Promise<SettingEntity>
+export async function createSettingEntity(data: CreateSettingEntityDTO & { bookId: string }): Promise<SettingEntity>
+export async function updateSettingEntity(id: string, data: UpdateSettingEntityDTO): Promise<SettingEntity>
+export async function deleteSettingEntity(id: string): Promise<void>
+```
+
+> 参考实现：`app/pages/books/api/world-rules.ts`
+
+**5. 前端组件** `app/pages/books/components/settings-library/`
+
+```
+组件结构：
+├── index.tsx          主组件（SplitPanel 左右分栏）
+├── index.module.css   样式
+
+左侧面板（分类折叠列表）：
+├── 5 个分类折叠组，每组显示实体数量
+├── 每个分类右侧带「+」按钮，点击打开创建弹窗
+├── 实体列表项显示：名称 + 级别 Tag
+├── 已废弃实体显示为半透明
+└── 选中态高亮 + 左侧蓝色边框
+
+右侧面板（实体详情）：
+├── 头部：名称 + 级别 Tag + 分类 Tag + 创建时间
+├── 操作栏：编辑 / 废弃 / 检查（Phase 4）/ 删除
+├── 通用信息区：描述 + 外观 + 特点 + 背景 + 能力 + 弱点
+│   └── 每个字段独立卡片，空字段折叠/隐藏
+├── 标签区：面包屑路径格式展示
+├── 分类专属区：如人物显示「性格」
+└── 状态信息区：动态字段 Key-Value 列表（2列网格）
+
+弹窗（统一 Modal，新建/编辑共用）：
+├── 基础信息区：名称*、级别选择器
+├── 通用信息区：描述、外观、特点、背景、能力、弱点（6个 TextArea）
+├── 标签选择器（从标签库选取）
+├── 分类专属区：如人物显示「性格」输入框
+├── 状态信息区：根据分类动态渲染初始状态字段
+├── maskClosable={false} keyboard={false} closable={false}
+└── 仅通过取消/保存按钮关闭
+```
+
+> 参考实现：`app/pages/books/components/world-rules/index.tsx`
+
+#### 各分类字段模板（弹窗动态渲染依据）
+
+**分类专属字段** — 创建/编辑弹窗根据分类动态展示：
+
+| 分类 | 专属字段 | 字段类型 |
+|------|---------|---------|
+| **人物** `character` | 性格（≤500 字） | TextArea |
+| **其他分类** | 无专属字段 | — |
+
+**初始状态字段** — 创建/编辑弹窗根据分类动态渲染（可留空）：
+
+| 分类 | 预定义状态字段 | 字段类型 |
+|------|-------------|---------|
+| **人物** `character` | 性别、年龄、修炼境界、所属势力、当前状态 | 全部 Input |
+| **地点** `location` | 地点类型、所属势力、当前状态 | 全部 Input |
+| **势力** `faction` | 组织类型、势力规模、当前状态 | 全部 Input |
+| **物品** `item` | 品阶、当前持有者、当前状态 | 全部 Input |
+| **其他** `other` | 无预定义字段 | — |
+
+> 状态字段均为文本 Input，不做下拉约束（与世界规则中的设定规则结构化校验互补）。Phase 1 先用固定字段，后续可扩展为动态增删字段。
 
 #### 关联关系
 
 ```
-设定库 ◄──标签库（标签字段引用标签库的 ID/路径）
-设定库 ──被引用──► 创作台章纲（章纲的「实体」字段从设定库选取）
+设定库 ◄──标签库（tagIds 引用标签库节点 ID，显示时展开为面包屑路径）
+设定库 ──被引用──► 创作台章纲（章纲的「实体」字段从设定库选取，存储 entity ID）
 设定库 ──被检查──► 世界规则（设定规则校验 + AI 检查）
-设定库 ──被变更──► 创作台过审（过审时更新状态信息字段）
-设定库 ──被回滚──► 创作台回滚（回滚时恢复状态信息）
+设定库 ──被变更──► 创作台过审（过审时更新 statusFields）
+设定库 ──被回滚──► 创作台回滚（回滚时恢复 statusFields）
 设定库 ──注入──► AI 提示词（当前设定实体信息作为 AI 生成的上下文）
+设定库 ──注入──► 创作台章纲（关联实体的基础信息注入 AI 生成上下文）
+```
+
+#### 现状 vs 目标
+
+| 维度 | 当前状态 | 目标状态 | 差距 |
+|------|---------|---------|------|
+| **类型定义** | `SettingEntity` 仅 4 个字段（name/description/gender/personality/traits），缺少 level/statusFields/tagIds 以及新增的 appearance/background/abilities/weaknesses | 9 通用字段 + 分类专属 + 动态状态 | 重写 |
+| **数据库** | 无 `setting_entities` 表 | SQLite 表（14 列 + 2 JSON）+ 索引 | 新建 |
+| **存储层** | 不存在 | `setting-entity-store.ts` | 新建 |
+| **API 路由** | 不存在 | `setting-entities/` 集合 + `[id]` 单条 | 新建 |
+| **客户端 API** | 不存在 | `api/setting-entities.ts` | 新建 |
+| **前端组件** | 纯前端 state，刷新丢失；仅人物有表单字段 | API 持久化 + 完整 CRUD + 三层信息架构 | 重写 |
+| **标签** | 无标签字段（仅人物有 `tags` 自由文本） | 从标签库选择，存储 tagIds | 重写 |
+| **状态信息** | 无 | 动态 key-value 字段（初始状态 → 系统更新） | 新建 |
+| **AI 检查** | 不存在 | Phase 4 实现 | 待定 |
+
+#### 实施计划
+
+```
+Phase 1（本次）  基础设施 + 数据持久化
+  ├── [类型] 重写 SettingEntity（9 通用字段 + categoryFields + statusFields）
+  ├── [DB]    新建 setting_entities 表（14 列 + 2 JSON + 索引）
+  ├── [存储]  新建 setting-entity-store.ts
+  ├── [API]   新建 setting-entities/ 路由
+  ├── [Client] 新建 api/setting-entities.ts
+  └── [前端]  重写 settings-library 组件（三层信息架构 + API 持久化）
+
+Phase 2（后续）  关联打通
+  ├── 设定库 ↔ 标签库关联（标签选择器从标签库读取）
+  ├── 创作台章纲 ↔ 设定库关联（实体选择器）
+  └── 章纲实体字段的展示与编辑
+
+Phase 4（后续）  AI 集成
+  └── 设定实体 AI 检查（设定规则 + 实体信息 → AI → 结果展示 → 一键修改）
 ```
 
 ---

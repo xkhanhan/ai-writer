@@ -255,18 +255,73 @@ export interface UpdateWorldRuleDTO {
 // 设定库分类
 export type SettingCategory = "character" | "item" | "location" | "faction" | "other";
 
+export type SettingLevel = "core" | "important" | "general";
+
 // 设定库实体
 export interface SettingEntity {
   id: string;
   bookId: string;
   category: SettingCategory;
   name: string;
-  gender?: string;
-  personality?: string;
-  traits?: string;
-  tags?: string[];
-  description?: string;
+  level: SettingLevel;
+  description: string;
+  appearance: string;
+  traits: string;
+  background: string;
+  abilities: string;
+  weaknesses: string;
+  tagIds: string[];
+  categoryFields: Record<string, string>;
+  statusFields: Record<string, string>;
   deprecated: boolean;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CreateSettingEntityDTO {
+  category: SettingCategory;
+  name: string;
+  level?: SettingLevel;
+  description?: string;
+  appearance?: string;
+  traits?: string;
+  background?: string;
+  abilities?: string;
+  weaknesses?: string;
+  tagIds?: string[];
+  categoryFields?: Record<string, string>;
+  statusFields?: Record<string, string>;
+}
+
+export interface UpdateSettingEntityDTO {
+  name?: string;
+  level?: SettingLevel;
+  description?: string;
+  appearance?: string;
+  traits?: string;
+  background?: string;
+  abilities?: string;
+  weaknesses?: string;
+  tagIds?: string[];
+  categoryFields?: Record<string, string>;
+  statusFields?: Record<string, string>;
+  deprecated?: boolean;
+}
+
+// 各分类的状态字段模板
+export const STATUS_FIELD_TEMPLATES: Record<SettingCategory, string[]> = {
+  character: ["性别", "年龄", "修炼境界", "所属势力", "当前状态"],
+  location: ["地点类型", "所属势力", "当前状态"],
+  faction: ["组织类型", "势力规模", "当前状态"],
+  item: ["品阶", "当前持有者", "当前状态"],
+  other: [],
+};
+
+// 分类专属字段模板
+export const CATEGORY_FIELD_TEMPLATES: Record<SettingCategory, string[]> = {
+  character: ["性格"],
+  location: [],
+  faction: [],
+  item: [],
+  other: [],
+};

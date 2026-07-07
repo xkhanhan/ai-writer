@@ -1,428 +1,702 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Button,
+  Form,
   Input,
-  Select,
   Modal,
+  Select,
   Tag,
+  Tooltip,
+  Spin,
 } from "antd";
 import {
-  PlusOutlined,
   DeleteOutlined,
   EditOutlined,
-  FileOutlined,
+  PlusOutlined,
+  RightOutlined,
+  InfoCircleOutlined,
+  UserOutlined,
+  EnvironmentOutlined,
+  BankOutlined,
+  GiftOutlined,
+  AppstoreOutlined,
+  BulbOutlined,
+  EyeOutlined,
+  StarOutlined,
+  ThunderboltOutlined,
+  FallOutlined,
 } from "@ant-design/icons";
 import { SplitPanel } from "@/shared/ui/split-panel";
-import { EmptyState } from "@/shared/ui/empty-state";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
-import type { Book, SettingEntity, SettingCategory } from "@/app/types";
+import type {
+  Book,
+  SettingEntity,
+  SettingCategory,
+  SettingLevel,
+  CreateSettingEntityDTO,
+} from "@/app/types";
+import {
+  STATUS_FIELD_TEMPLATES,
+  CATEGORY_FIELD_TEMPLATES,
+} from "@/app/types";
+import {
+  fetchSettingEntities,
+  createSettingEntity,
+  updateSettingEntity,
+  deleteSettingEntity,
+} from "../../api/setting-entities";
 import styles from "./index.module.css";
+
+// ============ 常量 ============
+
+const CAT_META: Record<
+  SettingCategory,
+  { label: string; icon: React.ReactNode }
+> = {
+  character: { label: "人物", icon: <UserOutlined /> },
+  location: { label: "地点", icon: <EnvironmentOutlined /> },
+  faction: { label: "势力", icon: <BankOutlined /> },
+  item: { label: "物品", icon: <GiftOutlined /> },
+  other: { label: "其他", icon: <AppstoreOutlined /> },
+};
+
+const LEVEL_MAP: Record<
+  SettingLevel,
+  { label: string; color: string }
+> = {
+  core: { label: "核心", color: "green" },
+  important: { label: "重要", color: "orange" },
+  general: { label: "一般", color: "" },
+};
+
+const CAT_ORDER: SettingCategory[] = [
+  "character",
+  "location",
+  "faction",
+  "item",
+  "other",
+];
+
+const INFO_FIELDS: {
+  key: keyof Pick<
+    SettingEntity,
+    "description" | "appearance" | "traits" | "background" | "abilities" | "weaknesses"
+  >;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  { key: "description", label: "描述", icon: <BulbOutlined /> },
+  { key: "appearance", label: "外观", icon: <EyeOutlined /> },
+  { key: "traits", label: "特点", icon: <StarOutlined /> },
+  { key: "background", label: "背景", icon: <InfoCircleOutlined /> },
+  { key: "abilities", label: "能力", icon: <ThunderboltOutlined /> },
+  { key: "weaknesses", label: "弱点", icon: <FallOutlined /> },
+];
+
+// ============ 组件 ============
 
 interface SettingsLibraryProps {
   book: Book;
 }
 
-const categories: { key: SettingCategory; label: string }[] = [
-  { key: "character", label: "人物" },
-  { key: "item", label: "物品" },
-  { key: "location", label: "地点" },
-  { key: "faction", label: "势力" },
-  { key: "other", label: "其他" },
-];
-
-const levelOptions = [
-  { label: "核心", value: "core" },
-  { label: "重要", value: "important" },
-  { label: "一般", value: "general" },
-];
-
-const levelLabels: Record<string, string> = {
-  core: "核心",
-  important: "重要",
-  general: "一般",
-};
-
-type ModalMode = "create" | "edit";
-
-const categoryLabels: Record<SettingCategory, string> = {
-  character: "人物",
-  item: "物品",
-  location: "地点",
-  faction: "势力",
-  other: "其他",
-};
-
 export default function SettingsLibrary({ book }: SettingsLibraryProps) {
-  const [selectedCategory, setSelectedCategory] =
-    useState<SettingCategory | null>(null);
-  const [selectedItem, setSelectedItem] = useState<SettingEntity | null>(null);
+  // 数据
   const [entities, setEntities] = useState<SettingEntity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
-  // Modal 状态
+  // 分组折叠
+  const [openGroups, setOpenGroups] = useState<
+    Record<SettingCategory, boolean>
+  >({
+    character: false,
+    location: false,
+    faction: false,
+    item: false,
+    other: false,
+  });
+
+  // Modal
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<ModalMode>("create");
-  const [editingEntity, setEditingEntity] = useState<SettingEntity | null>(null);
+  const [modalCat, setModalCat] = useState<SettingCategory>("character");
+  const [editing, setEditing] = useState<SettingEntity | null>(null);
+  const [form] = Form.useForm();
 
-  // 表单字段
-  const [formName, setFormName] = useState("");
-  const [formCategory, setFormCategory] = useState<SettingCategory>("character");
-  const [formLevel, setFormLevel] = useState("general");
-  const [formDescription, setFormDescription] = useState("");
-  const [formStatus, setFormStatus] = useState<"active" | "deprecated">("active");
+  // 详情区字段折叠
+  const [expandedFields, setExpandedFields] = useState<
+    Record<string, boolean>
+  >({
+    description: true,
+    appearance: true,
+    traits: true,
+    background: true,
+    abilities: true,
+    weaknesses: true,
+  });
 
-  // 打开新建 Modal
-  const handleOpenCreate = (category: SettingCategory) => {
-    setModalMode("create");
-    setEditingEntity(null);
-    setFormName("");
-    setFormCategory(category);
-    setFormLevel("general");
-    setFormDescription("");
-    setFormStatus("active");
-    setModalOpen(true);
-  };
+  const activeEntity = entities.find((e) => e.id === activeId) ?? null;
 
-  // 打开编辑 Modal
-  const handleOpenEdit = (entity: SettingEntity) => {
-    setModalMode("edit");
-    setEditingEntity(entity);
-    const entityLevel =
-      ((entity as unknown as Record<string, unknown>).level as string) ||
-      "general";
-    setFormName(entity.name);
-    setFormCategory(entity.category);
-    setFormLevel(entityLevel);
-    setFormDescription(entity.description || "");
-    setFormStatus(entity.deprecated ? "deprecated" : "active");
-    setModalOpen(true);
-  };
+  // 按分类分组
+  const grouped = CAT_ORDER.reduce(
+    (acc, cat) => {
+      acc[cat] = entities.filter((e) => e.category === cat);
+      return acc;
+    },
+    {} as Record<SettingCategory, SettingEntity[]>
+  );
 
-  // Modal 保存
-  const handleModalSave = () => {
-    if (!formName.trim()) return;
-    const now = new Date().toISOString();
+  // ============ 数据加载 ============
 
-    if (modalMode === "create") {
-      const newEntity: SettingEntity & { level?: string } = {
-        id: `se_${Date.now()}`,
-        bookId: book.id,
-        category: formCategory,
-        name: formName.trim(),
-        description: formDescription || undefined,
-        deprecated: false,
-        createdAt: now,
-        updatedAt: now,
-        level: formLevel,
+  const loadEntities = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await fetchSettingEntities(book.id);
+      setEntities(data);
+      // 自动展开有内容的分类
+      const newOpen: Record<SettingCategory, boolean> = {
+        character: false,
+        location: false,
+        faction: false,
+        item: false,
+        other: false,
       };
-      setEntities((prev) => [...prev, newEntity]);
-      setSelectedItem(newEntity);
-      setSelectedCategory(formCategory);
-    } else if (modalMode === "edit" && editingEntity) {
-      const updated: SettingEntity & { level?: string } = {
-        ...editingEntity,
-        name: formName.trim(),
-        category: formCategory,
-        description: formDescription || undefined,
-        deprecated: formStatus === "deprecated",
-        updatedAt: now,
-        level: formLevel,
-      };
-      setEntities((prev) =>
-        prev.map((e) => (e.id === updated.id ? updated : e))
-      );
-      setSelectedItem(updated);
+      for (const cat of CAT_ORDER) {
+        if (data.some((e) => e.category === cat)) {
+          newOpen[cat] = true;
+        }
+      }
+      setOpenGroups(newOpen);
+    } catch (err) {
+      console.error("加载设定实体失败:", err);
+    } finally {
+      setLoading(false);
     }
+  }, [book.id]);
 
-    setModalOpen(false);
+  useEffect(() => {
+    void (async () => {
+      await loadEntities();
+    })();
+  }, [loadEntities]);
+
+  // ============ 分组切换 ============
+
+  const toggleGroup = (cat: SettingCategory) => {
+    setOpenGroups((prev) => ({ ...prev, [cat]: !prev[cat] }));
   };
 
-  // 删除实体
+  // ============ 弹窗操作 ============
+
+  const openCreate = (cat: SettingCategory) => {
+    setEditing(null);
+    setModalCat(cat);
+    const defaults: Record<string, unknown> = {
+      name: "",
+      level: "general",
+      description: "",
+      appearance: "",
+      traits: "",
+      background: "",
+      abilities: "",
+      weaknesses: "",
+    };
+    // 初始化分类专属字段
+    for (const f of CATEGORY_FIELD_TEMPLATES[cat]) {
+      defaults[f] = "";
+    }
+    // 初始化状态字段
+    for (const f of STATUS_FIELD_TEMPLATES[cat]) {
+      defaults[f] = "";
+    }
+    form.resetFields();
+    form.setFieldsValue(defaults);
+    setModalOpen(true);
+  };
+
+  const openEdit = (entity: SettingEntity) => {
+    setEditing(entity);
+    setModalCat(entity.category);
+    form.resetFields();
+    form.setFieldsValue({
+      name: entity.name,
+      level: entity.level,
+      description: entity.description,
+      appearance: entity.appearance,
+      traits: entity.traits,
+      background: entity.background,
+      abilities: entity.abilities,
+      weaknesses: entity.weaknesses,
+      ...entity.categoryFields,
+      ...entity.statusFields,
+    });
+    setModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      const {
+        name,
+        level,
+        description,
+        appearance,
+        traits,
+        background,
+        abilities,
+        weaknesses,
+        ...rest
+      } = values;
+
+      // 分类专属字段
+      const categoryFields: Record<string, string> = {};
+      for (const f of CATEGORY_FIELD_TEMPLATES[modalCat]) {
+        if (rest[f] !== undefined) categoryFields[f] = rest[f];
+      }
+
+      // 状态字段
+      const statusFields: Record<string, string> = {};
+      for (const f of STATUS_FIELD_TEMPLATES[modalCat]) {
+        if (rest[f] !== undefined) statusFields[f] = rest[f];
+      }
+
+      if (editing) {
+        const dto = {
+          name: name.trim(),
+          level: level as SettingLevel,
+          description,
+          appearance,
+          traits,
+          background,
+          abilities,
+          weaknesses,
+          categoryFields,
+          statusFields,
+        };
+        const updated = await updateSettingEntity(editing.id, dto);
+        setEntities((prev) =>
+          prev.map((e) => (e.id === updated.id ? updated : e))
+        );
+      } else {
+        const dto: CreateSettingEntityDTO = {
+          category: modalCat,
+          name: name.trim(),
+          level: level as SettingLevel,
+          description,
+          appearance,
+          traits,
+          background,
+          abilities,
+          weaknesses,
+          categoryFields,
+          statusFields,
+        };
+        const created = await createSettingEntity(book.id, dto);
+        setEntities((prev) => [...prev, created]);
+        setActiveId(created.id);
+        setOpenGroups((prev) => ({ ...prev, [modalCat]: true }));
+      }
+
+      setModalOpen(false);
+    } catch (err) {
+      if (err && typeof err === "object" && "errorFields" in err) return;
+      console.error("保存设定实体失败:", err);
+    }
+  };
+
   const handleDelete = (entity: SettingEntity) => {
-    confirmDelete(entity.name, () => {
-      setEntities((prev) => prev.filter((e) => e.id !== entity.id));
-      if (selectedItem?.id === entity.id) {
-        setSelectedItem(null);
+    confirmDelete(entity.name, async () => {
+      try {
+        await deleteSettingEntity(entity.id);
+        setEntities((prev) => prev.filter((e) => e.id !== entity.id));
+        if (activeId === entity.id) setActiveId(null);
+      } catch (err) {
+        console.error("删除设定实体失败:", err);
       }
     });
   };
 
-  // 按分类获取数量
-  const getCount = (cat: SettingCategory) =>
-    entities.filter((e) => e.category === cat).length;
+  const handleToggleDeprecated = async (entity: SettingEntity) => {
+    try {
+      const updated = await updateSettingEntity(entity.id, {
+        deprecated: !entity.deprecated,
+      });
+      setEntities((prev) =>
+        prev.map((e) => (e.id === updated.id ? updated : e))
+      );
+    } catch (err) {
+      console.error("更新废弃状态失败:", err);
+    }
+  };
 
-  // 获取分类下的实体
-  const getCategoryEntities = (cat: SettingCategory) =>
-    entities.filter((e) => e.category === cat);
+  const toggleField = (key: string) => {
+    setExpandedFields((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
-  // 获取 entity 的 level
-  const getEntityLevel = (entity: SettingEntity): string =>
-    ((entity as unknown as Record<string, unknown>).level as string) || "general";
+  // ============ 左侧面板 ============
 
-  // 获取所有实体总数
-  const totalCount = entities.length;
-
-  // ===== 左侧面板 =====
-  const leftPanel = totalCount === 0 ? (
-    <div className={styles.leftEmpty}>
-      <EmptyState
-        icon={<FileOutlined />}
-        title="还没有设定"
-        description="创建人物、物品、地点等设定，丰富你的世界观"
-        action={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenCreate("character")}>
-            新建设定
-          </Button>
-        }
-      />
-    </div>
-  ) : (
-    <div className={styles.entityList}>
-      <div className={styles.listToolbar}>
-        <span className={styles.entityCount}>{totalCount} 条设定</span>
-        <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => handleOpenCreate("character")}>
-          新建
-        </Button>
+  const leftPanel = (
+    <>
+      <div className={styles.leftToolbar}>
+        <span className={styles.entityCount}>{entities.length} 条设定</span>
       </div>
-      {categories.map((cat) => {
-        const count = getCount(cat.key);
-        const items = getCategoryEntities(cat.key);
-        const isExpanded = selectedCategory === cat.key;
-
-        return (
-          <div key={cat.key} className={styles.categoryGroup}>
-            <div
-              className={`${styles.categoryHeader} ${isExpanded ? styles.categoryHeaderActive : ""}`}
-              onClick={() => setSelectedCategory(isExpanded ? null : cat.key)}
-            >
-              <span className={styles.categoryName}>{cat.label}</span>
-              <span className={styles.categoryCount}>{count}</span>
-            </div>
-
-            {isExpanded && (
-              <div className={styles.categoryItems}>
-                {items.length === 0 ? (
-                  <div className={styles.categoryEmpty}>暂无{cat.label}</div>
-                ) : (
-                  items.map((entity) => {
-                    const level = getEntityLevel(entity);
-                    return (
+      {loading ? (
+        <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
+          <Spin />
+        </div>
+      ) : (
+        <div className={styles.entityList}>
+          {CAT_ORDER.map((cat) => {
+            const items = grouped[cat];
+            const meta = CAT_META[cat];
+            const isOpen = openGroups[cat];
+            return (
+              <div key={cat} className={styles.catGroup}>
+                <div
+                  className={styles.catHeader}
+                  onClick={() => toggleGroup(cat)}
+                >
+                  <div className={styles.catHeaderLeft}>
+                    <span
+                      className={`${styles.catArrow} ${isOpen ? styles.catArrowOpen : ""}`}
+                    >
+                      <RightOutlined style={{ fontSize: 10 }} />
+                    </span>
+                    <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                      {meta.icon}
+                    </span>
+                    <span className={styles.catName}>{meta.label}</span>
+                    <span className={styles.catCount}>{items.length}</span>
+                  </div>
+                  <Tooltip title={`新建${meta.label}`}>
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<PlusOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openCreate(cat);
+                      }}
+                    />
+                  </Tooltip>
+                </div>
+                {isOpen && (
+                  <div className={styles.catItems}>
+                    {items.length === 0 ? (
                       <div
-                        key={entity.id}
-                        className={`${styles.entityItem} ${selectedItem?.id === entity.id ? styles.entityItemActive : ""} ${entity.deprecated ? styles.entityItemDeprecated : ""}`}
-                        onClick={() => setSelectedItem(entity)}
+                        style={{
+                          padding: "6px 0",
+                          fontSize: 11,
+                          color: "var(--text-secondary)",
+                          fontStyle: "italic",
+                        }}
                       >
-                        <div className={styles.entityItemBody}>
-                          <span className={styles.entityName}>{entity.name}</span>
-                          <Tag
-                            color={level === "core" ? "green" : level === "important" ? "orange" : undefined}
-                            style={{ margin: 0 }}
-                          >
-                            {levelLabels[level] || "一般"}
-                          </Tag>
-                        </div>
+                        暂无{meta.label}
                       </div>
-                    );
-                  })
+                    ) : (
+                      items.map((entity) => (
+                        <div
+                          key={entity.id}
+                          className={`${styles.entityItem} ${activeId === entity.id ? styles.entityItemActive : ""} ${entity.deprecated ? styles.entityItemDeprecated : ""}`}
+                          onClick={() => setActiveId(entity.id)}
+                        >
+                          <div className={styles.entityItemBody}>
+                            <span className={styles.entityName}>
+                              {entity.name}
+                            </span>
+                            <Tag
+                              color={LEVEL_MAP[entity.level]?.color}
+                              style={{ margin: 0, fontSize: 11 }}
+                            >
+                              {LEVEL_MAP[entity.level]?.label}
+                            </Tag>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 
-  // ===== 右侧详情 =====
-  const rightPanel = selectedItem ? (
+  // ============ 右侧面板 ============
+
+  const rightPanel = activeEntity ? (
     <div className={styles.detailPanel}>
       <div className={styles.detailHeader}>
         <div className={styles.detailTitleRow}>
-          <h3 className={styles.detailTitle}>{selectedItem.name}</h3>
-          <Tag
-            color={getEntityLevel(selectedItem) === "core" ? "green" : getEntityLevel(selectedItem) === "important" ? "orange" : undefined}
-          >
-            {levelLabels[getEntityLevel(selectedItem)] || "一般"}
+          <h3 className={styles.detailTitle}>{activeEntity.name}</h3>
+          <Tag color={LEVEL_MAP[activeEntity.level]?.color}>
+            {LEVEL_MAP[activeEntity.level]?.label}
           </Tag>
-          <Tag>{categoryLabels[selectedItem.category]}</Tag>
+          <Tag>{CAT_META[activeEntity.category]?.label}</Tag>
+          {activeEntity.deprecated && <Tag color="error">已废弃</Tag>}
         </div>
-        <span className={styles.detailTime}>
-          创建于 {new Date(selectedItem.createdAt).toLocaleString("zh-CN")}
-        </span>
+        <div className={styles.detailMeta}>
+          创建于{" "}
+          {new Date(activeEntity.createdAt).toLocaleString("zh-CN")} · 更新于{" "}
+          {new Date(activeEntity.updatedAt).toLocaleString("zh-CN")}
+        </div>
         <div className={styles.detailActions}>
-          <Button size="small" icon={<EditOutlined />} onClick={() => handleOpenEdit(selectedItem)}>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => openEdit(activeEntity)}
+          >
             编辑
           </Button>
-          <Button size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(selectedItem)}>
+          <Button
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(activeEntity)}
+          >
             删除
+          </Button>
+          <Button
+            size="small"
+            onClick={() => handleToggleDeprecated(activeEntity)}
+          >
+            {activeEntity.deprecated ? "取消废弃" : "废弃"}
           </Button>
         </div>
       </div>
 
-      <div className={styles.detailContent}>
-        {selectedItem.category === "character" && (
-          <>
-            {selectedItem.gender && (
-              <div className={styles.viewField}>
-                <span className={styles.viewFieldLabel}>性别</span>
-                <span className={styles.viewFieldValue}>{selectedItem.gender}</span>
+      <div className={styles.detailBody}>
+        {/* 6 个通用信息字段卡片 */}
+        {INFO_FIELDS.map((f) => {
+          const val = activeEntity[f.key];
+          const isExpanded = expandedFields[f.key];
+          return (
+            <div key={f.key} className={styles.infoSection}>
+              <div
+                className={styles.infoSectionHeader}
+                onClick={() => toggleField(f.key)}
+                style={{ cursor: "pointer" }}
+              >
+                <span className={styles.infoSectionTitle}>
+                  <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                    {f.icon}
+                  </span>
+                  {f.label}
+                </span>
+                <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                  {isExpanded ? "收起" : "展开"}
+                </span>
               </div>
-            )}
-            {selectedItem.personality && (
-              <div className={styles.viewField}>
-                <span className={styles.viewFieldLabel}>性格</span>
-                <span className={styles.viewFieldValue}>{selectedItem.personality}</span>
+              <div
+                className={`${styles.infoSectionBody} ${!isExpanded ? styles.infoSectionBodyCollapsed : ""}`}
+              >
+                {val ? (
+                  <div className={styles.descText}>{val}</div>
+                ) : (
+                  <div className={styles.descEmpty}>暂无内容</div>
+                )}
               </div>
-            )}
-            {selectedItem.traits && (
-              <div className={styles.viewField}>
-                <span className={styles.viewFieldLabel}>特点/癖好</span>
-                <span className={styles.viewFieldValue}>{selectedItem.traits}</span>
-              </div>
-            )}
-            {selectedItem.tags && selectedItem.tags.length > 0 && (
-              <div className={styles.viewField}>
-                <span className={styles.viewFieldLabel}>标签</span>
-                <div className={styles.viewTags}>
-                  {selectedItem.tags.map((tag, i) => (
-                    <span key={i} className={styles.viewTag}>{tag}</span>
-                  ))}
+            </div>
+          );
+        })}
+
+        {/* 标签区（预留，Phase 2 接入标签库） */}
+
+        {/* 分类专属字段 */}
+        {CATEGORY_FIELD_TEMPLATES[activeEntity.category]?.length > 0 && (
+          <div className={styles.infoSection}>
+            <div className={styles.infoSectionHeader}>
+              <span className={styles.infoSectionTitle}>
+                <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                  <InfoCircleOutlined />
+                </span>
+                分类专属
+              </span>
+            </div>
+            <div className={styles.infoSectionBody}>
+              {CATEGORY_FIELD_TEMPLATES[activeEntity.category].map((f) => (
+                <div key={f} className={styles.statusField} style={{ marginBottom: 8 }}>
+                  <span className={styles.statusLabel}>{f}</span>
+                  <span className={styles.statusValue}>
+                    {activeEntity.categoryFields?.[f] || "—"}
+                  </span>
                 </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {selectedItem.description ? (
-          <div className={styles.viewField}>
-            <span className={styles.viewFieldLabel}>描述</span>
-            <p className={styles.detailText}>{selectedItem.description}</p>
+              ))}
+            </div>
           </div>
-        ) : (
-          <p className={styles.detailEmpty}>暂无内容</p>
         )}
 
-        {selectedItem.deprecated && (
-          <Tag color="error" style={{ marginTop: 8 }}>已废弃</Tag>
-        )}
+        {/* 状态信息区 */}
+        <div className={styles.infoSection}>
+          <div className={styles.infoSectionHeader}>
+            <span className={styles.infoSectionTitle}>
+              <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                <InfoCircleOutlined />
+              </span>
+              状态信息
+            </span>
+            <Tooltip title="状态信息随正文变化，仅记录当前快照">
+              <InfoCircleOutlined
+                style={{ fontSize: 14, color: "var(--text-secondary)", cursor: "help" }}
+              />
+            </Tooltip>
+          </div>
+          <div className={styles.infoSectionBody}>
+            {Object.keys(activeEntity.statusFields || {}).length > 0 ? (
+              <div className={styles.statusGrid}>
+                {Object.entries(activeEntity.statusFields).map(([k, v]) => (
+                  <div key={k} className={styles.statusField}>
+                    <span className={styles.statusLabel}>{k}</span>
+                    <span className={styles.statusValue}>{v || "—"}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.statusEmpty}>暂无状态信息</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
-  ) : null;
-
-  // ===== Modal 表单 =====
-  const renderModal = () => (
-    <Modal
-      title={modalMode === "create" ? "新建设定" : "编辑设定"}
-      open={modalOpen}
-      onCancel={() => setModalOpen(false)}
-      onOk={handleModalSave}
-      okButtonProps={{ disabled: !formName.trim() }}
-      okText="保存"
-      cancelText="取消"
-      width={560}
-      destroyOnClose
-      closable={false}
-      maskClosable={false}
-      keyboard={false}
+  ) : (
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
-      <div className={styles.modalForm}>
-        <div className={styles.formField}>
-          <label className={styles.formLabel}>
-            名称 <span className={styles.formRequired}>*</span>
-          </label>
-          <Input
-            value={formName}
-            onChange={(e) => setFormName(e.target.value)}
-            placeholder="输入名称"
-            maxLength={60}
-            showCount
-          />
-        </div>
-        <div className={styles.formField}>
-          <label className={styles.formLabel}>分类</label>
-          <Select
-            value={formCategory}
-            onChange={(v) => setFormCategory(v)}
-            options={categories.map((c) => ({ label: c.label, value: c.key }))}
-            style={{ width: "100%" }}
-            disabled={modalMode === "create"}
-          />
-        </div>
-        <div className={styles.formField}>
-          <label className={styles.formLabel}>级别</label>
-          <Select
-            value={formLevel}
-            onChange={(v) => setFormLevel(v)}
-            options={levelOptions}
-            style={{ width: "100%" }}
-          />
-        </div>
-        {formCategory === "character" && (
-          <>
-            <div className={styles.formField}>
-              <label className={styles.formLabel}>性别</label>
-              <Select
-                value={undefined}
-                onChange={(v) => setFormDescription(v || "")}
-                allowClear
-                placeholder="选择性别"
-                options={[
-                  { label: "男", value: "男" },
-                  { label: "女", value: "女" },
-                  { label: "其他", value: "其他" },
-                ]}
-                style={{ width: "100%" }}
-              />
-            </div>
-            <div className={styles.formField}>
-              <label className={styles.formLabel}>性格</label>
-              <Input placeholder="描述角色性格特征" maxLength={200} showCount />
-            </div>
-            <div className={styles.formField}>
-              <label className={styles.formLabel}>特点/癖好</label>
-              <Input placeholder="描述角色特点或癖好" maxLength={200} showCount />
-            </div>
-          </>
-        )}
-        <div className={styles.formField}>
-          <label className={styles.formLabel}>描述</label>
-          <Input.TextArea
-            value={formDescription}
-            onChange={(e) => setFormDescription(e.target.value)}
-            placeholder="详细描述"
-            rows={6}
-            maxLength={2000}
-            showCount
-          />
-        </div>
-        {modalMode === "edit" && (
-          <div className={styles.formField}>
-            <label className={styles.formLabel}>状态</label>
-            <Select
-              value={formStatus}
-              onChange={(v) => setFormStatus(v)}
-              options={[
-                { label: "正常", value: "active" },
-                { label: "已废弃", value: "deprecated" },
-              ]}
-              style={{ width: "100%" }}
-            />
-          </div>
-        )}
-      </div>
-    </Modal>
+      <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+        选择一项设定查看详情
+      </span>
+    </div>
   );
+
+  // ============ 弹窗表单 ============
+
+  const catLabel = CAT_META[modalCat]?.label ?? "设定";
+  const modalTitle = `${editing ? "编辑" : "新建"}${catLabel}`;
+  const statusFieldsList = STATUS_FIELD_TEMPLATES[modalCat] ?? [];
+  const catFieldsList = CATEGORY_FIELD_TEMPLATES[modalCat] ?? [];
+
+  const modalContent = (
+    <Form form={form} layout="vertical" initialValues={{ level: "general" }}>
+      {/* 基础信息 */}
+      <div className={styles.formSection}>
+        <div className={styles.formSectionTitle}>
+          <InfoCircleOutlined style={{ fontSize: 13, color: "var(--text-secondary)" }} />
+          基础信息
+        </div>
+        <Form.Item
+          name="name"
+          label="名称"
+          rules={[{ required: true, message: "请输入名称" }]}
+        >
+          <Input placeholder="输入设定实体名称" maxLength={60} showCount />
+        </Form.Item>
+        <Form.Item name="level" label="级别">
+          <Select
+            placeholder="选择级别"
+            options={[
+              { value: "core", label: "核心" },
+              { value: "important", label: "重要" },
+              { value: "general", label: "一般" },
+            ]}
+          />
+        </Form.Item>
+      </div>
+
+      <div className={styles.formDivider} />
+
+      {/* 设定信息（6 个通用文本字段） */}
+      <div className={styles.formSection}>
+        <div className={styles.formSectionTitle}>
+          <BulbOutlined style={{ fontSize: 13, color: "var(--text-secondary)" }} />
+          设定信息
+        </div>
+        {INFO_FIELDS.map((f) => (
+          <Form.Item key={f.key} name={f.key} label={f.label}>
+            <Input.TextArea
+              rows={2}
+              placeholder={`填写${f.label}...`}
+              maxLength={f.key === "description" ? 2000 : 1000}
+              showCount
+            />
+          </Form.Item>
+        ))}
+      </div>
+
+      {/* 分类专属字段 */}
+      {catFieldsList.length > 0 && (
+        <>
+          <div className={styles.formDivider} />
+          <div className={styles.formSection}>
+            <div className={styles.formSectionTitle}>
+              <InfoCircleOutlined style={{ fontSize: 13, color: "var(--text-secondary)" }} />
+              {catLabel}专属
+            </div>
+            {catFieldsList.map((f) => (
+              <Form.Item key={f} name={f} label={f}>
+                <Input.TextArea
+                  rows={2}
+                  placeholder={`填写${f}...`}
+                  maxLength={500}
+                  showCount
+                />
+              </Form.Item>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* 初始状态 */}
+      {statusFieldsList.length > 0 && (
+        <>
+          <div className={styles.formDivider} />
+          <div className={styles.formSection}>
+            <div className={styles.formSectionTitle}>
+              <InfoCircleOutlined style={{ fontSize: 13, color: "var(--text-secondary)" }} />
+              初始状态
+              <span className={styles.formSectionHint}>
+                （可留空，后续系统自动更新）
+              </span>
+            </div>
+            {statusFieldsList.map((f) => (
+              <Form.Item key={f} name={f} label={f}>
+                <Input placeholder={`填写${f}（可留空）`} maxLength={200} />
+              </Form.Item>
+            ))}
+          </div>
+        </>
+      )}
+    </Form>
+  );
+
+  // ============ 渲染 ============
 
   return (
     <>
-      <SplitPanel
-        left={leftPanel}
-        right={rightPanel}
-        leftWidth={280}
-        emptyHint="选择一项设定查看详情"
-      />
-      {renderModal()}
+      <SplitPanel left={leftPanel} right={rightPanel} />
+      <Modal
+        className={styles.settingsModal}
+        title={modalTitle}
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
+        onOk={handleSave}
+        okText="保存"
+        cancelText="取消"
+        width={600}
+        destroyOnClose
+        closable={false}
+        maskClosable={false}
+        keyboard={false}
+      >
+        {modalContent}
+      </Modal>
     </>
   );
 }

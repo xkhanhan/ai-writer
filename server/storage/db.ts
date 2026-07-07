@@ -242,6 +242,32 @@ function initializeTables(db: Database.Database) {
     );
     CREATE INDEX IF NOT EXISTS idx_archive_book_id ON archived_chapters(book_id);
   `);
+
+  // 设定库 - 设定实体
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS setting_entities (
+      id              TEXT PRIMARY KEY,
+      book_id         TEXT NOT NULL,
+      category        TEXT NOT NULL,
+      name            TEXT NOT NULL,
+      level           TEXT NOT NULL DEFAULT 'general',
+      description     TEXT NOT NULL DEFAULT '',
+      appearance      TEXT NOT NULL DEFAULT '',
+      traits          TEXT NOT NULL DEFAULT '',
+      background      TEXT NOT NULL DEFAULT '',
+      abilities       TEXT NOT NULL DEFAULT '',
+      weaknesses      TEXT NOT NULL DEFAULT '',
+      tag_ids         TEXT NOT NULL DEFAULT '[]',
+      category_fields TEXT NOT NULL DEFAULT '{}',
+      status_fields   TEXT NOT NULL DEFAULT '{}',
+      deprecated      INTEGER NOT NULL DEFAULT 0,
+      created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_setting_entities_book_category ON setting_entities(book_id, category);
+    CREATE INDEX IF NOT EXISTS idx_setting_entities_book_level ON setting_entities(book_id, level);
+  `);
 }
 
 export function closeDb() {
