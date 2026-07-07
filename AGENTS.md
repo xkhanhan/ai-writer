@@ -30,7 +30,7 @@ Project documentation lives in `docs/` — see `docs/README.md` for the full dir
 - `npm run typecheck`: run TypeScript without emitting files.
 - `npm run lint`: run ESLint across the repo.
 
-Use these before opening a PR or handing work off.
+Use these before merging feature branches into master.
 
 ## Coding Style & Naming Conventions
 
@@ -61,71 +61,78 @@ There is no dedicated test framework yet. For now, the minimum verification set 
 
 When tests are added, place them near the feature they cover or in a feature-local `__tests__/` folder.
 
-## Git 工作流（严格模式）
+## Git 工作流（单人开发 + AI 协作）
 
 **Remote**: `origin` → `https://github.com/xkhanhan/ai-writer.git`
 
+> 核心目标：保证 AI 生成的代码可回滚，同时保持流程简洁。
+
 ### 分支策略
 
-- `master` — 生产分支，仅通过 PR 合并，**禁止直接 push**
-- `feature/*` — 功能开发分支，从 master 切出，完成后通过 PR 合回 master
-- `fix/*` — 紧急修复分支，从 master 切出
-- `docs/*` — 纯文档变更分支
+- `master` — 稳定分支，始终保持可运行状态
+- `feature/*` — 功能开发分支，**AI 只能在此分支上提交**
 
 ### 分支命名规范
 
 ```
 feature/简短功能描述     例: feature/creation-zone
 fix/问题简述            例: fix/scroll-overflow
-docs/文档变更简述        例: docs/update-agents
 ```
 
-### 禁止事项
+### 角色与权限
 
-- **禁止**直接向 `master` push 代码
-- **禁止**在 master 上直接修改文件
-- **禁止**跳过 PR 流程合并代码
-- **禁止**合并未通过 typecheck + lint 的代码
+| 角色 | 可以做 | 禁止做 |
+|------|--------|--------|
+| AI | 在 `feature/*` 上 commit | 直接 commit/push `master` |
+| 人（你） | 在 `master` 上直接编辑、merge feature 分支 | — |
 
-### 提交流程
+### AI 提交流程
 
-1. **切出分支**：从最新 `master` 切出功能分支 — `git checkout -b feature/xxx master`
-2. **开发提交**：每个独立任务完成后自动提交 — `typecheck` → `lint` → `git add` → `git commit`
-3. **推送分支**：`git push -u origin feature/xxx`
-4. **创建 PR**：填写规范的标题和描述
-5. **合并 PR**：review 通过后合并（推荐 Squash and merge）
-6. **清理分支**：PR 合并后**立即删除远程和本地分支** —
-   ```
-   git branch -d feature/xxx
-   git push origin --delete feature/xxx
-   ```
-   保持本地和远程只保留 `master`，分支干净无残留
+AI 每次完成一个独立任务后，在 feature 分支上提交：
+
+```
+typecheck → lint → git add → git commit
+```
+
+**禁止** AI 直接操作 `master` 分支（不 commit、不 push、不 merge）。
+
+### 人（你）的合并流程
+
+feature 分支开发完成、确认功能正常后，手动合并到 master：
+
+```bash
+# 1. 同步远程 master
+git checkout master
+git pull origin master
+
+# 2. 合并 feature 分支
+git merge feature/xxx
+
+# 3. 推送远程
+git push origin master
+
+# 4. 清理分支（可选，保持整洁）
+git branch -d feature/xxx
+```
+
+> 合并前建议跑一下 `npm run typecheck && npm run lint` 确认无误。
+
+### 回滚方式
+
+- **回滚单个 commit**：`git revert <commit-hash>`
+- **回滚整个 feature**：合并前直接删除分支，master 不受影响
+- **回滚已合并的 feature**：`git revert <merge-commit>`
 
 ### Commit 规范
 
-- `feat(scope): summary`
-- `fix(scope): summary`
-- `docs(scope): summary`
-- `chore(scope): summary`
+```
+feat(scope): summary
+fix(scope): summary
+docs(scope): summary
+refactor(scope): summary
+```
 
 Examples: `feat(home): add ai test panel`, `fix(ai): validate empty prompt`.
-
-### PR 要求
-
-PR 标题必须包含模块名和变更摘要，例如：
-
-```
-feat(books): 新增创作区四层大纲结构
-fix(world-rules): 修复规则编辑弹窗表单重置问题
-docs(standards): 更新 SplitPanel 组件规范
-```
-
-PR 描述必须包含：
-
-- 变更内容的简要说明
-- 影响的文件路径
-- UI 变更的截图
-- 验证命令及结果（typecheck / lint / build）
 
 ## Architecture Rules
 
