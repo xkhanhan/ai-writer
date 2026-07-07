@@ -1,5 +1,13 @@
 # Utilities & Shared Components
 
+## 适用场景
+
+本规范适用于 AI Writer 项目所有消息工具、日期格式化、共享类型/hooks/utils 注册表、共享 UI 组件清单及服务器工具。
+
+---
+
+# 原始内容
+
 ## 消息工具
 
 从 `@/app/utils/error-handler` 导入：
@@ -85,3 +93,27 @@ import { showError, showSuccess, showWarning, showInfo } from "@/app/utils/error
 - JSON 工具：`server/utils/json.ts` → `parseJsonSafe`
 - 查询构建：`server/utils/query-builder.ts` → `buildUpdateQuery`
 - **禁止：** 客户端代码导入 `server/`
+
+---
+
+## 合规校验标准
+
+| # | 校验项 | 自动化 | 手动 |
+|---|--------|--------|------|
+| U-1 | 消息使用 showError/showSuccess | 搜索 `message.error`/`message.success` | — |
+| U-2 | 日期使用 formatDate() | 搜索 `toLocaleDateString` | — |
+| U-3 | 全栈类型在 shared/types/ | 搜索类型定义位置 | — |
+| U-4 | 客户端不导入 server/ | 搜索 `from.*server/` 在 app/ | — |
+| U-5 | 共享组件在 shared/ui/ | 目录结构检查 | — |
+| U-6 | 共享 hook 在 shared/hooks/ | 目录结构检查 | — |
+| U-7 | 新增共享组件更新本文档 | Code Review | — |
+
+## 违规整改方案
+
+| 违规 | 整改方式 | 时限 |
+|------|---------|------|
+| 直接使用 message.error | 替换为 showError | 当前迭代 |
+| 未使用 formatDate | 替换为 formatDate() | 当前迭代 |
+| 全栈类型在 app/types/ | 迁移到 shared/types/ | 当前迭代 |
+| 客户端导入 server/ | 重构依赖方向 | 立即 |
+| 新增共享组件未记录 | 更新 utils.md | 当前迭代 |

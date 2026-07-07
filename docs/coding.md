@@ -1,5 +1,13 @@
 # Coding Standards
 
+## 适用场景
+
+本规范适用于 AI Writer 项目所有 TypeScript、React/Next.js、CSS Modules、API 路由、Store 层的编码标准，以及验证门禁和包管理规则。
+
+---
+
+# 原始规范
+
 ## TypeScript
 
 - `strict: true` — 类型错误零容忍
@@ -202,3 +210,34 @@ if (data.summary !== undefined) { fields.push("summary = ?"); values.push(data.s
 - **仅 npm** — 禁止混合使用 yarn / pnpm
 - `package-lock.json` 必须提交
 - 新依赖评估：必要性 → 包大小 → 维护性 → 安全性
+
+---
+
+## 合规校验标准
+
+| # | 校验项 | 自动化 | 手动 |
+|---|--------|--------|------|
+| C-1 | TypeScript strict 模式零错误 | `npm run typecheck` | — |
+| C-2 | ESLint 零错误 | `npm run lint` | — |
+| C-3 | 生产构建通过 | `npm run build` | — |
+| C-4 | 无 `any` 类型 | ESLint `no-any` | — |
+| C-5 | 文件命名 kebab-case | Code Review | — |
+| C-6 | useEffect 有 cleanup | ESLint `react-hooks/exhaustive-deps` | — |
+| C-7 | CSS 无硬编码颜色 | 搜索 hex/rgb 在 .module.css 中 | — |
+| C-8 | CSS 无 `!important` | 搜索 `!important` | — |
+| C-9 | Store 使用参数化 SQL | 搜索 `db.prepare(\`` | — |
+| C-10 | Store update 使用 map 驱动 | Code Review | — |
+| C-11 | 仅使用 npm | 检查无 yarn.lock/pnpm-lock | — |
+| C-12 | package-lock.json 已提交 | Git 检查 | — |
+
+## 违规整改方案
+
+| 违规 | 整改方式 | 时限 |
+|------|---------|------|
+| TypeScript 编译错误 | 修复类型错误 | 立即 |
+| ESLint 错误 | 修复代码规范问题 | 立即 |
+| 使用 `any` 类型 | 替换为具体类型或 unknown | 当前迭代 |
+| useEffect 无 cleanup | 添加 cleanup 函数 | 立即 |
+| CSS 硬编码颜色 | 替换为 CSS 变量 | 当前迭代 |
+| Store SQL 拼接 | 重构为参数化查询 | 立即 |
+| 混合使用包管理器 | 统一使用 npm | 当前迭代 |

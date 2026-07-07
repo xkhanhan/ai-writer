@@ -6,14 +6,19 @@
 
 | Doc | Content |
 |-----|---------|
-| [architecture.md](./architecture.md) | Four-layer structure, dependency rules, DB schema |
+| [architecture.md](./architecture.md) | Four-layer structure, dependency rules, DB schema, compliance checklist |
 | [coding.md](./coding.md) | TypeScript, React, CSS Modules, store/route encoding, verification |
-| [api.md](./api.md) | Funnel error handling, Result<T>, RESTful conventions |
-| [visual.md](./visual.md) | Design tokens (colors, spacing, radius, shadows), tech stack constraints |
-| [components.md](./components.md) | Button/form/modal/sidebar interaction rules |
-| [utils.md](./utils.md) | Message tools, shared UI component inventory, BaseModal/ConfirmDelete API |
-| [workflow.md](./workflow.md) | Git branching, commit format, PR requirements |
-| [engineering.md](./engineering.md) | New module checklists, scaling guide, performance budget, module split rules |
+| [api.md](./api.md) | Funnel error handling, Result<T>, RESTful conventions, response format |
+| [visual.md](./visual.md) | Design tokens, theme system, responsive, CSS usage constraints |
+| [components.md](./components.md) | Button/form/modal/sidebar rules, extraction, accessibility |
+| [utils.md](./utils.md) | Message tools, shared UI inventory, type/hook/utils registries |
+| [workflow.md](./workflow.md) | Git branching, commit format, PR requirements, DB migrations |
+| [engineering.md](./engineering.md) | Module checklists, scaling guide, performance budget, module split |
+| [performance.md](./performance.md) | Frontend/backend performance optimization, rendering, caching, monitoring |
+| [security.md](./security.md) | Input validation, XSS/SQL injection, secrets management, data privacy |
+| [ai-development.md](./ai-development.md) | AI tool usage, prompt engineering, code quality, review standards |
+| [environments.md](./environments.md) | Environment variables, feature flags, DB consistency, platform handling |
+| [validation.md](./validation.md) | CI/CD pipeline, automated checks, pre-commit hooks, testing strategy |
 
 ## Design Docs
 

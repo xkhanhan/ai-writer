@@ -1,3 +1,11 @@
+# Component Standards
+
+## 适用场景
+
+本规范适用于 AI Writer 项目所有 UI 组件的交互规则、使用约束、提取规则及无障碍要求。
+
+---
+
 # Component Interaction Rules
 
 ## Buttons
@@ -108,3 +116,29 @@
 | 下拉菜单 | 触发器有 `aria-haspopup` |
 
 **优先级：** 共享 UI 组件（`shared/ui/`）必须满足以上要求。页面级组件建议满足。
+
+---
+
+## 合规校验标准
+
+| # | 校验项 | 自动化 | 手动 |
+|---|--------|--------|------|
+| COMP-1 | 每页面最多一个 primary 按钮 | Code Review | — |
+| COMP-2 | 删除操作使用 confirmDelete | 搜索 `Modal.confirm` / 直接删除 | — |
+| COMP-3 | 异步操作有 loading 状态 | Code Review | — |
+| COMP-4 | 所有弹窗使用 BaseModal | 搜索 `Modal(` / `Modal.open` | — |
+| COMP-5 | 列表+详情使用 SplitPanel | Code Review | — |
+| COMP-6 | 共享组件有 aria-label | Code Review | — |
+| COMP-7 | 组件超过 200 行已拆分 | 代码行数检查 | — |
+| COMP-8 | Tags 仅使用 green/red/orange/default | Code Review | — |
+
+## 违规整改方案
+
+| 违规 | 整改方式 | 时限 |
+|------|---------|------|
+| 删除无确认 | 添加 confirmDelete | 当前迭代 |
+| 弹窗未使用 BaseModal | 迁移到 BaseModal | 当前迭代 |
+| 列表+详情未用 SplitPanel | 迁移到 SplitPanel | 当前迭代 |
+| 异步操作无 loading | 添加 loading 状态 | 当前迭代 |
+| 组件超 200 行未拆分 | 提取子组件 | 当前迭代 |
+| 缺少无障碍属性 | 补充 aria-label/role/tabIndex | 下次迭代 |

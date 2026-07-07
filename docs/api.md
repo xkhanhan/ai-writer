@@ -1,3 +1,11 @@
+# API Standards
+
+## 适用场景
+
+本规范适用于 AI Writer 项目所有前后端 API 交互，包括 API Client 层、API 函数层、Hook 层、API 路由层的错误处理、请求/响应格式、RESTful 约定。
+
+---
+
 # API Specification
 
 ## 漏斗式错误处理
@@ -163,4 +171,32 @@ export async function PATCH(
 | API 函数中 throw | 所有错误返回 Result\<T\> |
 | `message.error()` / `message.success()` | `showError()` / `showSuccess()` |
 | 路由文件中的业务逻辑 | 路由仅做适配 |
-| `{ error: "..." }` 格式 | `{ success: false, error: "...", message: "..." }` |
+| `{ error: "..." }` 格式 | \`{ success: false, error: "...", message: "..." }\` |
+
+---
+
+## 合规校验标准
+
+| # | 校验项 | 自动化 | 手动 |
+|---|--------|--------|------|
+| API-1 | 所有 API 调用返回 Result\<T\> | Code Review | — |
+| API-2 | Hook/组件中无 try/catch 处理 API 错误 | ESLint / Code Review | — |
+| API-3 | API 函数中无 throw | Code Review | — |
+| API-4 | 响应格式包含 success 字段 | Code Review | — |
+| API-5 | 错误响应包含 error + message | Code Review | — |
+| API-6 | 路由文件无数据库直接操作 | 搜索 `db.prepare` 在 app/api/ | — |
+| API-7 | 路由文件包裹 try/catch | Code Review | — |
+| API-8 | DELETE 操作检查返回值 | Code Review | — |
+| API-9 | 使用 PATCH 而非 PUT | 搜索 `export async function PUT` | — |
+| API-10 | 消息使用 showError/showSuccess | 搜索 `message.error`/`message.success` | — |
+
+## 违规整改方案
+
+| 违规 | 级别 | 整改方式 | 时限 |
+|------|------|---------|------|
+| API 调用未返回 Result\<T\> | P1 | 重构为 Result\<T\> 模式 | 当前迭代 |
+| Hook 中 try/catch 处理 API 错误 | P1 | 移除 try/catch，使用漏斗式处理 | 当前迭代 |
+| 响应缺少 success 字段 | P2 | 统一响应格式 | 当前迭代 |
+| 路由包含业务逻辑 | P1 | 提取到 server/ 函数 | 当前迭代 |
+| 使用 message.error/showSuccess | P2 | 替换为 showError/showSuccess | 当前迭代 |
+| 使用 PUT 执行部分更新 | P2 | 改为 PATCH | 当前迭代 |

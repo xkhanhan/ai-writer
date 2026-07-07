@@ -1,3 +1,11 @@
+# Architecture Standards
+
+## 适用场景
+
+本规范适用于 AI Writer 项目的整体架构设计、四层依赖方向管控、数据库设计规范及页面间通信机制。所有新增模块、重构操作必须遵循本规范定义的架构约束。
+
+---
+
 # Architecture
 
 ## 四层结构
@@ -116,3 +124,32 @@ useEffect(() => {
 - 时间戳：统一使用 SQL `datetime('now')`，禁止在 JS 层生成
 - 迁移：幂等迁移（PRAGMA 检查列是否存在），按顺序执行
 - `data/` 运行时文件**不提交**到 Git
+
+---
+
+## 合规校验标准
+
+| # | 校验项 | 自动化 | 手动 |
+|---|--------|--------|------|
+| A-1 | 四层依赖方向正确（shared 不依赖 app/server） | 架构检查脚本 | Code Review |
+| A-2 | API 路由无业务逻辑 | Code Review | — |
+| A-3 | shared/types/ 包含所有全栈共享类型 | 类型检查 | Code Review |
+| A-4 | 服务端禁止客户端导入 | ESLint 自定义规则 | — |
+| A-5 | 数据库使用参数化查询 | 搜索 `db.prepare(\`` | — |
+| A-6 | 外键约束已启用（PRAGMA foreign_keys = ON） | 代码检查 | — |
+| A-7 | 外键列有索引 | 迁移脚本审查 | — |
+| A-8 | 多步写操作使用事务 | Code Review | — |
+| A-9 | 时间戳使用 SQL datetime('now') | Code Review | — |
+| A-10 | 页面间通信使用自定义事件 | Code Review | — |
+
+## 违规整改方案
+
+| 违规 | 级别 | 整改方式 | 时限 |
+|------|------|---------|------|
+| shared/ 导入 app/ 或 server/ | P0 | 立即重构，将共享类型移至 shared/types/ | 立即 |
+| API 路由包含业务逻辑 | P1 | 提取业务逻辑到 server/ 函数 | 当前迭代 |
+| 数据库未使用参数化查询 | P0 | 立即重构为参数化查询 | 立即 |
+| 外键约束未启用 | P1 | 在 db.ts 中添加 PRAGMA foreign_keys = ON | 当前迭代 |
+| 缺失外键索引 | P2 | 补充 CREATE INDEX 迁移 | 当前迭代 |
+| 页面间直接 import 通信 | P1 | 重构为自定义事件模式 | 当前迭代 |
+| 时间戳在 JS 层生成 | P2 | 改为 SQL datetime('now') | 当前迭代 |

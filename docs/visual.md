@@ -1,3 +1,11 @@
+# Visual Standards
+
+## 适用场景
+
+本规范适用于 AI Writer 项目所有 UI 视觉设计，包括 Design Token 管理、主题系统、响应式布局、CSS 使用约束。
+
+---
+
 # Visual Specification
 
 ## 技术栈约束
@@ -173,3 +181,28 @@ ThemeProvider 通过 `useEffect` 在 `document.documentElement.style` 上注入 
 ## 响应式
 
 主断点 `@media (max-width: 768px)`，辅助断点 `480px` 和 `1024px`。内容区宽度通过 `--content-padding-x` 控制。
+
+---
+
+## 合规校验标准
+
+| # | 校验项 | 自动化 | 手动 |
+|---|--------|--------|------|
+| V-1 | CSS 无硬编码颜色 | 搜索 hex/rgb 在 .module.css | — |
+| V-2 | 无 `!important` | 搜索 `!important` | — |
+| V-3 | 无 `:global(.ant-xxx)` 覆盖 | 搜索 `:global` | — |
+| V-4 | 使用 antd ConfigProvider tokens | Code Review | — |
+| V-5 | CSS 变量在 globals.css 中定义 | 代码检查 | — |
+| V-6 | 新增主题变量同步更新 4 个主题 | Code Review | — |
+| V-7 | 仅使用 @ant-design/icons Outlined | Code Review | — |
+| V-8 | 字体使用 CSS 变量 | Code Review | — |
+
+## 违规整改方案
+
+| 违规 | 整改方式 | 时限 |
+|------|---------|------|
+| CSS 硬编码颜色 | 替换为 CSS 变量 | 当前迭代 |
+| 使用 `:global(.ant-xxx)` | 改用 ConfigProvider tokens | 当前迭代 |
+| 使用 `!important` | 通过类嵌套提升优先级 | 当前迭代 |
+| 非规范色彩（蓝/紫等） | 替换为规范色彩 | 当前迭代 |
+| 新增变量未同步主题 | 补充 ThemeColors + 4 主题定义 | 当前迭代 |

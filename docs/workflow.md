@@ -1,3 +1,11 @@
+# Workflow Standards
+
+## 适用场景
+
+本规范适用于 AI Writer 项目的 Git 分支管理、提交格式、PR 流程、代码审查要求及数据库迁移规范。
+
+---
+
 # Git Workflow
 
 ## 分支策略
@@ -75,3 +83,29 @@ function migrateV5(db: Database.Database) {
   }
 }
 ```
+
+---
+
+## 合规校验标准
+
+| # | 校验项 | 自动化 | 手动 |
+|---|--------|--------|------|
+| W-1 | 分支命名符合 kebab-case 规范 | Git hooks / Code Review | — |
+| W-2 | Commit 格式符合 type(scope): summary | Commitlint | — |
+| W-3 | 提交前通过 typecheck + lint | CI 流水线 | — |
+| W-4 | 未提交 .env / data/ 等敏感文件 | CI 检查脚本 | — |
+| W-5 | PR 描述包含变更摘要和验证命令 | PR 模板 | — |
+| W-6 | 数据库迁移幂等 | Code Review | — |
+| W-7 | 新表有外键约束 | 迁移脚本审查 | — |
+| W-8 | 迁移在 db.ts 中注册 | Code Review | — |
+
+## 违规整改方案
+
+| 违规 | 整改方式 | 时限 |
+|------|---------|------|
+| 直接 push 到 master | 立即停止，改为 PR 流程 | 立即 |
+| Commit 格式不规范 | 使用 `git commit --amend` 修正 | 提交前 |
+| 提交未通过验证的代码 | 回退 → 修复 → 重新验证 → 提交 | 立即 |
+| 迁移不幂等 | 重构为幂等迁移（PRAGMA 检查） | 当前迭代 |
+| 新表无外键约束 | 补充 FOREIGN KEY 定义 | 当前迭代 |
+| 迁移未注册 | 在 db.ts 迁移序列中添加 | 当前迭代 |
