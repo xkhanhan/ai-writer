@@ -19,6 +19,7 @@
 | [ai-development.md](./ai-development.md) | AI tool usage, prompt engineering, code quality, review standards |
 | [environments.md](./environments.md) | Environment variables, feature flags, DB consistency, platform handling |
 | [validation.md](./validation.md) | CI/CD pipeline, automated checks, pre-commit hooks, testing strategy |
+| [engineering-scan-report.md](./engineering-scan-report.md) | Current engineering scan report: frontend, backend/API, database risks |
 
 ## Design Docs
 
