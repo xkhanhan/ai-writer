@@ -5,6 +5,10 @@ import type {
   VolumeOutline,
   ChapterOutline,
   ArchivedChapter,
+  CreateVolumeDTO,
+  UpdateVolumeDTO,
+  CreateChapterDTO,
+  UpdateChapterDTO,
 } from "@/app/types";
 
 // ============ 总纲 ============
@@ -36,22 +40,18 @@ export async function fetchVolumes(bookId: string): Promise<Result<VolumeOutline
 }
 
 export async function createVolume(
-  bookId: string,
-  data: Record<string, unknown>
+  data: CreateVolumeDTO
 ): Promise<Result<VolumeOutline>> {
-  const res = await client.post<{ volume: VolumeOutline }>("/api/volumes", {
-    bookId,
-    ...data,
-  });
+  const res = await client.post<{ volume: VolumeOutline }>("/api/volumes", data);
   if (!res.ok) return res;
   return { ok: true, data: res.data.volume };
 }
 
 export async function updateVolume(
   id: string,
-  data: Record<string, unknown>
+  data: UpdateVolumeDTO
 ): Promise<Result<VolumeOutline>> {
-  const res = await client.patch<{ volume: VolumeOutline }, Record<string, unknown>>(
+  const res = await client.patch<{ volume: VolumeOutline }, UpdateVolumeDTO>(
     `/api/volumes/${id}`,
     data
   );
@@ -72,22 +72,18 @@ export async function fetchChapters(volumeId: string): Promise<Result<ChapterOut
 }
 
 export async function createChapter(
-  volumeId: string,
-  data: Record<string, unknown>
+  data: CreateChapterDTO
 ): Promise<Result<ChapterOutline>> {
-  const res = await client.post<{ chapter: ChapterOutline }>("/api/chapters", {
-    volumeId,
-    ...data,
-  });
+  const res = await client.post<{ chapter: ChapterOutline }>("/api/chapters", data);
   if (!res.ok) return res;
   return { ok: true, data: res.data.chapter };
 }
 
 export async function updateChapter(
   id: string,
-  data: Record<string, unknown>
+  data: UpdateChapterDTO
 ): Promise<Result<ChapterOutline>> {
-  const res = await client.patch<{ chapter: ChapterOutline }, Record<string, unknown>>(
+  const res = await client.patch<{ chapter: ChapterOutline }, UpdateChapterDTO>(
     `/api/chapters/${id}`,
     data
   );

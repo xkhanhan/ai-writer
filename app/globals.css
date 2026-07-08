@@ -105,27 +105,7 @@
   --gold: var(--color-gold);
   --indigo: var(--color-indigo);
 
-  /* ===== v4 新增变量 ===== */
 
-  /* 折叠区 */
-  --collapse-bg: #f5f2ec;
-  --collapse-border: #ddd8d0;
-  --collapse-header-color: #414753;
-
-  /* Tag 等级颜色 */
-  --tag-core-bg: #2F5D50;
-  --tag-core-color: #ffffff;
-  --tag-important-bg: #964400;
-  --tag-important-color: #ffffff;
-  --tag-general-bg: #ebe7e0;
-  --tag-general-color: #414753;
-
-  /* 状态筛选按钮 */
-  --filter-active-bg: var(--color-primary);
-  --filter-active-color: #ffffff;
-  --filter-inactive-bg: #faf8f4;
-  --filter-inactive-color: #555555;
-  --filter-inactive-border: #ddd8d0;
 }
 
 /* ===== 全局重置 ===== */

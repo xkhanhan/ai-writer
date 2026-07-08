@@ -8,7 +8,8 @@ import {
   FileTextOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import { Checkbox, message } from "antd";
+import { Checkbox } from "antd";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type { ChapterOutline } from "@/app/types";
 import type { CreationZoneState } from "@/app/pages/books/hooks/use-creation-zone";
@@ -61,7 +62,7 @@ export function NavigationTree({ zone }: { zone: CreationZoneState }) {
     (volId: string, volTitle: string) => {
       confirmDelete(volTitle, async () => {
         await removeVolume(volId);
-        message.success("卷纲已删除");
+        showSuccess("卷纲已删除");
         if (view.type === "volume-form" && view.volumeId === volId) {
           setView({ type: "empty" });
         }
@@ -74,7 +75,7 @@ export function NavigationTree({ zone }: { zone: CreationZoneState }) {
     (volumeId: string, chId: string, chTitle: string) => {
       confirmDelete(chTitle, async () => {
         await removeChapter(volumeId, chId);
-        message.success("章纲已删除");
+        showSuccess("章纲已删除");
         if ((view.type === "content-editor" || view.type === "chapter-form") && view.chapterId === chId) {
           setView({ type: "empty" });
         }
@@ -107,12 +108,12 @@ export function NavigationTree({ zone }: { zone: CreationZoneState }) {
           ...volIds.map((id) => removeVolume(id)),
           ...chItems.map(({ volumeId, chapterId }) => removeChapter(volumeId, chapterId)),
         ]);
-        message.success(`已删除 ${total} 个项目`);
+        showSuccess(`已删除 ${total} 个项目`);
         setSelected(new Set());
         setSelectMode(false);
         setView({ type: "empty" });
       } catch {
-        message.error("部分删除失败，请重试");
+        showError("部分删除失败，请重试");
       }
     });
   }, [selected, allItems, removeVolume, removeChapter, setView]);

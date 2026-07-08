@@ -61,7 +61,7 @@ function renderView(zone: CreationZoneState): ReactNode {
         />
       );
     case "content-editor":
-      return <ContentEditor volumeId={view.volumeId} chapterId={view.chapterId} zone={zone} />;
+      return <ContentEditor key={view.chapterId} volumeId={view.volumeId} chapterId={view.chapterId} zone={zone} />;
     default:
       return <EmptyState zone={zone} />;
   }

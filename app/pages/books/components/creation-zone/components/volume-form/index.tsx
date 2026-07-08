@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, message } from "antd";
+import { Button, Input } from "antd";
+import { showError, showSuccess, showWarning } from "@/app/utils/error-handler";
 import { DeleteOutlined, MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { SaveButton } from "@/shared/ui/save-button";
 import type { VolumeOutline } from "@/app/types";
@@ -25,15 +26,15 @@ export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      message.warning("请输入卷标题");
+      showWarning("请输入卷标题");
       return;
     }
     setSaving(true);
     try {
       await onSave({ id: volume?.id, title, coreConflict, stages, highlights });
-      message.success(volume ? "卷纲已更新" : "卷纲已创建");
+      showSuccess(volume ? "卷纲已更新" : "卷纲已创建");
     } catch {
-      message.error("保存失败");
+      showError("保存失败");
     } finally {
       setSaving(false);
     }
@@ -44,9 +45,9 @@ export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {
     setDeleting(true);
     try {
       await onDelete(volume.id);
-      message.success("卷纲已删除");
+      showSuccess("卷纲已删除");
     } catch {
-      message.error("删除失败");
+      showError("删除失败");
       setDeleting(false);
     }
   };

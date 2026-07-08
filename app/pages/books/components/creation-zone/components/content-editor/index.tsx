@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Button, Input, Tag, message } from "antd";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import { CheckCircleOutlined } from "@ant-design/icons";
 import { SaveButton } from "@/shared/ui/save-button";
 import { AiDropdown } from "@/shared/ui/ai-dropdown";
@@ -20,24 +21,17 @@ export function ContentEditor({ volumeId, chapterId, zone }: Props) {
   const [content, setContent] = useState(chapter?.content ?? "");
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const [prevChapterId, setPrevChapterId] = useState(chapterId);
-
-  if (chapterId !== prevChapterId) {
-    setPrevChapterId(chapterId);
-    setContent(chapter?.content ?? "");
-    setDirty(false);
-  }
 
   const wordCount = useMemo(() => content.replace(/\s/g, "").length, [content]);
 
-  const handleSave = async (status?: string) => {
+  const handleSave = async (status?: "planned" | "writing" | "done") => {
     setSaving(true);
     try {
       await zone.saveChapterContent(chapterId, content, status ?? chapter?.status);
-      message.success("正文已保存");
+      showSuccess("正文已保存");
       setDirty(false);
     } catch {
-      message.error("保存失败");
+      showError("保存失败");
     } finally {
       setSaving(false);
     }
@@ -47,10 +41,10 @@ export function ContentEditor({ volumeId, chapterId, zone }: Props) {
     setSaving(true);
     try {
       await zone.saveChapterContent(chapterId, content, "done");
-      message.success("已过审");
+      showSuccess("已过审");
       setDirty(false);
     } catch {
-      message.error("操作失败");
+      showError("操作失败");
     } finally {
       setSaving(false);
     }

@@ -314,25 +314,25 @@ function ProgressRow({ label, count, total, accent }: { label: string; count: nu
 }
 
 function RecentActivity({ archives, chapters }: { archives: ArchivedChapter[]; chapters: ChapterOutline[] }) {
-  // 合并最近活动：已归档的章节 + 最近更新的章纲
-  const items: { time: string; text: string; active: boolean }[] = [];
+  const items: { time: string; kind: "archive" | "writing"; title: string; active: boolean }[] = [];
 
   for (const a of archives.slice(-5)) {
     items.push({
       time: a.archivedAt || "",
-      text: `过审了 <b>${a.title}</b>`,
+      kind: "archive",
+      title: a.title,
       active: true,
     });
   }
   for (const c of chapters.filter((ch) => ch.status === "writing").slice(-3)) {
     items.push({
       time: c.updatedAt || "",
-      text: `正在写 <b>${c.title}</b>`,
+      kind: "writing",
+      title: c.title,
       active: true,
     });
   }
 
-  // 按时间排序取最近5条
   items.sort((a, b) => (b.time > a.time ? 1 : -1));
   const recent = items.slice(0, 5);
 
@@ -346,7 +346,9 @@ function RecentActivity({ archives, chapters }: { archives: ArchivedChapter[]; c
         <div key={i} className={styles.tlItem}>
           <div className={`${styles.tlDot} ${item.active ? styles.tlDotOn : ""}`} />
           <div className={styles.tlContent}>
-            <div className={styles.tlText} dangerouslySetInnerHTML={{ __html: item.text }} />
+            <div className={styles.tlText}>
+              {item.kind === "archive" ? "过审了 " : "正在写 "}<b>{item.title}</b>
+            </div>
             <div className={styles.tlTime}>{formatTime(item.time)}</div>
           </div>
         </div>

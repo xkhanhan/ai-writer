@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, InputNumber, Tag, message } from "antd";
+import { Button, Input, InputNumber, Tag } from "antd";
+import { showError, showSuccess, showWarning } from "@/app/utils/error-handler";
 import { DeleteOutlined, MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { SaveButton } from "@/shared/ui/save-button";
 import type { ChapterOutline } from "@/app/types";
@@ -61,7 +62,7 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
 
   const handleSave = async () => {
     if (!title.trim()) {
-      message.warning("请输入章节标题");
+      showWarning("请输入章节标题");
       return;
     }
     setSaving(true);
@@ -82,9 +83,9 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
         expectedWords,
         note,
       });
-      message.success(chapter ? "章纲已更新" : "章纲已创建");
+      showSuccess(chapter ? "章纲已更新" : "章纲已创建");
     } catch {
-      message.error("保存失败");
+      showError("保存失败");
     } finally {
       setSaving(false);
     }
@@ -95,9 +96,9 @@ export function ChapterForm({ volumeId, chapter, onSave, onCancel, onDelete }: P
     setDeleting(true);
     try {
       await onDelete(volumeId, chapter.id);
-      message.success("章纲已删除");
+      showSuccess("章纲已删除");
     } catch {
-      message.error("删除失败");
+      showError("删除失败");
       setDeleting(false);
     }
   };

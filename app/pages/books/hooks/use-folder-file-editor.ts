@@ -29,6 +29,19 @@ export function useFolderFileEditor({ bookId, category }: UseFolderFileEditorOpt
   const textareaRef = useRef<TextAreaRef>(null);
   const isComposing = useRef(false);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const selectedFileRef = useRef<BookFile | null>(null);
+
+  useEffect(() => {
+    selectedFileRef.current = selectedFile;
+  }, [selectedFile]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
 
   const fetchFolders = useCallback(
     async (showLoading = true) => {
@@ -121,8 +134,10 @@ export function useFolderFileEditor({ bookId, category }: UseFolderFileEditorOpt
       }
 
       saveTimerRef.current = setTimeout(async () => {
+        const fileId = selectedFileRef.current?.id;
+        if (!fileId) return;
         setSaveStatus("saving");
-        const result = await updateFileContent(selectedFile.id, content);
+        const result = await updateFileContent(fileId, content);
         if (result.ok) {
           setSaveStatus("saved");
           setTimeout(() => setSaveStatus("idle"), 2000);

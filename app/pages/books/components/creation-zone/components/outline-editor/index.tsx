@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, message } from "antd";
+import { Button, Input } from "antd";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import { SaveButton } from "@/shared/ui/save-button";
 import type { BookOutline } from "@/app/types";
 
@@ -23,9 +24,9 @@ export function OutlineEditor({ outline, onSave, onCancel }: Props) {
     setSaving(true);
     try {
       await onSave({ direction, stages, sellingPoints });
-      message.success("总纲已保存");
+      showSuccess("总纲已保存");
     } catch {
-      message.error("保存失败");
+      showError("保存失败");
     } finally {
       setSaving(false);
     }

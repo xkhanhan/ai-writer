@@ -104,7 +104,8 @@ export function useCreationZone(bookId: string) {
         setVolumes((prev) => prev.map((v) => (v.id === data.id ? result.data : v)));
         return result.data;
       }
-      const result = await api.createVolume(bookId, {
+      const result = await api.createVolume({
+        bookId,
         title: data.title,
         coreConflict: data.coreConflict,
         stages: data.stages,
@@ -195,7 +196,8 @@ export function useCreationZone(bookId: string) {
         }));
         return result.data;
       }
-      const result = await api.createChapter(volumeId, {
+      const result = await api.createChapter({
+        volumeId,
         title: data.title,
         summary: data.summary,
         prevChapterLink: data.prevChapterLink,
@@ -238,7 +240,7 @@ export function useCreationZone(bookId: string) {
 
   // 正文操作
   const saveChapterContent = useCallback(
-    async (chapterId: string, content: string, status?: string) => {
+    async (chapterId: string, content: string, status?: "planned" | "writing" | "done") => {
       const result = await api.updateChapter(chapterId, { content, status });
       if (!result.ok) {
         showError(result.error || "保存正文失败");
