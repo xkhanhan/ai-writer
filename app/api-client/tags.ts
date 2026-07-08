@@ -47,7 +47,7 @@ export async function updateTag(
   id: string,
   data: UpdateTagCategoryDTO
 ): Promise<Result<TagCategory>> {
-  const res = await client.put<{ tag: TagCategory }, typeof data>(
+  const res = await client.patch<{ tag: TagCategory }, typeof data>(
     `/api/tags/${id}`,
     data
   );

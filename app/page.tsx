@@ -20,7 +20,7 @@ export default async function Page({ searchParams }: PageProps) {
     listBooks(),
     getBookOptions(),
   ]);
-  const aiConfig = loadPublicAiConfig();
+  const aiConfig = await loadPublicAiConfig();
 
   const selectedBook =
     selectedBookId ? books.find((book) => book.id === selectedBookId) ?? null : null;

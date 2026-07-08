@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
+import { parseJsonSafe } from "@/server/utils/json";
 import type {
   SettingEntity,
   SettingCategory,
@@ -30,15 +31,6 @@ type SettingEntityRow = {
 };
 
 // ============ 映射函数 ============
-
-function parseJsonSafe<T>(raw: string, fallback: T): T {
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed as T;
-  } catch {
-    return fallback;
-  }
-}
 
 function mapSettingEntity(row: SettingEntityRow): SettingEntity {
   return {

@@ -1,65 +1,49 @@
-import { NextResponse } from "next/server";
 import { getVolumeById, updateVolume, deleteVolume } from "@/server/storage/outline-store";
+import { jsonSuccess, jsonError } from "@/app/api/utils";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
     const volume = await getVolumeById(id);
-
     if (!volume) {
-      return NextResponse.json(
-        { error: "卷纲不存在" },
-        { status: 404 }
-      );
+      return jsonError("卷纲不存在", 404);
     }
-
-    return NextResponse.json({ volume });
+    return jsonSuccess({ volume });
   } catch (error) {
     console.error("获取卷纲失败:", error);
-    return NextResponse.json(
-      { error: "获取卷纲失败" },
-      { status: 500 }
-    );
+    return jsonError("获取卷纲失败");
   }
 }
 
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PATCH(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
     const body = await request.json();
     const volume = await updateVolume(id, body);
-
     if (!volume) {
-      return NextResponse.json(
-        { error: "卷纲不存在" },
-        { status: 404 }
-      );
+      return jsonError("卷纲不存在", 404);
     }
-
-    return NextResponse.json({ volume });
+    return jsonSuccess({ volume });
   } catch (error) {
     console.error("更新卷纲失败:", error);
-    return NextResponse.json(
-      { error: "更新卷纲失败" },
-      { status: 500 }
-    );
+    return jsonError("更新卷纲失败");
   }
 }
 
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
-    await deleteVolume(id);
-    return NextResponse.json({ success: true });
+    const success = await deleteVolume(id);
+    if (!success) {
+      return jsonError("卷纲不存在", 404);
+    }
+    return jsonSuccess({ success: true });
   } catch (error) {
     console.error("删除卷纲失败:", error);
-    return NextResponse.json(
-      { error: "删除卷纲失败" },
-      { status: 500 }
-    );
+    return jsonError("删除卷纲失败");
   }
 }

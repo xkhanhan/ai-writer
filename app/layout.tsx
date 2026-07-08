@@ -21,7 +21,7 @@ export default async function RootLayout({
   const [books] = await Promise.all([
     listBooks()
   ]);
-  const aiConfig = loadPublicAiConfig();
+  const aiConfig = await loadPublicAiConfig();
 
   return (
     <html lang="zh-CN">

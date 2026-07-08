@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { promises as fs } from "node:fs";
 import path from "node:path";
 import {
   type AiAdvancedConfig,
@@ -22,33 +22,31 @@ export type AiConfigRecord = {
   updatedAt: string;
 };
 
-function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+async function ensureDataDir(): Promise<void> {
+  try {
+    await fs.access(DATA_DIR);
+  } catch {
+    await fs.mkdir(DATA_DIR, { recursive: true });
   }
 }
 
-function readConfig(): AiConfigRecord | null {
-  ensureDataDir();
-  if (!fs.existsSync(CONFIG_FILE)) {
-    return null;
-  }
-
+async function readConfig(): Promise<AiConfigRecord | null> {
+  await ensureDataDir();
   try {
-    const raw = fs.readFileSync(CONFIG_FILE, "utf-8");
+    const raw = await fs.readFile(CONFIG_FILE, "utf-8");
     return JSON.parse(raw) as AiConfigRecord;
   } catch {
     return null;
   }
 }
 
-function writeConfig(record: AiConfigRecord): void {
-  ensureDataDir();
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(record, null, 2), "utf-8");
+async function writeConfig(record: AiConfigRecord): Promise<void> {
+  await ensureDataDir();
+  await fs.writeFile(CONFIG_FILE, JSON.stringify(record, null, 2), "utf-8");
 }
 
-export function loadPublicAiConfig(): PublicAiConfig {
-  const record = readConfig();
+export async function loadPublicAiConfig(): Promise<PublicAiConfig> {
+  const record = await readConfig();
   const defaults = AI_CONFIG_DEFAULTS;
 
   if (!record) {
@@ -76,8 +74,8 @@ export function loadPublicAiConfig(): PublicAiConfig {
   };
 }
 
-export function loadInternalConfig(): AiConfigRecord {
-  const record = readConfig();
+export async function loadInternalConfig(): Promise<AiConfigRecord> {
+  const record = await readConfig();
   const defaults = AI_CONFIG_DEFAULTS;
 
   if (!record) {
@@ -106,8 +104,8 @@ export function loadInternalConfig(): AiConfigRecord {
   };
 }
 
-export function saveAiConfig(input: SaveAiConfigInput): PublicAiConfig {
-  const current = readConfig();
+export async function saveAiConfig(input: SaveAiConfigInput): Promise<PublicAiConfig> {
+  const current = await readConfig();
   const defaults = AI_CONFIG_DEFAULTS;
 
   const safeAdvancedInput = input.advancedConfig ? sanitizeAdvancedConfig(input.advancedConfig) : undefined;
@@ -154,7 +152,7 @@ export function saveAiConfig(input: SaveAiConfigInput): PublicAiConfig {
     updatedAt: new Date().toISOString(),
   };
 
-  writeConfig(nextRecord);
+  await writeConfig(nextRecord);
 
   return {
     providerId: nextRecord.providerId,

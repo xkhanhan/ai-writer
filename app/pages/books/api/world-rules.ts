@@ -35,7 +35,7 @@ export async function updateWorldRule(
   id: string,
   data: UpdateWorldRuleDTO
 ): Promise<Result<WorldRule>> {
-  const res = await client.put<{ rule: WorldRule }, typeof data>(
+  const res = await client.patch<{ rule: WorldRule }, typeof data>(
     `/api/world-rules/${id}`,
     data
   );

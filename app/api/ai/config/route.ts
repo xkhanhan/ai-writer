@@ -1,10 +1,15 @@
-import { NextResponse } from "next/server";
 import { loadPublicAiConfig, saveAiConfig } from "@/server/ai/ai-config-store";
 import { sanitizeAdvancedConfig } from "@/shared/ai/config-contracts";
+import { jsonSuccess, jsonError } from "@/app/api/utils";
 
 export async function GET() {
-  const config = loadPublicAiConfig();
-  return NextResponse.json({ success: true, config });
+  try {
+    const config = await loadPublicAiConfig();
+    return jsonSuccess({ success: true, config });
+  } catch (error) {
+    console.error("Failed to load AI config:", error);
+    return jsonError("配置加载失败");
+  }
 }
 
 export async function POST(request: Request) {
@@ -31,7 +36,7 @@ export async function POST(request: Request) {
       advancedConfig?: Record<string, unknown>;
     };
 
-    const result = saveAiConfig({
+    const result = await saveAiConfig({
       providerId,
       apiKey,
       baseUrl,
@@ -41,12 +46,9 @@ export async function POST(request: Request) {
       advancedConfig: advancedConfig ? sanitizeAdvancedConfig(advancedConfig) : undefined,
     });
 
-    return NextResponse.json({ success: true, config: result });
+    return jsonSuccess({ success: true, config: result });
   } catch (error) {
     console.error("Failed to save AI config:", error);
-    return NextResponse.json(
-      { success: false, error: "配置保存失败，请检查输入参数" },
-      { status: 500 }
-    );
+    return jsonError("配置保存失败，请检查输入参数");
   }
 }

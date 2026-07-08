@@ -46,7 +46,7 @@ export async function updateSettingEntity(
   id: string,
   data: UpdateSettingEntityDTO
 ): Promise<Result<SettingEntity>> {
-  const res = await client.put<{ entity: SettingEntity }, typeof data>(
+  const res = await client.patch<{ entity: SettingEntity }, typeof data>(
     `/api/setting-entities/${id}`,
     data
   );

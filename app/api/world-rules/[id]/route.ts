@@ -25,7 +25,7 @@ export async function GET(_request: Request, { params }: WorldRuleRouteParams) {
   }
 }
 
-export async function PUT(request: Request, { params }: WorldRuleRouteParams) {
+export async function PATCH(request: Request, { params }: WorldRuleRouteParams) {
   try {
     const { id } = await params;
     const body = await request.json();

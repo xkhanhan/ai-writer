@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
+import { parseJsonSafe, parseJsonArray } from "@/server/utils/json";
 import type {
   BookOutline,
   VolumeOutline,
@@ -79,19 +80,8 @@ function mapOutline(row: BookOutlineRow): BookOutline {
 }
 
 function mapVolume(row: VolumeRow): VolumeOutline {
-  let keyPoints: KeyPoint[] = [];
-  try {
-    keyPoints = JSON.parse(row.key_points || "[]") as KeyPoint[];
-  } catch {
-    keyPoints = [];
-  }
-  let stages: string[] = [];
-  try {
-    stages = JSON.parse(row.stages || "[]");
-    if (!Array.isArray(stages)) stages = [];
-  } catch {
-    stages = [];
-  }
+  const keyPoints = parseJsonSafe<KeyPoint[]>(row.key_points, []);
+  const stages = parseJsonArray(row.stages);
   return {
     id: row.id,
     bookId: row.book_id,
@@ -108,14 +98,6 @@ function mapVolume(row: VolumeRow): VolumeOutline {
 }
 
 function mapChapter(row: ChapterRow): ChapterOutline {
-  const parseArr = (s: string): string[] => {
-    try {
-      const v = JSON.parse(s || "[]");
-      return Array.isArray(v) ? v.map(String) : [];
-    } catch {
-      return [];
-    }
-  };
   return {
     id: row.id,
     volumeId: row.volume_id,
@@ -123,12 +105,12 @@ function mapChapter(row: ChapterRow): ChapterOutline {
     summary: row.summary,
     prevChapterLink: row.prev_chapter_link,
     nextChapterSuspense: row.next_chapter_suspense,
-    scenes: parseArr(row.scenes),
+    scenes: parseJsonArray(row.scenes),
     time: row.time,
     moodTone: row.mood_tone,
-    characters: parseArr(row.characters),
-    keyEvents: parseArr(row.key_events),
-    foreshadowings: parseArr(row.foreshadowings),
+    characters: parseJsonArray(row.characters),
+    keyEvents: parseJsonArray(row.key_events),
+    foreshadowings: parseJsonArray(row.foreshadowings),
     highlights: row.highlights,
     expectedWords: row.expected_words,
     note: row.note,

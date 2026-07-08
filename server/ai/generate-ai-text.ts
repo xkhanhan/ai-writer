@@ -21,7 +21,7 @@ export async function generateAiText(input: AiTextTaskInput) {
     throw new Error("prompt 不能为空。");
   }
 
-  const config = loadInternalConfig();
+  const config = await loadInternalConfig();
 
   if (!config.apiKey) {
     throw new Error("请先配置 AI_API_KEY。");
@@ -35,34 +35,42 @@ export async function generateAiText(input: AiTextTaskInput) {
     throw new Error("temperature 必须在 0 到 2 之间。");
   }
 
-  const response = await fetch(
-    `${advanced.baseUrl.replace(/\/$/, "")}/chat/completions`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        "Content-Type": "application/json",
-        ...advanced.headers
-      },
-      body: JSON.stringify({
-        model: input.model?.trim() || advanced.model,
-        messages: [
-          {
-            role: "system",
-            content: input.systemPrompt?.trim() || defaultAiSystemPrompt
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature,
-        top_p: topP,
-        ...(advanced.maxTokens !== null ? { max_tokens: advanced.maxTokens } : {}),
-        ...advanced.extraBody
-      })
-    }
-  );
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30_000);
+  let response: Response;
+  try {
+    response = await fetch(
+      `${advanced.baseUrl.replace(/\/$/, "")}/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+          "Content-Type": "application/json",
+          ...advanced.headers
+        },
+        body: JSON.stringify({
+          model: input.model?.trim() || advanced.model,
+          messages: [
+            {
+              role: "system",
+              content: input.systemPrompt?.trim() || defaultAiSystemPrompt
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature,
+          top_p: topP,
+          ...(advanced.maxTokens !== null ? { max_tokens: advanced.maxTokens } : {}),
+          ...advanced.extraBody
+        }),
+        signal: controller.signal
+      }
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 
   const data = (await response.json()) as OpenAiCompatibleResponse;
 

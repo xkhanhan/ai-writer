@@ -25,7 +25,7 @@ export async function GET(_request: Request, { params }: TagRouteParams) {
   }
 }
 
-export async function PUT(request: Request, { params }: TagRouteParams) {
+export async function PATCH(request: Request, { params }: TagRouteParams) {
   try {
     const { id } = await params;
     const body = await request.json();

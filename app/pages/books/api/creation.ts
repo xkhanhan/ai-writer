@@ -19,7 +19,7 @@ export async function updateOutline(
   bookId: string,
   data: Partial<BookOutline>
 ): Promise<Result<BookOutline>> {
-  const res = await client.put<{ outline: BookOutline }, Partial<BookOutline>>("/api/outline", {
+  const res = await client.patch<{ outline: BookOutline }, Partial<BookOutline>>("/api/outline", {
     bookId,
     ...data,
   });
@@ -51,7 +51,7 @@ export async function updateVolume(
   id: string,
   data: Record<string, unknown>
 ): Promise<Result<VolumeOutline>> {
-  const res = await client.put<{ volume: VolumeOutline }, Record<string, unknown>>(
+  const res = await client.patch<{ volume: VolumeOutline }, Record<string, unknown>>(
     `/api/volumes/${id}`,
     data
   );
@@ -87,7 +87,7 @@ export async function updateChapter(
   id: string,
   data: Record<string, unknown>
 ): Promise<Result<ChapterOutline>> {
-  const res = await client.put<{ chapter: ChapterOutline }, Record<string, unknown>>(
+  const res = await client.patch<{ chapter: ChapterOutline }, Record<string, unknown>>(
     `/api/chapters/${id}`,
     data
   );

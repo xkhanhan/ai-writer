@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
+import { parseJsonArray } from "@/server/utils/json";
 import type { WorldRule, CreateWorldRuleDTO, UpdateWorldRuleDTO } from "@/app/types";
 
 // ============ Row 类型 ============
@@ -24,13 +25,7 @@ type WorldRuleRow = {
 // ============ 映射函数 ============
 
 function mapWorldRule(row: WorldRuleRow): WorldRule {
-  let selectOptions: string[] = [];
-  try {
-    const parsed = JSON.parse(row.select_options || "[]");
-    selectOptions = Array.isArray(parsed) ? parsed.map(String) : [];
-  } catch {
-    selectOptions = [];
-  }
+  const selectOptions = parseJsonArray(row.select_options);
   return {
     id: row.id,
     bookId: row.book_id,

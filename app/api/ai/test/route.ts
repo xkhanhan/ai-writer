@@ -25,18 +25,22 @@ async function testOpenAIConnection(
   model: string
 ): Promise<{ success: boolean; message: string }> {
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
-  const response = await fetch(`${normalizedBaseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "user", content: "Hi" }],
-      max_tokens: 16,
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30_000);
+  try {
+    const response = await fetch(`${normalizedBaseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: "Hi" }],
+        max_tokens: 16,
+      }),
+      signal: controller.signal,
+    });
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "");
@@ -59,6 +63,9 @@ async function testOpenAIConnection(
   }
 
   return { success: true, message: "连接成功" };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function testAnthropicConnection(
@@ -67,19 +74,23 @@ async function testAnthropicConnection(
   model: string
 ): Promise<{ success: boolean; message: string }> {
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
-  const response = await fetch(`${normalizedBaseUrl}/v1/messages`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "user", content: "Hi" }],
-      max_tokens: 16,
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30_000);
+  try {
+    const response = await fetch(`${normalizedBaseUrl}/v1/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: "Hi" }],
+        max_tokens: 16,
+      }),
+      signal: controller.signal,
+    });
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "");
@@ -102,6 +113,9 @@ async function testAnthropicConnection(
   }
 
   return { success: true, message: "连接成功" };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function POST(request: Request) {
@@ -139,6 +153,13 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("Failed to test connection:", error);
+
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return NextResponse.json({
+        success: false,
+        message: "AI 请求超时（30s），请稍后重试",
+      });
+    }
 
     if (error instanceof TypeError && error.message.includes("fetch")) {
       return NextResponse.json({
