@@ -6,9 +6,6 @@
   /* 主色 - 青黛 */
   --color-primary: #2F5D50;
   --color-primary-hover: #1e4438;
-  --color-primary-bg: rgba(47, 93, 80, 0.05);
-  --color-primary-bg-hover: rgba(47, 93, 80, 0.10);
-  --color-primary-border: rgba(47, 93, 80, 0.20);
 
   /* 功能色 */
   --color-success: #2E8B57;
@@ -40,6 +37,16 @@
   --border: #ddd8d0;
   --border-strong: #c0bbb3;
   --border-light: #ebe7e0;
+
+  /* 功能色 — 派生 */
+  --color-primary-bg: rgba(47, 93, 80, 0.05);
+  --color-primary-bg-hover: rgba(47, 93, 80, 0.10);
+  --color-primary-border: rgba(47, 93, 80, 0.20);
+  --color-danger: var(--color-error);
+
+  /* 表面色 */
+  --surface-container-highest: var(--border);
+  --surface-variant: var(--bg-muted);
 
   /* 阴影 */
   --shadow: 0 1px 3px rgba(24, 28, 34, 0.08);
@@ -91,6 +98,7 @@
   --surface: var(--bg-elevated);
   --text: var(--text-primary);
   --muted: var(--text-secondary);
+  --text-muted: var(--text-secondary);
   --ink-secondary: var(--text-secondary);
   --ink-tertiary: var(--text-tertiary);
   --ink-light: var(--text-light);
@@ -329,5 +337,17 @@ a:hover {
 
   .shell-footer-item {
     font-size: 11px;
+  }
+}
+
+/* ===== 减弱动画偏好 ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

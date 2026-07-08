@@ -24,10 +24,19 @@ export interface ThemeColors {
   /* 主色 */
   primary: string;
   primaryHover: string;
+  primaryBg: string;
+  primaryBgHover: string;
+  primaryBorder: string;
+
+  /* 功能色 */
+  colorSuccess: string;
+  colorWarning: string;
+  colorError: string;
 
   /* 阴影 */
   shadow: string;
   shadowMd: string;
+  shadowLg: string;
 
   /* 滚动条 */
   scrollbarThumb: string;
@@ -60,8 +69,15 @@ export const themes: ThemePreset[] = [
       borderLight: "#ebe7e0",
       primary: "#2F5D50",
       primaryHover: "#1e4438",
+      primaryBg: "rgba(47, 93, 80, 0.05)",
+      primaryBgHover: "rgba(47, 93, 80, 0.10)",
+      primaryBorder: "rgba(47, 93, 80, 0.20)",
+      colorSuccess: "#2E8B57",
+      colorWarning: "#964400",
+      colorError: "#ba1a1a",
       shadow: "0 1px 3px rgba(26, 24, 20, 0.06)",
       shadowMd: "0 4px 12px rgba(26, 24, 20, 0.10)",
+      shadowLg: "0 8px 24px rgba(26, 24, 20, 0.14)",
       scrollbarThumb: "#c8c0b4",
       scrollbarThumbHover: "#a8a098",
     },
@@ -84,8 +100,15 @@ export const themes: ThemePreset[] = [
       borderLight: "#ececee",
       primary: "#2F5D50",
       primaryHover: "#1e4438",
+      primaryBg: "rgba(47, 93, 80, 0.05)",
+      primaryBgHover: "rgba(47, 93, 80, 0.10)",
+      primaryBorder: "rgba(47, 93, 80, 0.20)",
+      colorSuccess: "#2E8B57",
+      colorWarning: "#964400",
+      colorError: "#ba1a1a",
       shadow: "0 1px 3px rgba(26, 27, 30, 0.07)",
       shadowMd: "0 4px 12px rgba(26, 27, 30, 0.11)",
+      shadowLg: "0 8px 24px rgba(26, 27, 30, 0.15)",
       scrollbarThumb: "#c5c6cb",
       scrollbarThumbHover: "#a5a6ab",
     },
@@ -108,8 +131,15 @@ export const themes: ThemePreset[] = [
       borderLight: "#eef0f3",
       primary: "#2F5D50",
       primaryHover: "#1e4438",
+      primaryBg: "rgba(47, 93, 80, 0.05)",
+      primaryBgHover: "rgba(47, 93, 80, 0.10)",
+      primaryBorder: "rgba(47, 93, 80, 0.20)",
+      colorSuccess: "#2E8B57",
+      colorWarning: "#964400",
+      colorError: "#ba1a1a",
       shadow: "0 1px 3px rgba(24, 28, 34, 0.08)",
       shadowMd: "0 4px 12px rgba(24, 28, 34, 0.12)",
+      shadowLg: "0 8px 24px rgba(24, 28, 34, 0.16)",
       scrollbarThumb: "#c8cdd5",
       scrollbarThumbHover: "#a8adb5",
     },
@@ -132,8 +162,15 @@ export const themes: ThemePreset[] = [
       borderLight: "#2e2f32",
       primary: "#4a9e85",
       primaryHover: "#5cb89e",
+      primaryBg: "rgba(74, 158, 133, 0.10)",
+      primaryBgHover: "rgba(74, 158, 133, 0.18)",
+      primaryBorder: "rgba(74, 158, 133, 0.28)",
+      colorSuccess: "#4ade80",
+      colorWarning: "#fbbf24",
+      colorError: "#f87171",
       shadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
       shadowMd: "0 4px 12px rgba(0, 0, 0, 0.4)",
+      shadowLg: "0 8px 24px rgba(0, 0, 0, 0.5)",
       scrollbarThumb: "#4a4b4e",
       scrollbarThumbHover: "#5a5b5e",
     },

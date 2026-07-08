@@ -7,12 +7,12 @@
   border-radius: 4px;
   font-size: 12px;
   color: var(--color-primary);
-  background: white;
+  background: var(--bg-elevated);
   cursor: pointer;
   font-family: var(--font-body);
 }
 .trigger:hover {
-  background: rgba(47, 93, 80, 0.05);
+  background: var(--color-primary-bg);
 }
 .arrow {
   font-size: 10px;
@@ -23,5 +23,5 @@
 }
 .menuItemDisabled {
   font-size: 12px;
-  color: #ccc;
+  color: var(--text-light);
 }

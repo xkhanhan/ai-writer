@@ -78,8 +78,9 @@
   opacity: 1;
 }
 
-.deleteBtn:hover {
-  color: var(--color-error, #ff4d4f) !important;
+.volumeBar:hover .deleteBtn:hover,
+.chapterItem:hover .deleteBtn:hover {
+  color: var(--color-error, #ff4d4f);
 }
 
 .floatingBar {
@@ -116,7 +117,7 @@
 
 .floatingDeleteBtn:hover {
   background: var(--color-error, #ff4d4f);
-  color: #fff;
+  color: var(--text-inverse);
 }
 
 /* 总纲 */

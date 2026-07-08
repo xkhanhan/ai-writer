@@ -31,7 +31,7 @@ export function AiDropdown({ items, disabled }: AiDropdownProps) {
 
   return (
     <Dropdown menu={{ items: menuItems }} trigger={["click"]} disabled={disabled}>
-      <button className={styles.trigger}>
+      <button className={styles.trigger} aria-label="AI 功能">
         <ThunderboltOutlined />
         <span>AI</span>
         <span className={styles.arrow}>▾</span>

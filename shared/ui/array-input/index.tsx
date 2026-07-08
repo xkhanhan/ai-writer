@@ -33,7 +33,7 @@ export function ArrayInput({ value = [], onChange, placeholder, maxItems }: Arra
         {value.map((item, index) => (
           <span key={index} className={styles.tag}>
             {item}
-            <CloseOutlined className={styles.tagClose} onClick={() => handleRemove(index)} />
+            <CloseOutlined className={styles.tagClose} onClick={() => handleRemove(index)} role="button" aria-label={`删除 ${item}`} />
           </span>
         ))}
       </div>

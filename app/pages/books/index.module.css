@@ -129,10 +129,6 @@
   overflow: hidden;
 }
 
-.contentHidden {
-  display: none;
-}
-
 /* ===== 响应式适配 ===== */
 @media (max-width: 768px) {
   .activityBar {

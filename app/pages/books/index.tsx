@@ -24,6 +24,7 @@ export default function BookWorkspace({ book, onBack }: BookWorkspaceProps) {
               activePanel === panel.key ? styles.activityButtonActive : ""
             }`}
             data-tooltip={panel.title}
+            aria-label={panel.title}
             onClick={() => setActivePanel(panel.key)}
           >
             {panel.icon}
@@ -33,6 +34,7 @@ export default function BookWorkspace({ book, onBack }: BookWorkspaceProps) {
         <button
           className={`${styles.activityButton} ${styles.activityTooltip}`}
           data-tooltip="返回"
+          aria-label="返回"
           onClick={onBack}
         >
           <ArrowLeftOutlined />
@@ -41,14 +43,14 @@ export default function BookWorkspace({ book, onBack }: BookWorkspaceProps) {
 
       <div className={styles.contentArea}>
         <div className={styles.contentBody}>
-          {workspacePanels.map((panel) => (
-            <div
-              key={panel.key}
-              className={`${styles.panelWrapper} ${activePanel !== panel.key ? styles.contentHidden : ""}`}
-            >
-              {panel.component(book)}
-            </div>
-          ))}
+          {workspacePanels.map((panel) => {
+            if (activePanel !== panel.key) return null;
+            return (
+              <div key={panel.key} className={styles.panelWrapper}>
+                {panel.component(book)}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

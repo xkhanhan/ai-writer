@@ -53,8 +53,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     v.setProperty("--border-light", c.borderLight);
     v.setProperty("--color-primary", c.primary);
     v.setProperty("--color-primary-hover", c.primaryHover);
+    v.setProperty("--color-primary-bg", c.primaryBg);
+    v.setProperty("--color-primary-bg-hover", c.primaryBgHover);
+    v.setProperty("--color-primary-border", c.primaryBorder);
+    v.setProperty("--color-success", c.colorSuccess);
+    v.setProperty("--color-warning", c.colorWarning);
+    v.setProperty("--color-error", c.colorError);
     v.setProperty("--shadow", c.shadow);
     v.setProperty("--shadow-md", c.shadowMd);
+    v.setProperty("--shadow-lg", c.shadowLg);
     v.setProperty("--scrollbar-thumb", c.scrollbarThumb);
     v.setProperty("--scrollbar-thumb-hover", c.scrollbarThumbHover);
     v.setProperty("--accent", c.primary);

@@ -58,15 +58,15 @@
   border-radius: 10px;
 }
 
-.dashEditBtn {
-  color: var(--accent) !important;
-  border-color: var(--line) !important;
+.dashEditBtn:global(.ant-btn) {
+  color: var(--accent);
+  border-color: var(--line);
   flex-shrink: 0;
 }
 
-.dashEditBtn:hover {
-  border-color: var(--accent) !important;
-  background: rgba(47, 93, 80, 0.04) !important;
+.dashEditBtn:global(.ant-btn):hover {
+  border-color: var(--accent);
+  background: var(--color-primary-bg);
 }
 
 /* 卡片通用 */
@@ -171,7 +171,7 @@
 .bar {
   width: 100%;
   border-radius: 3px 3px 0 0;
-  background: linear-gradient(180deg, var(--accent), rgba(47, 93, 80, 0.6));
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--color-primary) 60%, transparent));
   min-height: 2px;
 }
 
@@ -325,7 +325,7 @@
 .distFill {
   height: 100%;
   border-radius: 3px;
-  background: linear-gradient(90deg, var(--accent), rgba(47, 93, 80, 0.6));
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--color-primary) 60%, transparent));
 }
 
 .distCount {
@@ -420,9 +420,9 @@
   background: var(--border-light);
 }
 
-.heat1 { background: rgba(47, 93, 80, 0.15); }
-.heat2 { background: rgba(47, 93, 80, 0.35); }
-.heat3 { background: rgba(47, 93, 80, 0.6); }
+.heat1 { background: color-mix(in srgb, var(--color-primary) 15%, transparent); }
+.heat2 { background: color-mix(in srgb, var(--color-primary) 35%, transparent); }
+.heat3 { background: color-mix(in srgb, var(--color-primary) 60%, transparent); }
 .heat4 { background: var(--accent); }
 
 .ghLegend {

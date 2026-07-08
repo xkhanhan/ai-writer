@@ -43,7 +43,7 @@ export default function ThemeSwitcher() {
       placement="bottomRight"
       arrow
     >
-      <button className={styles.trigger}>
+      <button className={styles.trigger} aria-label="切换主题">
         <BgColorsOutlined />
       </button>
     </Dropdown>
