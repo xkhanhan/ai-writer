@@ -12,7 +12,7 @@
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  padding: 16px 16px 16px 24px;
+  padding: 20px 24px;
 }
 
 /* 操作栏：固定底部 */

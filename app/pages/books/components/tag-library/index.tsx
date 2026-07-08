@@ -276,7 +276,7 @@ export default function TagLibrary({ book }: TagLibraryProps) {
     <div className={styles.leftPanel}>
       <div className={styles.leftHeader}>
         <span className={styles.leftTitle}>标签大类</span>
-        <Button type="link" size="small" onClick={handleCreateCategory}>
+        <Button type="primary" size="small" ghost onClick={handleCreateCategory}>
           + 新建大类
         </Button>
       </div>
@@ -327,6 +327,14 @@ export default function TagLibrary({ book }: TagLibraryProps) {
         <span className={styles.rightTitle}>
           {selectedCategory.name} 的标签
         </span>
+        <Button
+          type="primary"
+          size="small"
+          ghost
+          onClick={() => handleCreateSubTag(selectedCategory.id)}
+        >
+          + 添加子标签
+        </Button>
       </div>
       <div className={styles.treeWrap}>
         {(selectedCategory.children?.length ?? 0) > 0 ? (

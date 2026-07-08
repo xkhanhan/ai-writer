@@ -12,13 +12,11 @@ import styles from "./index.module.css";
 const treeTheme = {
   components: {
     Tree: {
-      controlHeightSM: 36,
+      titleHeight: 36,
+      switcherSize: 24,
       indentSize: 24,
-      colorBgContainer: "var(--bg-elevated)",
-      colorBgTreeNodeHover: "var(--bg-muted)",
-      colorBgTreeNodeSelected: "var(--color-primary-bg)",
-      colorTreeExpandIconToggle: "var(--text-tertiary)",
-      colorLine: "var(--border-light)",
+      nodeHoverBg: "var(--bg-muted)",
+      nodeSelectedBg: "var(--color-primary-bg)",
     },
   },
 };
@@ -176,7 +174,6 @@ export function TagTree({
         onExpand={handleExpand}
         selectedKeys={selectedKey ? [selectedKey] : []}
         onSelect={handleSelect}
-        showLine={{ showLeafIcon: false }}
         blockNode
       />
     </ConfigProvider>
