@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import type { ActivePanel, Book } from "@/app/types";
 import { ArrowLeftOutlined } from "@ant-design/icons";
+import type { Book } from "@/app/types";
 import { workspacePanels } from "./config/workspace-panels";
+import { useWorkspacePersist } from "./hooks/use-workspace-persist";
 import styles from "./index.module.css";
 
 interface BookWorkspaceProps {
@@ -12,7 +12,12 @@ interface BookWorkspaceProps {
 }
 
 export default function BookWorkspace({ book, onBack }: BookWorkspaceProps) {
-  const [activePanel, setActivePanel] = useState<ActivePanel>("info");
+  const {
+    activePanel,
+    setActivePanel,
+    panelSelections,
+    setPanelSelection,
+  } = useWorkspacePersist(book.id);
 
   return (
     <div className={styles.container}>
@@ -47,7 +52,12 @@ export default function BookWorkspace({ book, onBack }: BookWorkspaceProps) {
             if (activePanel !== panel.key) return null;
             return (
               <div key={panel.key} className={styles.panelWrapper}>
-                {panel.component(book)}
+                {panel.component({
+                  book,
+                  activeId: panelSelections[panel.key],
+                  onActiveChange: (id: string) =>
+                    setPanelSelection(panel.key, id),
+                })}
               </div>
             );
           })}

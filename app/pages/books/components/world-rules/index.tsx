@@ -62,13 +62,14 @@ const SETTING_TYPE_COLORS: Record<string, string> = {
 
 interface WorldRulesProps {
   book: Book;
+  activeId?: string;
+  onActiveChange?: (id: string) => void;
 }
 
-export default function WorldRules({ book }: WorldRulesProps) {
+export default function WorldRules({ book, activeId, onActiveChange }: WorldRulesProps) {
   // 数据
   const [rules, setRules] = useState<WorldRule[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeRuleId, setActiveRuleId] = useState<string | null>(null);
 
   // 分组折叠状态
   const [collapsed, setCollapsed] = useState<Record<WorldRuleCategory, boolean>>({
@@ -87,7 +88,7 @@ export default function WorldRules({ book }: WorldRulesProps) {
   const [formName, setFormName] = useState("");
   const [formContent, setFormContent] = useState("");
 
-  const activeRule = rules.find((r) => r.id === activeRuleId) ?? null;
+  const activeRule = rules.find((r) => r.id === activeId) ?? null;
 
   // 按分类分组
   const grouped = {
@@ -112,6 +113,14 @@ export default function WorldRules({ book }: WorldRulesProps) {
       await loadRules();
     })();
   }, [loadRules]);
+
+  // 数据加载完成后，自动选中首项（无历史选中 or 选中项已被删除）
+  useEffect(() => {
+    if (loading || rules.length === 0) return;
+    if (!activeId || !rules.some((r) => r.id === activeId)) {
+      onActiveChange?.(rules[0].id);
+    }
+  }, [loading, rules, activeId, onActiveChange]);
 
   // ============ 表单操作 ============
 
@@ -153,7 +162,7 @@ export default function WorldRules({ book }: WorldRulesProps) {
         return;
       }
       setRules((prev) => [...prev, result.data]);
-      setActiveRuleId(result.data.id);
+      onActiveChange?.(result.data.id);
     } else if (editingRule) {
       const result = await updateWorldRule(editingRule.id, {
         name: formName.trim(),
@@ -178,7 +187,6 @@ export default function WorldRules({ book }: WorldRulesProps) {
       const result = await deleteWorldRule(rule.id);
       if (result.ok) {
         setRules((prev) => prev.filter((r) => r.id !== rule.id));
-        if (activeRuleId === rule.id) setActiveRuleId(null);
         showSuccess("删除成功");
       } else {
         showError(result.error || "删除失败");
@@ -227,10 +235,10 @@ export default function WorldRules({ book }: WorldRulesProps) {
               <div
                 key={rule.id}
                 className={`${styles.ruleItem} ${
-                  activeRuleId === rule.id ? styles.ruleItemActive : ""
+                  activeId === rule.id ? styles.ruleItemActive : ""
                 }`}
                 onClick={() =>
-                  setActiveRuleId(rule.id === activeRuleId ? null : rule.id)
+                  onActiveChange?.(rule.id === activeId ? "" : rule.id)
                 }
               >
                 <span className={styles.ruleName}>{rule.name}</span>

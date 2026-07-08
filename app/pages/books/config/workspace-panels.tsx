@@ -17,12 +17,18 @@ import ForeshadowLibrary from "../components/foreshadow-library";
 import { CreationZone } from "../components/creation-zone";
 import ContentLibrary from "../components/content-library";
 
+export interface WorkspacePanelProps {
+  book: Book;
+  activeId?: string;
+  onActiveChange?: (id: string) => void;
+}
+
 export interface WorkspacePanel {
   key: ActivePanel;
   title: string;
   icon: React.ReactNode;
   category?: string;
-  component: (book: Book) => React.ReactNode;
+  component: (props: WorkspacePanelProps) => React.ReactNode;
 }
 
 export const workspacePanels: WorkspacePanel[] = [
@@ -30,46 +36,60 @@ export const workspacePanels: WorkspacePanel[] = [
     key: "info",
     title: "书籍信息",
     icon: <ReadOutlined />,
-    component: (book) => <BookInfoDashboard key={book.id} book={book} />,
+    component: ({ book }) => <BookInfoDashboard key={book.id} book={book} />,
   },
   {
     key: "world-rules",
     title: "世界规则",
     icon: <AppstoreOutlined />,
     category: "world-rules",
-    component: (book) => <WorldRules key={book.id} book={book} />,
+    component: ({ book, activeId, onActiveChange }) => (
+      <WorldRules
+        key={book.id}
+        book={book}
+        activeId={activeId}
+        onActiveChange={onActiveChange}
+      />
+    ),
   },
   {
     key: "settings",
     title: "设定库",
     icon: <FileTextOutlined />,
     category: "settings",
-    component: (book) => <SettingsLibrary key={book.id} book={book} />,
+    component: ({ book, activeId, onActiveChange }) => (
+      <SettingsLibrary
+        key={book.id}
+        book={book}
+        activeId={activeId}
+        onActiveChange={onActiveChange}
+      />
+    ),
   },
   {
     key: "tag-library",
     title: "标签库",
     icon: <TagsOutlined />,
-    component: (book) => <TagLibrary key={book.id} book={book} />,
+    component: ({ book }) => <TagLibrary key={book.id} book={book} />,
   },
   {
     key: "creation",
     title: "创作区",
     icon: <EditOutlined />,
     category: "creation",
-    component: (book) => <CreationZone key={book.id} bookId={book.id} />,
+    component: ({ book }) => <CreationZone key={book.id} bookId={book.id} />,
   },
   {
     key: "foreshadow",
     title: "伏笔库",
     icon: <PushpinOutlined />,
-    component: (book) => <ForeshadowLibrary key={book.id} book={book} />,
+    component: ({ book }) => <ForeshadowLibrary key={book.id} book={book} />,
   },
   {
     key: "archive",
     title: "正文库",
     icon: <BookOutlined />,
     category: "archive",
-    component: (book) => <ContentLibrary key={book.id} book={book} />,
+    component: ({ book }) => <ContentLibrary key={book.id} book={book} />,
   },
 ];

@@ -104,13 +104,14 @@ const INFO_FIELDS: {
 
 interface SettingsLibraryProps {
   book: Book;
+  activeId?: string;
+  onActiveChange?: (id: string) => void;
 }
 
-export default function SettingsLibrary({ book }: SettingsLibraryProps) {
+export default function SettingsLibrary({ book, activeId, onActiveChange }: SettingsLibraryProps) {
   // 数据
   const [entities, setEntities] = useState<SettingEntity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeId, setActiveId] = useState<string | null>(null);
 
   // 标签名称映射（id -> name），用于详情区展示
   const { tags: tagTree } = useTagTree(book.id);
@@ -196,6 +197,14 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
       await loadEntities();
     })();
   }, [loadEntities]);
+
+  // 数据加载完成后，自动选中首项（无历史选中 or 选中项已被删除）
+  useEffect(() => {
+    if (loading || entities.length === 0) return;
+    if (!activeId || !entities.some((e) => e.id === activeId)) {
+      onActiveChange?.(entities[0].id);
+    }
+  }, [loading, entities, activeId, onActiveChange]);
 
   // ============ 分组切换 ============
 
@@ -324,7 +333,7 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
         return;
       }
       setEntities((prev) => [...prev, result.data]);
-      setActiveId(result.data.id);
+      onActiveChange?.(result.data.id);
       setOpenGroups((prev) => ({ ...prev, [modalCat]: true }));
     }
 
@@ -337,7 +346,6 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
       const result = await deleteSettingEntity(entity.id);
       if (result.ok) {
         setEntities((prev) => prev.filter((e) => e.id !== entity.id));
-        if (activeId === entity.id) setActiveId(null);
         showSuccess("删除成功");
       } else {
         showError(result.error || "删除失败");
@@ -428,7 +436,7 @@ export default function SettingsLibrary({ book }: SettingsLibraryProps) {
                         <div
                           key={entity.id}
                           className={`${styles.entityItem} ${activeId === entity.id ? styles.entityItemActive : ""} ${entity.deprecated ? styles.entityItemDeprecated : ""}`}
-                          onClick={() => setActiveId(entity.id)}
+                          onClick={() => onActiveChange?.(entity.id)}
                         >
                           <div className={styles.entityItemBody}>
                             <span className={styles.entityName}>
