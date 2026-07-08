@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>创作区 — 总纲设计 v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cp:#2F5D50;--cp-h:#1e4438;--cp-bg:rgba(47,93,80,0.06);
+  --cs:#2E8B57;--cs-bg:rgba(46,139,87,0.1);
+  --cw:#964400;--cw-bg:rgba(150,68,0,0.1);
+  --ce:#ba1a1a;--ce-bg:rgba(186,26,26,0.06);
+  --bg:#f0ece4;--bg2:#faf8f4;--bg3:#f5f2ec;
+  --t1:#1a1814;--t2:#4a4640;--t3:#807b74;--tl:#b5b0a8;
+  --bd:#ddd8d0;--bl:#ebe7e0;
+  --fd:'Noto Serif SC',serif;--fb:'Inter','Noto Sans SC',sans-serif
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--fb);background:var(--bg);color:var(--t1);padding:40px}
+.ph{max-width:1400px;margin:0 auto 32px}
+.ph h1{font-family:var(--fd);font-size:26px;font-weight:700;margin-bottom:6px}
+.ph p{font-size:13px;color:var(--t2);line-height:1.6}
+.sc{max-width:1400px;margin:0 auto 40px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.sh{padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
+.sn{width:26px;height:26px;border-radius:50%;background:var(--cp);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.st{font-size:15px;font-weight:600}.sd{font-size:12px;color:var(--t3);margin-left:auto}
+.fn{padding:14px 20px;background:var(--cp-bg);border-top:1px solid var(--bd);font-size:12px;color:var(--t2);line-height:1.7}
+.fn strong{color:var(--cp)}
+.app{display:flex;height:620px;overflow:hidden}
+.side{width:260px;min-width:260px;background:var(--bg2);border-right:1px solid var(--bd);display:flex;flex-direction:column}
+.side-hd{padding:10px 16px;border-bottom:1px solid var(--bl);font-size:13px;font-weight:600}
+.tr{padding:4px 0}
+.tn{display:flex;align-items:center;gap:6px;padding:5px 12px;cursor:pointer;font-size:13px;transition:background .15s}
+.tn:hover{background:var(--bg3)}.tn.sel{background:var(--cp-bg);font-weight:500}
+.tw{width:16px;font-size:10px;color:var(--t3);flex-shrink:0;text-align:center}
+.tt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tg{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;font-size:12px;font-weight:500;border:1px solid}
+.tg-g{background:var(--cs-bg);color:var(--cs);border-color:rgba(46,139,87,.2)}
+.tg-w{background:var(--cw-bg);color:var(--cw);border-color:rgba(150,68,0,.1)}
+.tg-b{background:rgba(47,93,80,0.08);color:var(--cp);border-color:rgba(47,93,80,.2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 15px;border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s;border:1px solid var(--bd);background:#fff;color:var(--t1)}
+.btn:hover{border-color:var(--cp);color:var(--cp)}
+.btn-p{background:var(--cp);border-color:var(--cp);color:#fff}
+.btn-p:hover{background:var(--cp-h);border-color:var(--cp-h);color:#fff}
+.btn-sm{height:26px;padding:0 10px;font-size:12px;border-radius:4px}
+.btn-t{border:none;background:none;padding:0 4px}
+.btn-t:hover{color:var(--cp);border:none;background:var(--cp-bg)}
+.btn-d{border:1px dashed var(--cp);background:var(--cp-bg);color:var(--cp)}
+.btn-d:hover{background:var(--cp);color:#fff;border-style:solid}
+.fi{margin-bottom:16px}
+.fl{display:block;font-size:13px;color:var(--t1);margin-bottom:6px;font-weight:500}
+.fl .rq{color:var(--ce);margin-left:2px}
+.fh{font-size:12px;color:var(--t3);margin-top:4px}
+.inp{width:100%;height:32px;padding:4px 11px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--cp);box-shadow:0 0 0 2px rgba(47,93,80,.1)}
+.txa{width:100%;min-height:72px;padding:6px 11px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;outline:none;resize:vertical;line-height:1.6}
+.txa:focus{border-color:var(--cp);box-shadow:0 0 0 2px rgba(47,93,80,.1)}
+.inp-lg{height:40px;font-size:14px;padding:6px 14px}
+.txa-lg{min-height:88px;font-size:14px;padding:8px 14px;line-height:1.7}
+.dv2{border:none;border-top:1px solid var(--bl);margin:12px 0}
+.pg{display:flex;align-items:center;gap:8px}.pg-b{flex:1;height:6px;background:var(--bl);border-radius:3px;overflow:hidden}.pg-f{height:100%;background:var(--cp);border-radius:3px;transition:width .3s}.pg-t{font-size:11px;color:var(--t3);white-space:nowrap}
+.book-info-bar{display:flex;gap:16px;padding:12px 20px;background:var(--bg3);border-bottom:1px solid var(--bl);flex-wrap:wrap}
+.book-info-item{font-size:12px;color:var(--t3)}.book-info-item strong{color:var(--t2);font-weight:500}
+.bc{padding:10px 20px;border-bottom:1px solid var(--bl);font-size:13px}
+.bc span{color:var(--t3);cursor:pointer}.bc span:hover{color:var(--cp)}
+.bc .cur{color:var(--t1);font-weight:500;cursor:default}
+.ai-panel{width:360px;min-width:360px;border-left:1px solid var(--bd);display:flex;flex-direction:column;background:var(--bg2)}
+.ai-panel-hd{padding:10px 16px;border-bottom:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between}
+.ai-panel-hd-t{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.ai-tpl-select{display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--t2);cursor:pointer;background:#fff;transition:border-color .15s}
+.ai-tpl-select:hover{border-color:var(--cp);color:var(--cp)}
+.ai-tpl-select .arrow{font-size:8px;color:var(--t3)}
+.ai-panel-bd{flex:1;overflow-y:auto;padding:12px 16px}
+.ai-panel-ft{padding:12px 16px;border-top:1px solid var(--bl);background:#fff}
+.ai-empty{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:32px 20px}
+.ai-empty-icon{font-size:32px;margin-bottom:10px}
+.ai-empty-title{font-size:14px;font-weight:500;color:var(--t2);margin-bottom:4px}
+.ai-empty-desc{font-size:12px;color:var(--t3);line-height:1.6;max-width:240px}
+.ai-user-input{width:100%;min-height:56px;padding:8px 12px;border:1px solid var(--bd);border-radius:6px;font-size:12px;color:var(--t1);background:#fff;outline:none;resize:vertical;line-height:1.5;font-family:var(--fb)}
+.ai-user-input:focus{border-color:var(--cp);box-shadow:0 0 0 2px rgba(47,93,80,.1)}
+.ai-user-input::placeholder{color:var(--tl)}
+.ai-card{border:1px solid var(--bd);border-radius:8px;background:#fff;overflow:hidden;margin-bottom:8px;transition:border-color .2s}
+.ai-card.accepted{border-color:var(--cs);background:#fcfefc}
+.ai-card-hd{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--bl);background:var(--bg3);font-size:11px}
+.ai-card.accepted .ai-card-hd{background:var(--cs-bg);border-bottom-color:rgba(46,139,87,.1)}
+.ai-card-title{font-weight:600;color:var(--t2)}
+.ai-card-status{font-size:10px;font-weight:500;color:var(--cs)}
+.ai-card-bd{padding:8px 10px}
+.ai-card-content{font-size:12px;color:var(--t1);line-height:1.6;min-height:20px;outline:none;word-break:break-word}
+.ai-card-ft{padding:6px 10px;border-top:1px solid var(--bl);background:var(--bg3)}
+.ai-card.accepted .ai-card-ft{background:var(--cs-bg)}
+.ai-card-ft .btn-sm{height:22px;font-size:11px;padding:0 8px}
+.ai-act-accept{border:1px solid var(--cs);color:var(--cs);background:#fff}
+.ai-act-accept:hover,.ai-act-accept.on{background:var(--cs);color:#fff}
+</style>
+</head>
+<body>
+<div class="ph">
+  <h1>创作区 — 总纲设计 v4</h1>
+  <p><b>纯黑盒 AiPanel：</b>接收 context + fields + programData + templates，输出生成内容。不含业务逻辑。</p>
+</div>
+
+<!-- A: 空态 -->
+<div class="sc">
+  <div class="sh"><span class="sn">A</span><span class="st">空态</span><span class="sd">面板待命 + 模板选择器</span></div>
+  <div class="app">
+    <div class="side">
+      <div class="side-hd">创作区</div>
+      <div class="tr"><div class="tn sel"><span class="tw"></span><span class="tt">总纲</span></div></div>
+      <div style="flex:1;"></div>
+    </div>
+    <div style="flex:1;display:flex;overflow:hidden;">
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#fff;">
+        <div class="bc"><span class="cur">总纲</span></div>
+        <div class="book-info-bar">
+          <div class="book-info-item"><strong>题材</strong> 仙侠 · 凡人流</div>
+          <div class="book-info-item"><strong>文风</strong> 平实内敛</div>
+          <div class="book-info-item"><strong>受众</strong> 男频</div>
+          <div class="book-info-item"><strong>参考</strong> 凡人修仙传</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+          <div class="fi"><label class="fl">① 故事核心（一句话） <span class="rq">*</span></label>
+          <input class="inp inp-lg" placeholder="用一句话概括"></div>
+          <div class="fi"><label class="fl">② 主角 <span class="rq">*</span></label>
+          <div style="border:1px dashed var(--bd);border-radius:8px;padding:16px;text-align:center;color:var(--t3);font-size:13px;">+ 关联角色</div></div>
+          <div class="fi"><label class="fl">③ 核心冲突 <span class="rq">*</span></label>
+          <textarea class="txa txa-lg" rows="2" placeholder="主要矛盾"></textarea></div>
+          <div class="fi"><label class="fl">④ 结局方向 <span class="rq">*</span></label>
+          <textarea class="txa" rows="2" placeholder="结局走向"></textarea></div>
+        </div>
+      </div>
+      <div class="ai-panel">
+        <div class="ai-panel-hd">
+          <div class="ai-panel-hd-t">AI 生成</div>
+          <div class="ai-tpl-select">默认总纲生成 <span class="arrow">▾</span></div>
+        </div>
+        <div class="ai-panel-bd">
+          <div class="ai-empty">
+            <div class="ai-empty-icon">✨</div>
+            <div class="ai-empty-title">AI 辅助生成</div>
+            <div class="ai-empty-desc">描述你想要的内容方向，AI 结合当前数据帮你生成。</div>
+          </div>
+        </div>
+        <div class="ai-panel-ft">
+          <textarea class="ai-user-input" rows="2" placeholder="描述你想要的内容（可选）..."></textarea>
+          <div style="margin-top:8px;"><button class="btn btn-sm btn-d" style="width:100%;font-weight:600;">✨ 生成</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>面板头部：</strong>右侧有<b>模板选择器</b>（下拉切换提示词模板）。面板接收 context/fields/programData/templates，不处理业务逻辑。</div>
+</div>
+
+<!-- B: 生成结果 -->
+<div class="sc">
+  <div class="sh"><span class="sn">B</span><span class="st">生成结果 — 逐字段卡片</span><span class="sd">可编辑、采纳、一键采纳</span></div>
+  <div class="app">
+    <div class="side"><div class="side-hd">创作区</div><div class="tr"><div class="tn sel"><span class="tw"></span><span class="tt">总纲</span></div></div><div style="flex:1;"></div></div>
+    <div style="flex:1;display:flex;overflow:hidden;">
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#fff;">
+        <div class="bc"><span class="cur">总纲</span></div>
+        <div class="book-info-bar">
+          <div class="book-info-item"><strong>题材</strong> 仙侠 · 凡人流</div>
+          <div class="book-info-item"><strong>文风</strong> 平实内敛</div>
+          <div class="book-info-item"><strong>受众</strong> 男频</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+          <div class="fi"><label class="fl">① 故事核心 <span class="rq">*</span></label><input class="inp inp-lg" placeholder="用一句话概括"></div>
+          <div class="fi"><label class="fl">② 主角 <span class="rq">*</span></label><div style="border:1px dashed var(--bd);border-radius:8px;padding:16px;text-align:center;color:var(--t3);font-size:13px;">+ 关联角色</div></div>
+          <div class="fi"><label class="fl">③ 核心冲突 <span class="rq">*</span></label><textarea class="txa txa-lg" rows="2" placeholder="主要矛盾"></textarea></div>
+          <div class="fi"><label class="fl">④ 结局方向 <span class="rq">*</span></label><textarea class="txa" rows="2" placeholder="结局走向"></textarea></div>
+        </div>
+      </div>
+      <div class="ai-panel">
+        <div class="ai-panel-hd"><div class="ai-panel-hd-t">AI 生成</div><div class="ai-tpl-select">默认总纲生成 <span class="arrow">▾</span></div></div>
+        <div class="ai-panel-bd">
+          <div style="padding:6px 10px;background:#fff;border:1px solid var(--bl);border-radius:6px;font-size:11px;color:var(--t2);margin-bottom:10px;"><span style="color:var(--t3);">你的想法：</span>凡人流，主角低调发育</div>
+          <div class="ai-card">
+            <div class="ai-card-hd"><div class="ai-card-title">故事核心</div></div>
+            <div class="ai-card-bd"><div class="ai-card-content" contenteditable="true">一个山村少年在修仙门派中低调求存、步步为营的故事。</div></div>
+            <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button></div>
+          </div>
+          <div class="ai-card" style="opacity:.5;border-style:dashed;">
+            <div class="ai-card-hd" style="background:#f9f8f6;"><div class="ai-card-title" style="color:var(--t3);">主角</div><div style="font-size:10px;color:var(--t3);">手动关联</div></div>
+            <div class="ai-card-bd"><div class="ai-card-content" style="color:var(--t3);font-style:italic;">AI 不生成，请在左侧手动关联。</div></div>
+          </div>
+          <div class="ai-card">
+            <div class="ai-card-hd"><div class="ai-card-title">核心冲突</div></div>
+            <div class="ai-card-bd"><div class="ai-card-content" contenteditable="true">门派内部派系斗争严重，无背景弟子成为各方势力博弈的棋子。</div></div>
+            <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button></div>
+          </div>
+          <div class="ai-card">
+            <div class="ai-card-hd"><div class="ai-card-title">结局方向</div></div>
+            <div class="ai-card-bd"><div class="ai-card-content" contenteditable="true">低调成长，暗中积蓄实力，最终脱离门派自立门户。</div></div>
+            <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button></div>
+          </div>
+        </div>
+        <div class="ai-panel-ft">
+          <textarea class="ai-user-input" rows="2" placeholder="调整方向后重新生成..."></textarea>
+          <div style="margin-top:8px;display:flex;gap:6px;">
+            <button class="btn btn-sm btn-p" style="flex:1;font-size:11px;font-weight:600;">一键采纳全部</button>
+            <button class="btn btn-sm" style="font-size:11px;">重新生成</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>面板输出：</strong>采纳时调用 <code>onAdopt(results)</code> 抛出数据。<b>面板不处理保护/锁定</b>，调用层在回调中自行决定。</div>
+</div>
+
+<!-- C: 角色场景 — 不同 fields -->
+<div class="sc">
+  <div class="sh"><span class="sn">C</span><span class="st">同一组件 · 角色创建场景</span><span class="sd">不同 context + fields + templates</span></div>
+  <div class="app">
+    <div class="side"><div class="side-hd">创作区</div>
+      <div class="tr"><div class="tn" style="padding-left:12px;"><span class="tw">▾</span><span class="tt">设定库</span></div><div class="tn sel" style="padding-left:36px;"><span class="tw"></span><span class="tt">角色</span><span class="tg tg-b" style="font-size:10px;">4</span></div></div>
+      <div style="flex:1;"></div>
+    </div>
+    <div style="flex:1;display:flex;overflow:hidden;">
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#fff;">
+        <div class="bc"><span>设定库</span> <span style="color:var(--tl);margin:0 4px;">/</span> <span>角色</span> <span style="color:var(--tl);margin:0 4px;">/</span> <span class="cur">新建角色</span></div>
+        <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+          <div class="fi"><label class="fl">姓名 <span class="rq">*</span></label><input class="inp" placeholder="角色姓名"></div>
+          <div class="fi"><label class="fl">性格特征</label><textarea class="txa" rows="2" placeholder="性格特点..."></textarea></div>
+          <div class="fi"><label class="fl">人物背景</label><textarea class="txa txa-lg" rows="3" placeholder="出身、经历..."></textarea></div>
+          <div class="fi"><label class="fl">核心动机</label><textarea class="txa" rows="2" placeholder="终极目标..."></textarea></div>
+        </div>
+      </div>
+      <div class="ai-panel">
+        <div class="ai-panel-hd"><div class="ai-panel-hd-t">AI 生成</div><div class="ai-tpl-select">默认角色生成 <span class="arrow">▾</span></div></div>
+        <div class="ai-panel-bd">
+          <div class="ai-card">
+            <div class="ai-card-hd"><div class="ai-card-title">性格特征</div></div>
+            <div class="ai-card-bd"><div class="ai-card-content" contenteditable="true">外表沉默寡言，内心极度警惕。习惯性观察他人微表情，对善意保持怀疑但不排斥。</div></div>
+            <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button></div>
+          </div>
+          <div class="ai-card">
+            <div class="ai-card-hd"><div class="ai-card-title">人物背景</div></div>
+            <div class="ai-card-bd"><div class="ai-card-content" contenteditable="true">出身偏远山村，父母早亡，被路过的散修收养。养父在其十二岁时失踪。</div></div>
+            <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button></div>
+          </div>
+          <div class="ai-card">
+            <div class="ai-card-hd"><div class="ai-card-title">核心动机</div></div>
+            <div class="ai-card-bd"><div class="ai-card-content" contenteditable="true">寻找失踪的养父，同时在修仙界生存下去。</div></div>
+            <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button></div>
+          </div>
+        </div>
+        <div class="ai-panel-ft">
+          <textarea class="ai-user-input" rows="2" placeholder="描述角色方向..."></textarea>
+          <div style="margin-top:8px;display:flex;gap:6px;">
+            <button class="btn btn-sm btn-p" style="flex:1;font-size:11px;font-weight:600;">一键采纳全部</button>
+            <button class="btn btn-sm" style="font-size:11px;">重新生成</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><b>同一 AiPanel</b>，context={{ panel: 'character', scenario: 'character_create' }}，fields 传角色字段，promptTemplates 传角色模板。面板渲染一样，数据不同。</div>
+</div>
+
+<!-- D: 组件总览 -->
+<div class="sc">
+  <div class="sh"><span class="sn">D</span><span class="st">AiPanel 纯黑盒组件总览</span></div>
+  <div style="padding:20px;"><div style="max-width:1200px;margin:0 auto;">
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px;">设计原则</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="padding:12px;border:1px solid rgba(46,139,87,.2);border-radius:6px;background:var(--cs-bg);">
+          <div style="font-size:12px;font-weight:600;color:var(--cs);margin-bottom:6px;">面板知道的</div>
+          <div style="font-size:11px;color:var(--t2);line-height:1.8;">- 当前在哪个面板/场景<br>- 要生成哪些字段<br>- 有哪些提示词模板<br>- 用户输入了什么想法<br>- 用户编辑/采纳了哪些卡片</div>
+        </div>
+        <div style="padding:12px;border:1px solid var(--ce-bg);border-radius:6px;background:var(--ce-bg);">
+          <div style="font-size:12px;font-weight:600;color:var(--ce);margin-bottom:6px;">面板不知道的</div>
+          <div style="font-size:11px;color:var(--t2);line-height:1.8;">- 字段保护/锁定逻辑<br>- 采纳后数据写入哪里<br>- 表单的校验规则<br>- 业务规则<br>- 数据持久化</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px;">组件接口</div>
+      <pre style="font-size:12px;line-height:1.8;color:var(--t2);background:var(--bg3);padding:12px;border-radius:6px;overflow-x:auto;"><code>&lt;AiPanel
+  context={{ panel, scenario }}
+  fields={[{ key, label }]}
+  programData={{...}}
+  promptTemplates={[{ id, name }]}
+  defaultTemplateId="xxx"
+  onGenerate={({ input, templateId }) =&gt; ...}
+  onAdopt={(results) =&gt; ...}
+/&gt;</code></pre>
+    </div>
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px;">复用场景</div>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <tr style="border-bottom:1px solid var(--bl);color:var(--t3);"><td style="padding:8px;font-weight:500;">场景</td><td style="padding:8px;">panel</td><td style="padding:8px;">scenario</td><td style="padding:8px;">fields</td><td style="padding:8px;">模板</td></tr>
+        <tr style="border-bottom:1px solid var(--bl);"><td style="padding:8px;">总纲</td><td style="padding:8px;">outline</td><td style="padding:8px;">outline_generate</td><td style="padding:8px;">故事核心/冲突/结局</td><td style="padding:8px;">总纲提示词库</td></tr>
+        <tr style="border-bottom:1px solid var(--bl);"><td style="padding:8px;">卷纲</td><td style="padding:8px;">volume</td><td style="padding:8px;">volume_generate</td><td style="padding:8px;">卷主题/卷冲突</td><td style="padding:8px;">卷纲提示词库</td></tr>
+        <tr style="border-bottom:1px solid var(--bl);"><td style="padding:8px;">角色</td><td style="padding:8px;">character</td><td style="padding:8px;">character_create</td><td style="padding:8px;">性格/背景/动机</td><td style="padding:8px;">角色提示词库</td></tr>
+        <tr><td style="padding:8px;">书籍信息</td><td style="padding:8px;">book</td><td style="padding:8px;">book_info</td><td style="padding:8px;">题材/文风/受众</td><td style="padding:8px;">书籍提示词库</td></tr>
+      </table>
+    </div>
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;">
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px;">数据流</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;">
+        <span style="padding:4px 10px;background:var(--cp-bg);border-radius:4px;color:var(--cp);font-weight:500;">调用层传入</span>
+        <span style="color:var(--t3);">→</span>
+        <span style="padding:4px 10px;background:var(--bg3);border-radius:4px;font-weight:500;">AiPanel 渲染</span>
+        <span style="color:var(--t3);">→</span>
+        <span style="padding:4px 10px;background:var(--bg3);border-radius:4px;font-weight:500;">onGenerate → 调 AI</span>
+        <span style="color:var(--t3);">→</span>
+        <span style="padding:4px 10px;background:var(--cp-bg);border-radius:4px;color:var(--cp);font-weight:500;">AiPanel 渲染卡片</span>
+        <span style="color:var(--t3);">→</span>
+        <span style="padding:4px 10px;background:var(--cs-bg);border-radius:4px;color:var(--cs);font-weight:500;">onAdopt → 调用层处理</span>
+      </div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8;margin-top:8px;"><b>完全单向。</b>面板不主动写入数据，不保存状态，不做业务判断。纯展示+交互的黑盒。</div>
+    </div>
+  </div></div>
+</div>
+</body>
+</html>
