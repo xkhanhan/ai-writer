@@ -415,3 +415,71 @@ export interface UpdateSettingEntityDTO {
   statusFields?: Record<string, string>;
   deprecated?: boolean;
 }
+
+// ============ AI 生成会话 ============
+
+export interface AiGenerationSession {
+  id: string;
+  bookId: string;
+  functionKey: string;
+  chapterId: string | null;
+  promptTemplateId: string | null;
+  inputContext: string;
+  userInput: string;
+  rawOutput: string;
+  adopted: boolean;
+  model: string;
+  tokensInput: number;
+  tokensOutput: number;
+  latencyMs: number;
+  createdAt: string;
+}
+
+export interface CreateGenerationSessionDTO {
+  bookId: string;
+  functionKey: string;
+  chapterId?: string;
+  promptTemplateId?: string;
+  inputContext?: string;
+  userInput?: string;
+  model?: string;
+}
+
+// ============ AI 提示词模板 ============
+
+export interface PromptTemplate {
+  id: string;
+  bookId: string;
+  functionKey: string;
+  displayName: string;
+  description: string;
+  template: string;
+  variables: PromptVariable[];
+  isDefault: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PromptVariable {
+  name: string;
+  description: string;
+  source: string;
+  required: boolean;
+}
+
+export interface CreatePromptTemplateDTO {
+  functionKey: string;
+  displayName: string;
+  description?: string;
+  template: string;
+  variables?: PromptVariable[];
+}
+
+export interface UpdatePromptTemplateDTO {
+  displayName?: string;
+  description?: string;
+  template?: string;
+  variables?: PromptVariable[];
+  isActive?: boolean;
+}

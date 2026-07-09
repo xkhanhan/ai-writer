@@ -306,6 +306,48 @@ function initializeTables(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_setting_entities_book_category ON setting_entities(book_id, category);
     CREATE INDEX IF NOT EXISTS idx_setting_entities_book_level ON setting_entities(book_id, level);
   `);
+
+  // AI 生成会话记录
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ai_generation_sessions (
+      id                  TEXT PRIMARY KEY,
+      book_id             TEXT NOT NULL,
+      function_key        TEXT NOT NULL,
+      chapter_id          TEXT,
+      prompt_template_id  TEXT,
+      input_context       TEXT DEFAULT '',
+      user_input          TEXT DEFAULT '',
+      raw_output          TEXT DEFAULT '',
+      adopted             INTEGER DEFAULT 0,
+      model               TEXT DEFAULT '',
+      tokens_input        INTEGER DEFAULT 0,
+      tokens_output       INTEGER DEFAULT 0,
+      latency_ms          INTEGER DEFAULT 0,
+      created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_gen_sessions_book ON ai_generation_sessions(book_id);
+    CREATE INDEX IF NOT EXISTS idx_gen_sessions_chapter ON ai_generation_sessions(chapter_id);
+  `);
+
+  // AI 提示词模板
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS prompt_templates (
+      id            TEXT PRIMARY KEY,
+      book_id       TEXT NOT NULL,
+      function_key  TEXT NOT NULL,
+      display_name  TEXT NOT NULL,
+      description   TEXT DEFAULT '',
+      template      TEXT NOT NULL,
+      variables     TEXT DEFAULT '[]',
+      is_default    INTEGER DEFAULT 0,
+      is_active     INTEGER DEFAULT 1,
+      created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_prompt_func ON prompt_templates(book_id, function_key);
+  `);
 }
 
 
