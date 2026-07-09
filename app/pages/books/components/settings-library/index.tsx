@@ -465,7 +465,7 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
   // ============ 右侧面板 ============
 
   const rightPanel = activeEntity ? (
-    <div className={styles.detailPanel}>
+    <>
       <div className={styles.detailHeader}>
         <div className={styles.detailTitleRow}>
           <h3 className={styles.detailTitle}>{activeEntity.name}</h3>
@@ -618,21 +618,8 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
           </div>
         </div>
       </div>
-    </div>
-  ) : (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-        选择一项设定查看详情
-      </span>
-    </div>
-  );
+    </>
+  ) : null;
 
   // ============ 弹窗表单 ============
 
