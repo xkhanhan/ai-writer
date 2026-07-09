@@ -20,6 +20,12 @@
 | [environments.md](./environments.md) | Environment variables, feature flags, DB consistency |
 | [validation.md](./validation.md) | CI/CD pipeline, automated checks, pre-commit hooks |
 
+## Planning
+
+| Doc | Content | Status |
+|-----|---------|--------|
+| [project-roadmap.md](./project-roadmap.md) | 项目开发计划：里程碑、阶段任务、路线图 | Active |
+
 ## Design Documents
 
 | Doc | Content | Status |
