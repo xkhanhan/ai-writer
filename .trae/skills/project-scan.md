@@ -1,3 +1,8 @@
+---
+name: project-scan
+description: Use when the user wants to scan, review, audit, or diagnose project code, architecture, maintainability, robustness, security, module boundaries, data reliability, API contracts, frontend state, or long-term engineering risks. This skill reports evidence-backed issues from a senior architecture perspective and gives repair priority without directly changing code unless separately requested.
+---
+
 # project-scan - 工程与架构扫描
 
 > 触发方式：`/project-scan`、`/scan`、`工程扫描`、`架构扫描`、`代码审查`、`扫描项目问题`、`审查代码`

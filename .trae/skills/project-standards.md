@@ -1,3 +1,8 @@
+---
+name: project-standards
+description: Use when the user wants to design software engineering standards, project rules, architecture boundaries, directory conventions, collaboration rules, quality gates, or technical constraints before writing requirements, architecture, or code. This skill helps clarify goals with beginner-friendly questions, compare lightweight vs robust approaches, prevent over-engineering, and produce a reusable engineering standards document.
+---
+
 # project-standards - 工程规范设计
 
 > 触发方式：`/standards`、`/project-standards`、`工程规范`、`软件设计规范`、`制定项目规范`、`技术规范`
