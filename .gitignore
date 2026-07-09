@@ -34,3 +34,14 @@ pnpm-debug.log*
 
 # 脑暴工具临时文件
 .superpowers/
+
+# Claude Code 配置
+.claude/
+
+# OMC 运行时状态
+.omc/
+
+# 编辑器临时文件
+*.swp
+*.swo
+*~
