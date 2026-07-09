@@ -317,13 +317,17 @@ export default function FactLibrary({ book }: FactLibraryProps) {
 
   return (
     <>
-      <Spin spinning={loading}>
+      {loading && facts.length === 0 ? (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+          <Spin />
+        </div>
+      ) : (
         <SplitPanel
           left={leftPanel}
           right={rightPanel}
           emptyHint="选择一条事实查看详情"
         />
-      </Spin>
+      )}
 
       <Modal
         title={editingFact ? "编辑事实" : "新建事实"}

@@ -115,17 +115,14 @@
   position: relative;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.contentBody::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .panelWrapper {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
