@@ -2,12 +2,16 @@
 .factList {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: var(--space-2) var(--space-3);
 }
 
 .listToolbar {
-  padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
   flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
 }
 
 .listTitle {
@@ -20,14 +24,15 @@
 .listCount {
   font-weight: 600;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--ink-tertiary);
 }
 
 /* ===== 筛选栏 ===== */
 .filterBar {
   display: flex;
-  gap: 4px;
-  padding-bottom: 10px;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line);
   flex-shrink: 0;
 }
 
@@ -37,7 +42,7 @@
   font-size: 11px;
   border: 1px solid var(--border);
   background: var(--panel);
-  color: var(--text-secondary);
+  color: var(--ink-tertiary);
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: var(--font-body);
@@ -56,23 +61,24 @@
 
 /* ===== 搜索栏 ===== */
 .searchBar {
-  padding-bottom: 10px;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line);
   flex-shrink: 0;
 }
 
 /* ===== 章节分组 ===== */
 .chapterGroup {
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .chapterHeader {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-1);
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--ink-tertiary);
   letter-spacing: 0.05em;
   user-select: none;
 }
@@ -85,7 +91,7 @@
 
 /* ===== 事实项 ===== */
 .factItem {
-  padding: 6px 10px;
+  padding: var(--space-2);
   border-radius: var(--radius-md);
   margin-bottom: 2px;
   border-left: 3px solid transparent;
@@ -94,12 +100,12 @@
 }
 
 .factItem:hover {
-  background: var(--bg-muted);
+  background: var(--panel-soft);
 }
 
 .factItemActive {
-  background: var(--color-primary-bg);
-  border-left-color: var(--color-primary);
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
 }
 
 .factItemContent {
@@ -115,8 +121,8 @@
 .factItemMeta {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 4px;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
   flex-wrap: wrap;
 }
 
@@ -130,14 +136,14 @@
 
 /* ===== 左侧底部操作栏 ===== */
 .bottomBar {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border-top: 1px solid var(--line);
   flex-shrink: 0;
 }
 
 /* ===== 右侧详情 ===== */
 .detailHeader {
-  padding: 16px 20px;
+  padding: var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
 }
@@ -145,8 +151,8 @@
 .detailTitleRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .detailTitle {
@@ -164,40 +170,45 @@
 
 .detailActions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
+  margin-left: auto;
 }
 
 .detailMeta {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-tertiary);
   font-family: var(--font-body);
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 /* ===== 内容区 ===== */
 .detailBody {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px;
+  padding: var(--space-5) var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 /* ===== 内容卡片 ===== */
 .contentCard {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  background: var(--panel-soft);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  margin-bottom: var(--space-4);
 }
 
 .contentCardHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: var(--panel-soft);
-  border-bottom: 1px solid var(--line);
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+  background: rgba(0, 0, 0, 0.02);
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
@@ -209,7 +220,13 @@
 }
 
 .contentCardBody {
-  padding: 16px;
+  padding: var(--space-4);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 60px;
 }
 
 .detailText {
@@ -232,29 +249,28 @@
 
 /* ===== 相关角色 ===== */
 .relatedSection {
-  margin-top: 4px;
+  margin-top: var(--space-3);
 }
 
 .relatedLabel {
   font-size: 12px;
+  font-weight: 600;
   color: var(--ink-tertiary);
   font-family: var(--font-body);
-  width: 64px;
-  flex-shrink: 0;
-  line-height: 22px;
-  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
 }
 
 .relatedTags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .relatedTag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   padding: 3px 10px;
   border-radius: var(--radius-full);
   font-size: 12px;
@@ -273,15 +289,15 @@
 /* ===== 响应式 ===== */
 @media (max-width: 768px) {
   .factList {
-    padding: 8px 12px;
+    padding: var(--space-2);
   }
 
   .detailHeader {
-    padding: 14px 16px;
+    padding: var(--space-3) var(--space-4);
   }
 
   .detailBody {
-    padding: 12px 16px;
+    padding: var(--space-3) var(--space-4);
   }
 
   .detailTitle {

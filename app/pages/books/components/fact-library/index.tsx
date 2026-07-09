@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Button, Input, Modal, Form, InputNumber } from "antd";
+import { Button, Input, Form, InputNumber } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
   SearchOutlined,
+  AuditOutlined,
 } from "@ant-design/icons";
 import { SplitPanel } from "@/shared/ui/split-panel";
+import BaseModal from "@/shared/ui/base-modal";
+import { EmptyState } from "@/shared/ui/empty-state";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type { Book, StoryFact } from "@/app/types";
 import {
@@ -234,9 +237,11 @@ export default function FactLibrary({ book }: FactLibraryProps) {
           );
         })}
         {filteredFacts.length === 0 && (
-          <div style={{ padding: "40px 20px", textAlign: "center" }}>
-            <p className={styles.detailEmpty}>暂无匹配的事实</p>
-          </div>
+          <EmptyState
+            icon={<AuditOutlined />}
+            title="暂无匹配的事实"
+            description="尝试调整筛选条件或搜索关键词"
+          />
         )}
       </div>
       <div className={styles.bottomBar}>
@@ -326,13 +331,13 @@ export default function FactLibrary({ book }: FactLibraryProps) {
         loading={loading && facts.length === 0}
       />
 
-      <Modal
+      <BaseModal
         title={editingFact ? "编辑事实" : "新建事实"}
         open={editModalOpen}
         onOk={handleSave}
         onCancel={() => setEditModalOpen(false)}
         okText="保存"
-        cancelText="取消"
+        width={560}
         destroyOnClose
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
@@ -362,7 +367,7 @@ export default function FactLibrary({ book }: FactLibraryProps) {
             <Input placeholder="用逗号分隔多个角色名，如：张三, 李四" />
           </Form.Item>
         </Form>
-      </Modal>
+      </BaseModal>
     </>
   );
 }
