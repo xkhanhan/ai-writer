@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>创作区 V2 — 三栏布局 + 内联 AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--cp:#2F5D50;--cp-h:#1e4438;--cp-bg:rgba(47,93,80,.06);--cs:#2E8B57;--cs-bg:rgba(46,139,87,.1);--cw:#964400;--cw-bg:rgba(150,68,0,.1);--ce:#ba1a1a;--ce-bg:rgba(186,26,26,.06);--bg:#f0ece4;--bg2:#faf8f4;--bg3:#f5f2ec;--bg4:#e8e4dc;--t1:#1a1814;--t2:#4a4640;--t3:#807b74;--tl:#b5b0a8;--bd:#ddd8d0;--bl:#ebe7e0;--fd:'Noto Serif SC',serif;--fb:'Inter','Noto Sans SC',sans-serif;--fm:'JetBrains Mono','Fira Code',monospace}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--fb);background:var(--bg);color:var(--t1);padding:32px 40px}
+.ph{max-width:1440px;margin:0 auto 28px}.ph h1{font-family:var(--fd);font-size:24px;font-weight:700;margin-bottom:4px}.ph p{font-size:13px;color:var(--t2);line-height:1.6}
+.sc{max-width:1440px;margin:0 auto 36px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.sh{padding:12px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
+.sn{width:24px;height:24px;border-radius:50%;background:var(--cp);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.st{font-size:14px;font-weight:600}.sd{font-size:11px;color:var(--t3);margin-left:auto}
+.fn{padding:12px 18px;background:var(--cp-bg);border-top:1px solid var(--bd);font-size:12px;color:var(--t2);line-height:1.7}.fn strong{color:var(--cp)}
+.layout{display:flex;height:620px;overflow:hidden}
+.col-l{width:220px;min-width:220px;border-right:1px solid var(--bd);display:flex;flex-direction:column;background:var(--bg2)}
+.col-l-hd{padding:8px 14px;border-bottom:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between}
+.col-l-t{font-size:12px;font-weight:600;color:var(--t2)}
+.col-l-btn{width:22px;height:22px;border-radius:4px;border:1px solid var(--bd);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--t3)}.col-l-btn:hover{border-color:var(--cp);color:var(--cp)}
+.col-l-scroll{flex:1;overflow-y:auto;padding:6px 0}
+.tree-row{display:flex;align-items:center;gap:4px;padding:4px 10px;cursor:pointer;font-size:12px;transition:background .12s;border-left:2px solid transparent}
+.tree-row:hover{background:var(--bg3)}.tree-row.sel{background:var(--cp-bg);border-left-color:var(--cp);font-weight:500;color:var(--cp)}
+.tree-icon{width:14px;font-size:9px;color:var(--t3);flex-shrink:0;text-align:center}
+.tree-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-badge{height:16px;padding:0 5px;border-radius:3px;font-size:9px;font-weight:600;display:inline-flex;align-items:center;flex-shrink:0}
+.b-w{background:var(--cw-bg);color:var(--cw)}.b-g{background:var(--cs-bg);color:var(--cs)}.b-b{background:rgba(47,93,80,.08);color:var(--cp)}
+.tree-children{padding-left:14px}
+.col-m{flex:1;display:flex;flex-direction:column;background:#fff;min-width:0}
+.col-m-bar{padding:6px 16px;border-bottom:1px solid var(--bl);display:flex;align-items:center;gap:6px;background:var(--bg3);flex-shrink:0}
+.col-m-crumb{font-size:12px;color:var(--t3)}.col-m-crumb .cur{color:var(--t1);font-weight:500}.col-m-crumb .sep{margin:0 4px;color:var(--tl)}
+.col-m-scroll{flex:1;overflow-y:auto;padding:20px 24px}
+.col-r{width:0;overflow:hidden;border-left:1px solid var(--bd);display:flex;flex-direction:column;background:var(--bg2);transition:width .25s ease}
+.col-r.open{width:360px;min-width:360px}
+.col-r-hd{padding:8px 14px;border-bottom:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.col-r-title{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.col-r-close{width:22px;height:22px;border-radius:4px;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--t3)}.col-r-close:hover{background:var(--bg3);color:var(--t1)}
+.col-r-bd{flex:1;overflow-y:auto;padding:10px 14px}
+.col-r-ft{padding:10px 14px;border-top:1px solid var(--bl);background:#fff;flex-shrink:0}
+.mode{display:inline-flex;align-items:center;gap:4px;height:18px;padding:0 7px;border-radius:4px;font-size:10px;font-weight:600}.mode .d{width:5px;height:5px;border-radius:50%}
+.m-exp{background:var(--cp-bg);color:var(--cp);border:1px solid rgba(47,93,80,.15)}.m-exp .d{background:var(--cp)}
+.m-plan{background:var(--cs-bg);color:var(--cs);border:1px solid rgba(46,139,87,.15)}.m-plan .d{background:var(--cs)}
+.m-draft{background:var(--cw-bg);color:var(--cw);border:1px solid rgba(150,68,0,.12)}.m-draft .d{background:var(--cw)}
+.m-check{background:rgba(70,95,136,.07);color:#465f88;border:1px solid rgba(70,95,136,.15)}.m-check .d{background:#465f88}
+.fi{margin-bottom:16px}.fl{display:block;font-size:13px;color:var(--t1);margin-bottom:6px;font-weight:500}.fl .rq{color:var(--ce);margin-left:2px}
+.inp{width:100%;height:32px;padding:4px 11px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;outline:none;transition:border-color .2s}.inp:focus{border-color:var(--cp);box-shadow:0 0 0 2px rgba(47,93,80,.1)}
+.txa{width:100%;min-height:72px;padding:6px 11px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;outline:none;resize:vertical;line-height:1.6}.txa:focus{border-color:var(--cp);box-shadow:0 0 0 2px rgba(47,93,80,.1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 12px;border-radius:5px;font-size:12px;cursor:pointer;transition:all .2s;border:1px solid var(--bd);background:#fff;color:var(--t1)}.btn:hover{border-color:var(--cp);color:var(--cp)}
+.btn-p{background:var(--cp);border-color:var(--cp);color:#fff}.btn-p:hover{background:var(--cp-h);border-color:var(--cp-h);color:#fff}
+.btn-sm{height:24px;padding:0 8px;font-size:11px;border-radius:4px}
+.btn-g{border:1px solid var(--cs);color:var(--cs);background:#fff}.btn-g:hover,.btn-g.on{background:var(--cs);color:#fff}
+.btn-d{border:1px dashed var(--cp);background:var(--cp-bg);color:var(--cp)}.btn-d:hover{background:var(--cp);color:#fff;border-style:solid}
+.btn-ai{border:1px solid var(--cp);color:var(--cp);background:var(--cp-bg);gap:4px;font-weight:500}.btn-ai:hover{background:var(--cp);color:#fff}
+.btn-ai svg{width:14px;height:14px}
+.toolbar{display:flex;gap:4px;flex-wrap:wrap}
+.toolbar-sep{width:1px;height:20px;background:var(--bd);margin:0 2px}
+.ai-summary{padding:6px 10px;background:#fff;border:1px solid var(--bl);border-radius:6px;font-size:11px;color:var(--t2);margin-bottom:10px}.ai-summary b{color:var(--t3);font-weight:normal}
+.ai-card{border:1px solid var(--bd);border-radius:6px;background:#fff;overflow:hidden;margin-bottom:8px;transition:border-color .2s}.ai-card.done{border-color:var(--cs);background:#fcfefc}
+.ai-card-hd{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid var(--bl);background:var(--bg3);font-size:10px}
+.ai-card.done .ai-card-hd{background:var(--cs-bg);border-bottom-color:rgba(46,139,87,.1)}
+.ai-card-t{font-weight:600;color:var(--t2)}.ai-card-s{font-size:9px;font-weight:500;color:var(--cs)}
+.ai-card-bd{padding:7px 10px}.ai-card-ct{font-size:11px;color:var(--t1);line-height:1.6;min-height:18px;outline:none;word-break:break-word}
+.ai-card-ft{padding:5px 10px;border-top:1px solid var(--bl);background:var(--bg3);display:flex;align-items:center;gap:5px}.ai-card.done .ai-card-ft{background:var(--cs-bg)}
+.opt-card{border:1px solid var(--bd);border-radius:6px;background:#fff;overflow:hidden;margin-bottom:8px;cursor:pointer;transition:all .2s}.opt-card:hover{border-color:var(--cp);box-shadow:0 2px 6px rgba(47,93,80,.08)}.opt-card.sel{border-color:var(--cp);background:var(--cp-bg)}
+.opt-num{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--cp-bg);color:var(--cp);font-size:9px;font-weight:700;flex-shrink:0}
+.opt-hd{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--bl)}.opt-t{font-size:12px;font-weight:600;flex:1}
+.opt-bd{padding:8px 10px}.opt-ct{font-size:11px;color:var(--t2);line-height:1.6}
+.opt-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}.opt-tag{display:inline-flex;height:18px;padding:0 5px;border-radius:3px;font-size:9px;font-weight:500;background:var(--bg3);color:var(--t3);align-items:center}
+.ai-input{width:100%;min-height:44px;padding:7px 10px;border:1px solid var(--bd);border-radius:5px;font-size:11px;color:var(--t1);background:#fff;outline:none;resize:vertical;line-height:1.5;font-family:var(--fb)}.ai-input:focus{border-color:var(--cp);box-shadow:0 0 0 2px rgba(47,93,80,.1)}.ai-input::placeholder{color:var(--tl)}
+.draft-preview{border:1px solid var(--bd);border-radius:6px;background:#fff;overflow:hidden}
+.draft-hd{padding:6px 10px;border-bottom:1px solid var(--bl);background:var(--bg3);display:flex;align-items:center;justify-content:space-between}
+.draft-title{font-size:12px;font-weight:600}.draft-meta{font-size:9px;color:var(--t3)}
+.draft-body{padding:10px}.draft-text{font-size:12px;color:var(--t1);line-height:1.8;font-family:var(--fd)}.draft-text p{margin-bottom:8px;text-indent:2em}
+.draft-actions{padding:6px 10px;border-top:1px solid var(--bl);display:flex;gap:5px}
+.issue-card{border:1px solid var(--bd);border-radius:6px;background:#fff;overflow:hidden;margin-bottom:6px}
+.issue-hd{display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--bl)}
+.issue-icon{width:18px;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.issue-icon.err{background:var(--ce-bg);color:var(--ce)}.issue-icon.warn{background:var(--cw-bg);color:var(--cw)}
+.issue-title{font-size:11px;font-weight:600;flex:1}.issue-sev{font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px}
+.issue-sev.err{background:var(--ce-bg);color:var(--ce)}.issue-sev.warn{background:var(--cw-bg);color:var(--cw)}
+.issue-bd{padding:6px 10px}.issue-desc{font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:4px}
+.issue-chs{display:flex;gap:3px;flex-wrap:wrap}.issue-ch{display:inline-flex;height:16px;padding:0 5px;border-radius:3px;font-size:9px;background:var(--bg3);color:var(--t3);align-items:center}
+.issue-ft{padding:4px 10px;border-top:1px solid var(--bl);background:var(--bg3);display:flex;align-items:center;justify-content:space-between}
+.stats-bar{display:flex;gap:10px;padding:6px 10px;background:var(--bg3);border-radius:5px;margin-bottom:8px}.stat{font-size:10px;color:var(--t3)}.stat strong{font-weight:600}
+.tg{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:3px;font-size:10px;font-weight:500;border:1px solid}.tg-b{background:rgba(47,93,80,.08);color:var(--cp);border-color:rgba(47,93,80,.15)}.tg-g{background:var(--cs-bg);color:var(--cs);border-color:rgba(46,139,87,.15)}
+.loading-dots{display:flex;gap:3px;padding:8px 0}.loading-dots span{width:4px;height:4px;border-radius:50%;background:var(--cp);animation:pulse 1.2s infinite}.loading-dots span:nth-child(2){animation-delay:.2s}.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.word-stat{display:flex;gap:12px;padding:8px 0;font-size:11px;color:var(--t3)}.word-stat strong{color:var(--t2)}
+</style>
+</head>
+<body>
+
+<div class="ph">
+  <h1>创作区 V2 — 三栏布局 + 内联 AI</h1>
+  <p>核心改变：AI 不再是独立面板区域，而是<strong>随处可唤起的上下文辅助能力</strong>。编辑器工具栏内联触发按钮，右栏轻量展示结果。</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     A: 写作状态 — AI 侧栏折叠
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">A</span>
+    <span class="st">写作状态 — AI 侧栏折叠</span>
+    <span class="sd">用户专注写作，AI 待命</span>
+  </div>
+  <div class="layout">
+    <!-- 左栏：大纲树 -->
+    <div class="col-l">
+      <div class="col-l-hd"><span class="col-l-t">大纲</span><span class="col-l-btn">+</span></div>
+      <div class="col-l-scroll">
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);"><span class="tree-icon">▾</span><span class="tree-label">总纲</span></div>
+        <div class="tree-children">
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label" style="color:var(--cs);">故事核心</span></div>
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label" style="color:var(--cs);">主角</span></div>
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label" style="color:var(--cs);">冲突</span></div>
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label" style="color:var(--cs);">结局</span></div>
+        </div>
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);margin-top:4px;"><span class="tree-icon">▾</span><span class="tree-label">第一卷 · 踏入仙途</span><span class="tree-badge b-g">3章</span></div>
+        <div class="tree-children">
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 1 章 · 初入宗门</span><span class="tree-badge b-g" style="font-size:8px;">✓</span></div>
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 2 章 · 灵根测试</span><span class="tree-badge b-g" style="font-size:8px;">✓</span></div>
+          <div class="tree-row sel"><span class="tree-icon">✎</span><span class="tree-label">第 3 章 · 夜探禁地</span><span class="tree-badge b-w">写作中</span></div>
+        </div>
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);margin-top:4px;"><span class="tree-icon">▸</span><span class="tree-label">第二卷 · 暗流涌动</span></div>
+      </div>
+    </div>
+
+    <!-- 中间：正文编辑 -->
+    <div class="col-m">
+      <div class="col-m-bar">
+        <span class="col-m-crumb">第一卷 <span class="sep">/</span> <span class="cur">第 3 章 · 夜探禁地</span></span>
+        <div style="margin-left:auto;display:flex;gap:4px;">
+          <span class="tg tg-b" style="font-size:9px;height:16px;">2,847 字</span>
+        </div>
+      </div>
+      <div class="col-m-scroll">
+        <!-- 工具栏 -->
+        <div class="toolbar" style="margin-bottom:16px;padding:6px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--bl);">
+          <button class="btn btn-ai btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            AI 写
+          </button>
+          <button class="btn btn-ai btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            AI 润色
+          </button>
+          <button class="btn btn-ai btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            AI 检查
+          </button>
+          <div class="toolbar-sep"></div>
+          <button class="btn btn-sm" style="border:none;color:var(--t3);">版本历史</button>
+        </div>
+
+        <!-- 正文编辑器 -->
+        <div style="line-height:1.9;font-size:14px;font-family:var(--fd);">
+          <p style="text-indent:2em;margin-bottom:10px;">月光透过密林的缝隙，斑驳地洒在青石小径上。萧炎蹲在一棵古松后面，屏住呼吸，目光紧紧盯着前方那道若隐若现的石门。</p>
+          <p style="text-indent:2em;margin-bottom:10px;">三天来，他一直在暗中观察这道禁地的入口。白天有两名炼气期弟子把守，到了子时换班时会有大约半盏茶的空隙。</p>
+          <p style="text-indent:2em;margin-bottom:10px;">他等的就是这个空隙。</p>
+          <p style="text-indent:2em;margin-bottom:10px;">远处传来更鼓声，三下，子时到了。守门的两名弟子打着哈欠往左走去，接班的人还没来。</p>
+          <p style="text-indent:2em;color:var(--t3);">|</p>
+        </div>
+        <div class="word-stat">
+          <span>本章 <strong>2,847</strong> 字</span>
+          <span>本卷累计 <strong>8,234</strong> 字</span>
+          <span>预计阅读 <strong>7 分钟</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右栏：折叠状态 -->
+    <div class="col-r">
+      <!-- 空：折叠 -->
+    </div>
+  </div>
+  <div class="fn"><strong>场景 A：</strong>用户在专注写作，AI 侧栏折叠。工具栏提供 3 个内联 AI 按钮（写/润色/检查），点击后右栏展开对应模式。</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     B: AI 写作 — 右栏展开（Draft 模式）
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">B</span>
+    <span class="st">AI 写作 — 右栏展开（Draft 模式）</span>
+    <span class="sd">点击「AI 写」后，右栏轻量展开</span>
+  </div>
+  <div class="layout">
+    <div class="col-l">
+      <div class="col-l-hd"><span class="col-l-t">大纲</span><span class="col-l-btn">+</span></div>
+      <div class="col-l-scroll">
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);"><span class="tree-icon">▾</span><span class="tree-label">总纲</span></div>
+        <div class="tree-children">
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label" style="color:var(--cs);">故事核心</span></div>
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label" style="color:var(--cs);">主角</span></div>
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label" style="color:var(--cs);">冲突</span></div>
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label" style="color:var(--cs);">结局</span></div>
+        </div>
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);margin-top:4px;"><span class="tree-icon">▾</span><span class="tree-label">第一卷 · 踏入仙途</span><span class="tree-badge b-g">3章</span></div>
+        <div class="tree-children">
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 1 章 · 初入宗门</span><span class="tree-badge b-g" style="font-size:8px;">✓</span></div>
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 2 章 · 灵根测试</span><span class="tree-badge b-g" style="font-size:8px;">✓</span></div>
+          <div class="tree-row sel"><span class="tree-icon">✎</span><span class="tree-label">第 3 章 · 夜探禁地</span><span class="tree-badge b-w">写作中</span></div>
+        </div>
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);margin-top:4px;"><span class="tree-icon">▸</span><span class="tree-label">第二卷 · 暗流涌动</span></div>
+      </div>
+    </div>
+
+    <div class="col-m">
+      <div class="col-m-bar">
+        <span class="col-m-crumb">第一卷 <span class="sep">/</span> <span class="cur">第 3 章 · 夜探禁地</span></span>
+        <div style="margin-left:auto;display:flex;gap:4px;">
+          <span class="tg tg-b" style="font-size:9px;height:16px;">2,847 字</span>
+        </div>
+      </div>
+      <div class="col-m-scroll">
+        <div class="toolbar" style="margin-bottom:16px;padding:6px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--bl);">
+          <button class="btn btn-ai btn-sm" style="background:var(--cp);color:#fff;border-color:var(--cp);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            AI 写
+          </button>
+          <button class="btn btn-ai btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            AI 润色
+          </button>
+          <button class="btn btn-ai btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            AI 检查
+          </button>
+          <div class="toolbar-sep"></div>
+          <button class="btn btn-sm" style="border:none;color:var(--t3);">版本历史</button>
+        </div>
+        <div style="line-height:1.9;font-size:14px;font-family:var(--fd);">
+          <p style="text-indent:2em;margin-bottom:10px;">月光透过密林的缝隙，斑驳地洒在青石小径上。萧炎蹲在一棵古松后面，屏住呼吸，目光紧紧盯着前方那道若隐若现的石门。</p>
+          <p style="text-indent:2em;margin-bottom:10px;">三天来，他一直在暗中观察这道禁地的入口。白天有两名炼气期弟子把守，到了子时换班时会有大约半盏茶的空隙。</p>
+          <p style="text-indent:2em;margin-bottom:10px;">他等的就是这个空隙。</p>
+          <p style="text-indent:2em;">远处传来更鼓声，三下，子时到了。守门的两名弟子打着哈欠往左走去，接班的人还没来。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右栏：AI 写作（Draft 模式） -->
+    <div class="col-r open">
+      <div class="col-r-hd">
+        <div class="col-r-title"><span class="mode m-draft"><span class="d"></span>写作</span>AI 写作</div>
+        <button class="col-r-close">&times;</button>
+      </div>
+      <div class="col-r-bd">
+        <!-- 上下文状态 -->
+        <div style="padding:6px 8px;background:#fff;border:1px solid var(--bl);border-radius:5px;margin-bottom:8px;">
+          <div style="font-size:9px;color:var(--t3);margin-bottom:3px;">上下文已加载</div>
+          <div style="display:flex;gap:3px;flex-wrap:wrap;">
+            <span class="tg tg-b" style="font-size:9px;height:15px;">总纲</span>
+            <span class="tg tg-b" style="font-size:9px;height:15px;">章纲</span>
+            <span class="tg tg-b" style="font-size:9px;height:15px;">前章末尾</span>
+            <span class="tg tg-b" style="font-size:9px;height:15px;">规则</span>
+            <span class="tg tg-b" style="font-size:9px;height:15px;">事实×8</span>
+          </div>
+        </div>
+        <!-- 全文预览 -->
+        <div class="draft-preview">
+          <div class="draft-hd">
+            <span class="draft-title">第 3 章 · 夜探禁地</span>
+            <span class="draft-meta">约 2,400 字</span>
+          </div>
+          <div class="draft-body">
+            <div class="draft-text">
+              <p>月光透过密林的缝隙，斑驳地洒在青石小径上。萧炎蹲在一棵古松后面，屏住呼吸，目光紧紧盯着前方那道若隐若现的石门。</p>
+              <p>他等的就是这个空隙。</p>
+              <p>远处传来更鼓声，三下，子时到了。守门的两名弟子打着哈欠往左走去，接班的人还没来。</p>
+              <p>萧炎深吸一口气，脚尖轻点地面，身形如同一片落叶，无声地掠过石门。</p>
+              <p>门后是一条向下延伸的甬道，空气中弥漫着一股说不清道不明的气息。不是腐朽，不是潮湿，而是某种……古老的东西。</p>
+            </div>
+          </div>
+          <div class="draft-actions">
+            <button class="btn btn-sm btn-g" style="flex:1;font-weight:600;">采纳续写</button>
+            <button class="btn btn-sm">复制</button>
+            <button class="btn btn-sm">重写</button>
+          </div>
+        </div>
+        <div style="margin-top:6px;display:flex;justify-content:space-between;font-size:9px;color:var(--t3);">
+          <span>Token: 1,280 / 3,420</span><span>18.3s</span>
+        </div>
+      </div>
+      <div class="col-r-ft">
+        <textarea class="ai-input" rows="2" placeholder="补充要求：增加紧张感..."></textarea>
+        <div style="margin-top:6px;display:flex;gap:5px;">
+          <button class="btn btn-sm btn-p" style="flex:1;font-weight:600;">继续生成</button>
+          <button class="btn btn-sm">重新生成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>场景 B：</strong>用户点击工具栏「AI 写」，右栏滑出展开（<code>col-r.open</code>，360px）。面板是轻量的纯展示壳：显示上下文加载状态 + 生成结果 + 采纳按钮。左栏和中间编辑区自动缩小让出空间。</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     C: 总纲编辑 — AI 探索（Explore 模式）
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">C</span>
+    <span class="st">总纲编辑 — AI 探索（Explore 模式）</span>
+    <span class="sd">点击「AI 探索」按钮，右栏展示多选项卡片</span>
+  </div>
+  <div class="layout">
+    <div class="col-l">
+      <div class="col-l-hd"><span class="col-l-t">大纲</span><span class="col-l-btn">+</span></div>
+      <div class="col-l-scroll">
+        <div class="tree-row sel" style="padding-left:10px;font-weight:600;"><span class="tree-icon">▾</span><span class="tree-label">总纲</span></div>
+        <div class="tree-children">
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label">故事核心</span></div>
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label">主角</span></div>
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label">冲突</span></div>
+          <div class="tree-row"><span class="tree-icon">·</span><span class="tree-label">结局</span></div>
+        </div>
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);margin-top:4px;"><span class="tree-icon">▸</span><span class="tree-label">第一卷 · 踏入仙途</span></div>
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);margin-top:4px;"><span class="tree-icon">▸</span><span class="tree-label">第二卷 · 暗流涌动</span></div>
+      </div>
+    </div>
+
+    <div class="col-m">
+      <div class="col-m-bar"><span class="col-m-crumb"><span class="cur">总纲</span></span></div>
+      <div class="col-m-scroll">
+        <div class="toolbar" style="margin-bottom:16px;padding:6px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--bl);">
+          <button class="btn btn-ai btn-sm" style="background:var(--cp);color:#fff;border-color:var(--cp);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            AI 探索
+          </button>
+          <button class="btn btn-ai btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            AI 检查
+          </button>
+        </div>
+        <div class="fi"><label class="fl">① 故事核心（一句话）<span class="rq">*</span></label><input class="inp" value="一个山村少年在修仙门派中低调求存、步步为营的故事。"></div>
+        <div class="fi"><label class="fl">② 主角<span class="rq">*</span></label><div style="border:1px dashed var(--bd);border-radius:6px;padding:14px;text-align:center;color:var(--t3);font-size:12px;cursor:pointer;">+ 关联角色</div></div>
+        <div class="fi"><label class="fl">③ 核心冲突<span class="rq">*</span></label><textarea class="txa" rows="2" placeholder="主角面对的主要矛盾..."></textarea></div>
+        <div class="fi"><label class="fl">④ 结局方向<span class="rq">*</span></label><textarea class="txa" rows="2" placeholder="故事的大致走向..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- 右栏：AI 探索（Explore 模式） -->
+    <div class="col-r open">
+      <div class="col-r-hd">
+        <div class="col-r-title"><span class="mode m-exp"><span class="d"></span>探索</span>AI 探索</div>
+        <button class="col-r-close">&times;</button>
+      </div>
+      <div class="col-r-bd">
+        <div class="ai-summary"><b>你的想法：</b>凡人流，主角低调发育，不要有太多金手指</div>
+
+        <div class="opt-card sel">
+          <div class="opt-hd"><span class="opt-num">1</span><span class="opt-t">凡人流 · 低调崛起</span><span class="tg tg-b" style="font-size:9px;height:15px;">推荐</span></div>
+          <div class="opt-bd"><div class="opt-ct">一个山村少年资质平庸，偶得残破功法，在门派底层摸爬滚打。没有逆天机缘，只靠谨慎和隐忍在修仙界存活。</div>
+            <div class="opt-tags"><span class="opt-tag">低魔设定</span><span class="opt-tag">慢热成长</span><span class="opt-tag">权谋暗斗</span></div>
+          </div>
+        </div>
+        <div class="opt-card">
+          <div class="opt-hd"><span class="opt-num">2</span><span class="opt-t">凡人流 · 底层求生</span></div>
+          <div class="opt-bd"><div class="opt-ct">主角是灵根最差的杂役弟子，在门派中被视为废物。一次意外进入禁地，获得一部残缺古法。</div>
+            <div class="opt-tags"><span class="opt-tag">废柴逆袭</span><span class="opt-tag">禁地探险</span></div>
+          </div>
+        </div>
+        <div class="opt-card">
+          <div class="opt-hd"><span class="opt-num">3</span><span class="opt-t">凡人流 · 散修漂泊</span></div>
+          <div class="opt-bd"><div class="opt-ct">主角不愿加入任何门派，以散修身份在各城邦间游历。靠买卖灵材、帮人炼丹为生。</div>
+            <div class="opt-tags"><span class="opt-tag">散修视角</span><span class="opt-tag">见闻录</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-r-ft">
+        <textarea class="ai-input" rows="2" placeholder="调整方向，继续探索..."></textarea>
+        <div style="margin-top:6px;display:flex;gap:5px;">
+          <button class="btn btn-sm btn-p" style="flex:1;font-weight:600;">继续探索</button>
+          <button class="btn btn-sm btn-g">采纳选中</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>场景 C：</strong>用户在编辑总纲，点击工具栏「AI 探索」。右栏展开 Explore 模式，展示多选项卡片。同一个全局 AI 侧栏组件，根据触发来源自动切换渲染模式。</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     D: AI 检查 — 一致性报告（Check 模式）
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">D</span>
+    <span class="st">AI 检查 — 一致性报告（Check 模式）</span>
+    <span class="sd">点击「AI 检查」，右栏展示问题列表</span>
+  </div>
+  <div class="layout">
+    <div class="col-l">
+      <div class="col-l-hd"><span class="col-l-t">大纲</span><span class="col-l-btn">+</span></div>
+      <div class="col-l-scroll">
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);"><span class="tree-icon">▾</span><span class="tree-label">总纲</span></div>
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);margin-top:4px;"><span class="tree-icon">▾</span><span class="tree-label">第一卷 · 踏入仙途</span><span class="tree-badge b-g">3章</span></div>
+        <div class="tree-children">
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 1 章 · 初入宗门</span></div>
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 2 章 · 灵根测试</span></div>
+          <div class="tree-row sel"><span class="tree-icon">✎</span><span class="tree-label">第 3 章 · 夜探禁地</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-m">
+      <div class="col-m-bar">
+        <span class="col-m-crumb">第一卷 <span class="sep">/</span> <span class="cur">第 3 章 · 夜探禁地</span></span>
+      </div>
+      <div class="col-m-scroll">
+        <div class="toolbar" style="margin-bottom:16px;padding:6px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--bl);">
+          <button class="btn btn-ai btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            AI 写
+          </button>
+          <button class="btn btn-ai btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            AI 润色
+          </button>
+          <button class="btn btn-ai btn-sm" style="background:var(--cp);color:#fff;border-color:var(--cp);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            AI 检查
+          </button>
+        </div>
+        <div style="line-height:1.9;font-size:14px;font-family:var(--fd);">
+          <p style="text-indent:2em;margin-bottom:10px;">月光透过密林的缝隙，斑驳地洒在青石小径上。萧炎蹲在一棵古松后面，屏住呼吸，目光紧紧盯着前方那道若隐若现的石门。</p>
+          <p style="text-indent:2em;margin-bottom:10px;">三天来，他一直在暗中观察这道禁地的入口。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右栏：AI 检查（Check 模式） -->
+    <div class="col-r open">
+      <div class="col-r-hd">
+        <div class="col-r-title"><span class="mode m-check"><span class="d"></span>检查</span>AI 检查</div>
+        <button class="col-r-close">&times;</button>
+      </div>
+      <div class="col-r-bd">
+        <div class="stats-bar">
+          <div class="stat">范围 <strong>第 1-3 章</strong></div>
+          <div class="stat"><strong style="color:var(--ce);">1 错误</strong></div>
+          <div class="stat"><strong style="color:var(--cw);">2 警告</strong></div>
+        </div>
+
+        <div class="issue-card">
+          <div class="issue-hd"><span class="issue-icon err">!</span><span class="issue-title">角色状态矛盾</span><span class="issue-sev err">错误</span></div>
+          <div class="issue-bd"><div class="issue-desc">「药老」在第 2 章被描述为"已经陨落"，但章纲中第 3 章提到他将指导主角。</div><div class="issue-chs"><span class="issue-ch">第 2 章</span><span class="issue-ch">第 3 章</span></div></div>
+          <div class="issue-ft"><span style="font-size:10px;color:var(--t3);">建议改为"重伤沉睡"</span><button class="btn btn-sm" style="font-size:10px;color:var(--cp);border:none;background:none;padding:0 4px;">查看 →</button></div>
+        </div>
+
+        <div class="issue-card">
+          <div class="issue-hd"><span class="issue-icon warn">⚠</span><span class="issue-title">伏笔超期</span><span class="issue-sev warn">警告</span></div>
+          <div class="issue-bd"><div class="issue-desc">伏笔「神秘玉佩」已在第 1 章埋下，至今未有推进。</div></div>
+          <div class="issue-ft"><span style="font-size:10px;color:var(--t3);">建议近 2 章内回收</span></div>
+        </div>
+
+        <div class="issue-card">
+          <div class="issue-hd"><span class="issue-icon warn">⚠</span><span class="issue-title">时间线模糊</span><span class="issue-sev warn">警告</span></div>
+          <div class="issue-bd"><div class="issue-desc">第 2-3 章之间时间跨度不明确。</div></div>
+          <div class="issue-ft"><span style="font-size:10px;color:var(--t3);">建议补充时间标记</span></div>
+        </div>
+      </div>
+      <div class="col-r-ft">
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-sm btn-p" style="flex:1;font-weight:600;">重新检查</button>
+          <button class="btn btn-sm">导出</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>场景 D：</strong>用户点击「AI 检查」，右栏展开 Check 模式。按严重度展示问题列表，每个问题显示涉及章节和修复建议。</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     E: 卷纲编辑 — AI 规划（Plan 模式）
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">E</span>
+    <span class="st">卷纲编辑 — AI 规划（Plan 模式）</span>
+    <span class="sd">点击「AI 规划」，右栏展示字段卡片</span>
+  </div>
+  <div class="layout">
+    <div class="col-l">
+      <div class="col-l-hd"><span class="col-l-t">大纲</span><span class="col-l-btn">+</span></div>
+      <div class="col-l-scroll">
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);"><span class="tree-icon">▸</span><span class="tree-label">总纲</span></div>
+        <div class="tree-row" style="padding-left:10px;font-weight:600;color:var(--t2);margin-top:4px;"><span class="tree-icon">▾</span><span class="tree-label">第一卷 · 踏入仙途</span></div>
+        <div class="tree-children">
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 1 章</span></div>
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 2 章</span></div>
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 3 章</span></div>
+        </div>
+        <div class="tree-row sel" style="padding-left:10px;font-weight:600;"><span class="tree-icon">▾</span><span class="tree-label">第二卷 · 暗流涌动</span><span class="tree-badge b-b">规划中</span></div>
+        <div class="tree-children">
+          <div class="tree-row"><span class="tree-icon">📄</span><span class="tree-label">第 4 章 · 新的开始</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-m">
+      <div class="col-m-bar"><span class="col-m-crumb">卷纲 <span class="sep">/</span> <span class="cur">第二卷 · 暗流涌动</span></span></div>
+      <div class="col-m-scroll">
+        <div class="toolbar" style="margin-bottom:16px;padding:6px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--bl);">
+          <button class="btn btn-ai btn-sm" style="background:var(--cp);color:#fff;border-color:var(--cp);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            AI 规划
+          </button>
+          <button class="btn btn-ai btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            AI 检查
+          </button>
+        </div>
+        <div class="fi"><label class="fl">卷标题<span class="rq">*</span></label><input class="inp" value="第二卷 · 暗流涌动"></div>
+        <div class="fi"><label class="fl">卷梗概<span class="rq">*</span></label><textarea class="txa" rows="3" placeholder="这一卷主要讲什么..."></textarea></div>
+        <div class="fi"><label class="fl">核心冲突<span class="rq">*</span></label><textarea class="txa" rows="2"></textarea></div>
+        <div class="fi"><label class="fl">发展弧线</label><textarea class="txa" rows="2"></textarea></div>
+        <div class="fi"><label class="fl">预计看点</label><textarea class="txa" rows="2"></textarea></div>
+      </div>
+    </div>
+
+    <!-- 右栏：AI 规划（Plan 模式） -->
+    <div class="col-r open">
+      <div class="col-r-hd">
+        <div class="col-r-title"><span class="mode m-plan"><span class="d"></span>规划</span>AI 规划</div>
+        <button class="col-r-close">&times;</button>
+      </div>
+      <div class="col-r-bd">
+        <div class="ai-summary"><b>你的想法：</b>门派内部矛盾爆发，主角被迫卷入派系斗争</div>
+
+        <div class="ai-card done">
+          <div class="ai-card-hd"><div class="ai-card-t">卷标题</div><div class="ai-card-s">已采纳</div></div>
+          <div class="ai-card-bd"><div class="ai-card-ct">暗流涌动</div></div>
+          <div class="ai-card-ft"><button class="btn btn-sm btn-g on" style="font-size:9px;">已采纳</button></div>
+        </div>
+        <div class="ai-card">
+          <div class="ai-card-hd"><div class="ai-card-t">卷梗概</div><div class="ai-card-s">必填</div></div>
+          <div class="ai-card-bd"><div class="ai-card-ct" contenteditable="true" style="min-height:36px;">三大长老争夺掌门之位，主角在夹缝中发现门派起源的秘密。</div></div>
+          <div class="ai-card-ft"><button class="btn btn-sm">采纳</button></div>
+        </div>
+        <div class="ai-card">
+          <div class="ai-card-hd"><div class="ai-card-t">核心冲突</div><div class="ai-card-s">必填</div></div>
+          <div class="ai-card-bd"><div class="ai-card-ct" contenteditable="true">被迫选边站，但无论哪边都是棋子。唯一出路是第三条路。</div></div>
+          <div class="ai-card-ft"><button class="btn btn-sm">采纳</button></div>
+        </div>
+        <div class="ai-card">
+          <div class="ai-card-hd"><div class="ai-card-t">发展弧线</div></div>
+          <div class="ai-card-bd"><div class="ai-card-ct" contenteditable="true">被动卷入 → 发现秘密 → 主动布局 → 新危机</div></div>
+          <div class="ai-card-ft"><button class="btn btn-sm">采纳</button></div>
+        </div>
+      </div>
+      <div class="col-r-ft">
+        <textarea class="ai-input" rows="2" placeholder="调整后重新生成..."></textarea>
+        <div style="margin-top:6px;display:flex;gap:5px;">
+          <button class="btn btn-sm btn-p" style="flex:1;font-weight:600;">全部采纳</button>
+          <button class="btn btn-sm">重新生成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>场景 E：</strong>用户在编辑卷纲，点击「AI 规划」。右栏展开 Plan 模式，字段卡片可编辑后逐个采纳。左栏的卷纲节点带「规划中」徽章。</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     F: 设计总结
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">F</span>
+    <span class="st">设计总结</span>
+    <span class="sd">对比旧版 vs 新版</span>
+  </div>
+  <div style="padding:24px;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;">
+          <div style="font-size:14px;font-weight:600;color:var(--ce);margin-bottom:10px;">旧版（V1）</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.9;">
+            - 4 种独立面板组件<br>
+            - 每种模式一个完整面板（含业务逻辑）<br>
+            - 用户需要理解"explore/plan/draft/check"<br>
+            - AI 面板占固定 380px 右栏<br>
+            - 操作：选模式 → 选模板 → 输入 → 生成 → 编辑 → 采纳<br>
+            - 总纲/卷纲/章纲分 3 个独立页面
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;">
+          <div style="font-size:14px;font-weight:600;color:var(--cs);margin-bottom:10px;">新版（V2）</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.9;">
+            - 1 个全局 AI 侧栏组件<br>
+            - 侧栏是纯展示壳（无业务逻辑）<br>
+            - 用户只需知道"AI 写 / AI 规划 / AI 检查"<br>
+            - AI 侧栏按需展开（0 → 360px 动画过渡）<br>
+            - 操作：点工具栏按钮 → 右栏直接出结果 → 采纳<br>
+            - 所有内容在同一棵大纲树中
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px;">触发按钮 × 右栏模式映射</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <tr style="border-bottom:2px solid var(--bd);color:var(--t3);font-weight:500;">
+            <td style="padding:8px;">工具栏按钮</td>
+            <td style="padding:8px;">右栏模式</td>
+            <td style="padding:8px;">使用场景</td>
+            <td style="padding:8px;">outputFormat</td>
+            <td style="padding:8px;">multiTurn</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--bl);">
+            <td style="padding:8px;font-weight:500;">AI 写</td>
+            <td style="padding:8px;"><span class="mode m-draft"><span class="d"></span>draft</span></td>
+            <td style="padding:8px;">正文续写/生成</td>
+            <td style="padding:8px;">text</td>
+            <td style="padding:8px;">No</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--bl);">
+            <td style="padding:8px;font-weight:500;">AI 润色</td>
+            <td style="padding:8px;"><span class="mode m-draft"><span class="d"></span>draft</span></td>
+            <td style="padding:8px;">选中文本后润色改写</td>
+            <td style="padding:8px;">text</td>
+            <td style="padding:8px;">No</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--bl);">
+            <td style="padding:8px;font-weight:500;">AI 探索</td>
+            <td style="padding:8px;"><span class="mode m-exp"><span class="d"></span>explore</span></td>
+            <td style="padding:8px;">总纲方向探索</td>
+            <td style="padding:8px;">options</td>
+            <td style="padding:8px;">Yes</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--bl);">
+            <td style="padding:8px;font-weight:500;">AI 规划</td>
+            <td style="padding:8px;"><span class="mode m-plan"><span class="d"></span>plan</span></td>
+            <td style="padding:8px;">卷纲/章纲规划</td>
+            <td style="padding:8px;">structured</td>
+            <td style="padding:8px;">Yes</td>
+          </tr>
+          <tr>
+            <td style="padding:8px;font-weight:500;">AI 检查</td>
+            <td style="padding:8px;"><span class="mode m-check"><span class="d"></span>check</span></td>
+            <td style="padding:8px;">一致性检查</td>
+            <td style="padding:8px;">report</td>
+            <td style="padding:8px;">No</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
