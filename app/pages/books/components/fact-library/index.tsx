@@ -235,11 +235,11 @@ export default function FactLibrary({ book }: FactLibraryProps) {
         })}
         {filteredFacts.length === 0 && (
           <div style={{ padding: "40px 20px", textAlign: "center" }}>
-            <div className={styles.emptyContent}>暂无匹配的事实</div>
+            <p className={styles.detailEmpty}>暂无匹配的事实</p>
           </div>
         )}
       </div>
-      <div style={{ padding: "8px 12px", borderTop: "1px solid var(--line)" }}>
+      <div className={styles.bottomBar}>
         <Button
           type="primary"
           size="small"
@@ -254,8 +254,8 @@ export default function FactLibrary({ book }: FactLibraryProps) {
 
   // 右侧面板
   const rightPanel = selectedFact ? (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div className={styles.detailHeader} style={{ padding: "16px 24px" }}>
+    <div className={styles.detailPanel}>
+      <div className={styles.detailHeader}>
         <div className={styles.detailTitleRow}>
           <span className={styles.detailTitle}>事实详情</span>
           <div className={styles.detailActions}>
@@ -278,23 +278,24 @@ export default function FactLibrary({ book }: FactLibraryProps) {
         </div>
         <div className={styles.detailMeta}>
           <span>
-            <span style={{ color: "var(--text-secondary)" }}>来源：</span>
+            来源：
             <span style={{ fontWeight: 500 }}>
               第 {selectedFact.chapterNumber} 章
             </span>
           </span>
           <span>
-            <span style={{ color: "var(--text-secondary)" }}>记录于：</span>
-            <span>{selectedFact.createdAt}</span>
+            记录于：<span>{selectedFact.createdAt}</span>
           </span>
         </div>
       </div>
-      <div style={{ flex: 1, overflow: "auto", padding: "20px 24px" }}>
+      <div className={styles.detailContent}>
         <div className={styles.contentCard}>
           <div className={styles.contentCardHeader}>
             <span className={styles.contentCardTitle}>事实内容</span>
           </div>
-          <div className={styles.contentCardBody}>{selectedFact.content}</div>
+          <div className={styles.contentCardBody}>
+            <p className={styles.detailText}>{selectedFact.content}</p>
+          </div>
         </div>
         <div className={styles.relatedSection}>
           <div className={styles.relatedLabel}>涉及角色</div>
@@ -307,9 +308,7 @@ export default function FactLibrary({ book }: FactLibraryProps) {
               ))}
             </div>
           ) : (
-            <div className={styles.emptyContent}>
-              无关联角色（纯事件记录）
-            </div>
+            <p className={styles.detailEmpty}>无关联角色（纯事件记录）</p>
           )}
         </div>
       </div>
