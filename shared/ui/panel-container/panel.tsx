@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import styles from "./index.module.css";
 
 interface PanelProps {
-  title: string;
+  title?: ReactNode;
   defaultSize?: number;
   minSize?: number;
   maxSize?: number;
