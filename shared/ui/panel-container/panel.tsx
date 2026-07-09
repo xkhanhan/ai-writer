@@ -5,6 +5,10 @@ import styles from "./index.module.css";
 
 interface PanelProps {
   title: string;
+  defaultSize?: number;
+  minSize?: number;
+  maxSize?: number;
+  collapsible?: boolean;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   actions?: ReactNode;

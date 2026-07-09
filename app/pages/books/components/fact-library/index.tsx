@@ -8,7 +8,12 @@ import {
   SearchOutlined,
   AuditOutlined,
 } from "@ant-design/icons";
-import { SplitPanel } from "@/shared/ui/split-panel";
+import {
+  PanelContainer,
+  PanelGroup,
+  Panel,
+  Divider,
+} from "@/shared/ui/panel-container";
 import BaseModal from "@/shared/ui/base-modal";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
@@ -177,159 +182,190 @@ export default function FactLibrary({ book }: FactLibraryProps) {
     });
   };
 
-  // 左侧面板
-  const leftPanel = (
+  // 右侧内容（无选中时的空状态）
+  const emptyDetail = (
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 13,
+          color: "var(--text-tertiary)",
+          fontFamily: "var(--font-body)",
+        }}
+      >
+        选择一条事实查看详情
+      </span>
+    </div>
+  );
+
+  return (
     <>
-      <div className={styles.listToolbar}>
-        <span className={styles.listTitle}>事实库</span>
-        <span className={styles.listCount}>{filteredFacts.length} 条</span>
-      </div>
-      <div className={styles.filterBar}>
-        {FILTER_OPTIONS.map((f) => (
-          <button
-            key={f.key}
-            className={`${styles.filterBtn} ${filter === f.key ? styles.filterBtnActive : ""}`}
-            onClick={() => setFilter(f.key)}
+      <PanelContainer>
+        <PanelGroup direction="horizontal">
+          <Panel
+            title="事实库"
+            defaultSize={280}
+            minSize={200}
+            maxSize={500}
+            collapsible
+            actions={
+              <span className={styles.listCount}>
+                {filteredFacts.length} 条
+              </span>
+            }
           >
-            {f.label}
-          </button>
-        ))}
-      </div>
-      <div className={styles.searchBar}>
-        <Input
-          placeholder="搜索事实内容或角色..."
-          size="small"
-          allowClear
-          prefix={<SearchOutlined />}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-      <div className={styles.factList}>
-        {chapterNumbers.map((ch) => {
-          const chFacts = groupedFacts[ch];
-          return (
-            <div key={ch} className={styles.chapterGroup}>
-              <div className={styles.chapterHeader}>
-                <span>第 {ch} 章</span>
-                <div className={styles.chapterHeaderLine} />
-                <span>{chFacts.length} 条</span>
-              </div>
-              {chFacts.map((f) => (
-                <div
-                  key={f.id}
-                  className={`${styles.factItem} ${f.id === selectedId ? styles.factItemActive : ""}`}
-                  onClick={() => setSelectedId(f.id)}
+            <div className={styles.filterBar}>
+              {FILTER_OPTIONS.map((f) => (
+                <button
+                  key={f.key}
+                  className={`${styles.filterBtn} ${filter === f.key ? styles.filterBtnActive : ""}`}
+                  onClick={() => setFilter(f.key)}
                 >
-                  <div className={styles.factItemContent}>{f.content}</div>
-                  {f.relatedCharacterIds.length > 0 && (
-                    <div className={styles.factItemMeta}>
-                      {f.relatedCharacterIds.map((c) => (
-                        <span key={c} className={styles.factItemTag}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <div className={styles.searchBar}>
+              <Input
+                placeholder="搜索事实内容或角色..."
+                size="small"
+                allowClear
+                prefix={<SearchOutlined />}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className={styles.factList}>
+              {chapterNumbers.map((ch) => {
+                const chFacts = groupedFacts[ch];
+                return (
+                  <div key={ch} className={styles.chapterGroup}>
+                    <div className={styles.chapterHeader}>
+                      <span>第 {ch} 章</span>
+                      <div className={styles.chapterHeaderLine} />
+                      <span>{chFacts.length} 条</span>
+                    </div>
+                    {chFacts.map((f) => (
+                      <div
+                        key={f.id}
+                        className={`${styles.factItem} ${f.id === selectedId ? styles.factItemActive : ""}`}
+                        onClick={() => setSelectedId(f.id)}
+                      >
+                        <div className={styles.factItemContent}>
+                          {f.content}
+                        </div>
+                        {f.relatedCharacterIds.length > 0 && (
+                          <div className={styles.factItemMeta}>
+                            {f.relatedCharacterIds.map((c) => (
+                              <span key={c} className={styles.factItemTag}>
+                                {c}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+              {filteredFacts.length === 0 && (
+                <EmptyState
+                  icon={<AuditOutlined />}
+                  title="暂无匹配的事实"
+                  description="尝试调整筛选条件或搜索关键词"
+                />
+              )}
+            </div>
+            <div className={styles.bottomBar}>
+              <Button
+                type="primary"
+                size="small"
+                block
+                onClick={openCreateModal}
+              >
+                + 新建事实
+              </Button>
+            </div>
+          </Panel>
+
+          <Divider />
+
+          <Panel
+            title="事实详情"
+            defaultSize={600}
+            minSize={400}
+            actions={
+              selectedFact ? (
+                <>
+                  <Button
+                    size="small"
+                    icon={<EditOutlined />}
+                    onClick={() => openEditModal(selectedFact)}
+                  >
+                    编辑
+                  </Button>
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDelete(selectedFact.id)}
+                  >
+                    删除
+                  </Button>
+                </>
+              ) : undefined
+            }
+          >
+            {selectedFact ? (
+              <div className={styles.detailBody}>
+                <div className={styles.detailMeta}>
+                  <span>
+                    来源：
+                    <span style={{ fontWeight: 500 }}>
+                      第 {selectedFact.chapterNumber} 章
+                    </span>
+                  </span>
+                  <span>
+                    记录于：<span>{selectedFact.createdAt}</span>
+                  </span>
+                </div>
+                <div className={styles.contentCard}>
+                  <div className={styles.contentCardHeader}>
+                    <span className={styles.contentCardTitle}>事实内容</span>
+                  </div>
+                  <div className={styles.contentCardBody}>
+                    <p className={styles.detailText}>{selectedFact.content}</p>
+                  </div>
+                </div>
+                <div className={styles.relatedSection}>
+                  <div className={styles.relatedLabel}>涉及角色</div>
+                  {selectedFact.relatedCharacterIds.length > 0 ? (
+                    <div className={styles.relatedTags}>
+                      {selectedFact.relatedCharacterIds.map((c) => (
+                        <span key={c} className={styles.relatedTag}>
                           {c}
                         </span>
                       ))}
                     </div>
+                  ) : (
+                    <p className={styles.detailEmpty}>
+                      无关联角色（纯事件记录）
+                    </p>
                   )}
                 </div>
-              ))}
-            </div>
-          );
-        })}
-        {filteredFacts.length === 0 && (
-          <EmptyState
-            icon={<AuditOutlined />}
-            title="暂无匹配的事实"
-            description="尝试调整筛选条件或搜索关键词"
-          />
-        )}
-      </div>
-      <div className={styles.bottomBar}>
-        <Button
-          type="primary"
-          size="small"
-          block
-          onClick={openCreateModal}
-        >
-          + 新建事实
-        </Button>
-      </div>
-    </>
-  );
-
-  // 右侧面板
-  const rightHeader = selectedFact ? (
-    <div className={styles.detailHeader}>
-      <div className={styles.detailTitleRow}>
-        <span className={styles.detailTitle}>事实详情</span>
-        <div className={styles.detailActions}>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => openEditModal(selectedFact)}
-          >
-            编辑
-          </Button>
-          <Button
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(selectedFact.id)}
-          >
-            删除
-          </Button>
-        </div>
-      </div>
-      <div className={styles.detailMeta}>
-        <span>
-          来源：
-          <span style={{ fontWeight: 500 }}>
-            第 {selectedFact.chapterNumber} 章
-          </span>
-        </span>
-        <span>
-          记录于：<span>{selectedFact.createdAt}</span>
-        </span>
-      </div>
-    </div>
-  ) : null;
-
-  const rightPanel = selectedFact ? (
-    <div className={styles.detailBody}>
-      <div className={styles.contentCard}>
-        <div className={styles.contentCardHeader}>
-          <span className={styles.contentCardTitle}>事实内容</span>
-        </div>
-        <div className={styles.contentCardBody}>
-          <p className={styles.detailText}>{selectedFact.content}</p>
-        </div>
-      </div>
-      <div className={styles.relatedSection}>
-        <div className={styles.relatedLabel}>涉及角色</div>
-        {selectedFact.relatedCharacterIds.length > 0 ? (
-          <div className={styles.relatedTags}>
-            {selectedFact.relatedCharacterIds.map((c) => (
-              <span key={c} className={styles.relatedTag}>
-                {c}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className={styles.detailEmpty}>无关联角色（纯事件记录）</p>
-        )}
-      </div>
-    </div>
-  ) : null;
-
-  return (
-    <>
-      <SplitPanel
-        left={leftPanel}
-        right={rightPanel}
-        rightHeader={rightHeader}
-        emptyHint="选择一条事实查看详情"
-        loading={loading && facts.length === 0}
-      />
+              </div>
+            ) : (
+              emptyDetail
+            )}
+          </Panel>
+        </PanelGroup>
+      </PanelContainer>
 
       <BaseModal
         title={editingFact ? "编辑事实" : "新建事实"}
