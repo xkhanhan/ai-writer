@@ -1,6 +1,6 @@
 ---
 name: product-requirements
-description: Use when the user wants to discuss, challenge, refine, or write product requirements, PRDs, feature scope, user flows, interaction states, pain points, acceptance criteria, or a product draft. This skill reads an existing engineering standards document when available, stays product-focused rather than technical or commercial, questions weak user requests, and produces a bounded product requirements document.
+description: 当用户需要讨论、质疑、收敛或编写产品需求、PRD、功能范围、用户流程、交互状态、痛点、验收标准或产品稿件时使用。该 skill 会优先读取已有工程规范，从纯产品视角出发，不讨论商业和技术实现，质疑不合理需求，并产出边界清晰的产品需求稿。
 ---
 
 # product-requirements - 产品需求稿

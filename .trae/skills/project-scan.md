@@ -1,6 +1,6 @@
 ---
 name: project-scan
-description: Use when the user wants to scan, review, audit, or diagnose project code, architecture, maintainability, robustness, security, module boundaries, data reliability, API contracts, frontend state, or long-term engineering risks. This skill reports evidence-backed issues from a senior architecture perspective and gives repair priority without directly changing code unless separately requested.
+description: 当用户需要扫描、审查、审计或诊断项目代码、架构合理性、可维护性、健壮性、安全性、模块边界、数据可靠性、API 契约、前端状态流或长期工程风险时使用。该 skill 从高级架构师视角输出有证据的问题和修复优先级，默认不直接改代码。
 ---
 
 # project-scan - 工程与架构扫描

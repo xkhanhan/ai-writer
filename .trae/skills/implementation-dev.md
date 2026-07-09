@@ -1,6 +1,6 @@
 ---
 name: implementation-dev
-description: Use when the user wants to implement, fix, refactor, or modify code according to engineering standards, product requirements, and architecture plans. This skill explores the project before editing, protects existing user changes, keeps code simple and maintainable, respects module boundaries, validates with project commands, and commits only task-related files when authorized.
+description: 当用户需要按工程规范、产品需求稿和架构方案实现功能、修复 bug、重构或修改代码时使用。该 skill 会先探索项目和相关源码，保护用户已有改动，保持代码简洁可维护，遵守模块边界，执行项目验证，并在获得授权时只提交本次任务相关文件。
 ---
 
 # implementation-dev - 开发执行

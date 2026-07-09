@@ -1,6 +1,6 @@
 ---
 name: architecture-design
-description: Use when the user wants a technical architecture plan, technical design, module boundaries, frontend/API/server/data flow, technology stack decisions, diagrams, file placement, migration or validation strategy based on engineering standards and product requirements. This skill should be used before implementation for non-trivial features and should produce an architecture plan without writing code.
+description: 当用户需要技术架构方案、技术设计、模块边界、前端/API/服务端/数据流、技术栈决策、架构图、文件落点、迁移策略或验证方案时使用。适用于基于工程规范和产品需求进行非小型功能的开发前设计；产出架构方案，不直接写代码。
 ---
 
 # architecture-design - 技术架构方案
