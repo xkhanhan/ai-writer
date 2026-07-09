@@ -5,13 +5,13 @@ import {
 } from "@/server/storage/fact-store";
 
 interface FactsRouteParams {
-  params: Promise<{ bookId: string }>;
+  params: Promise<{ id: string }>;
 }
 
 export async function GET(request: Request, { params }: FactsRouteParams) {
   try {
-    const { bookId } = await params;
-    const facts = await getStoryFactsByBookId(bookId);
+    const { id } = await params;
+    const facts = await getStoryFactsByBookId(id);
     return NextResponse.json({ facts });
   } catch (error) {
     console.error("获取事实列表失败:", error);
@@ -21,7 +21,7 @@ export async function GET(request: Request, { params }: FactsRouteParams) {
 
 export async function POST(request: Request, { params }: FactsRouteParams) {
   try {
-    const { bookId } = await params;
+    const { id } = await params;
     const body = await request.json();
     const { content, chapterNumber, chapterId, relatedCharacterIds } = body;
 
@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: FactsRouteParams) {
       return NextResponse.json({ error: "事实内容不能为空" }, { status: 400 });
     }
 
-    const fact = await createStoryFact(bookId, {
+    const fact = await createStoryFact(id, {
       content,
       chapterNumber,
       chapterId,

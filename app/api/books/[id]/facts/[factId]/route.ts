@@ -6,7 +6,7 @@ import {
 } from "@/server/storage/fact-store";
 
 interface FactRouteParams {
-  params: Promise<{ bookId: string; factId: string }>;
+  params: Promise<{ id: string; factId: string }>;
 }
 
 export async function GET(_request: Request, { params }: FactRouteParams) {
