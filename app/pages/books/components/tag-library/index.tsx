@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Button, Input, Spin, Divider } from "antd";
+import { Button, Input, Divider } from "antd";
 import { TagsOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { SplitPanel } from "@/shared/ui/split-panel";
@@ -366,25 +366,6 @@ export default function TagLibrary({ book }: TagLibraryProps) {
     </div>
   );
 
-  // ---- 加载状态 ----
-
-  if (loading && categories.length === 0) {
-    return (
-      <div className={styles.container}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%",
-          }}
-        >
-          <Spin />
-        </div>
-      </div>
-    );
-  }
-
   // ---- 弹窗内容 ----
 
   const modalContent = (
@@ -480,11 +461,12 @@ export default function TagLibrary({ book }: TagLibraryProps) {
   // ---- 主视图 ----
 
   return (
-    <div className={styles.container}>
+    <>
       <SplitPanel
         left={leftPanel}
         right={rightPanel}
         emptyHint="选择一个标签大类"
+        loading={loading && categories.length === 0}
       />
 
       <BaseModal
@@ -497,6 +479,6 @@ export default function TagLibrary({ book }: TagLibraryProps) {
       >
         {modalOpen && modalContent}
       </BaseModal>
-    </div>
+    </>
   );
 }
