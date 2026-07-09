@@ -465,7 +465,6 @@ export default function TagLibrary({ book }: TagLibraryProps) {
       <SplitPanel
         left={leftPanel}
         right={rightPanel}
-        emptyHint="选择一个标签大类"
         loading={loading && categories.length === 0}
       />
 

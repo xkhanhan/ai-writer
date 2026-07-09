@@ -136,6 +136,13 @@
 }
 
 /* ===== 右侧详情 ===== */
+.detailPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
 .detailHeader {
   padding: 16px 20px;
   border-bottom: 1px solid var(--line);

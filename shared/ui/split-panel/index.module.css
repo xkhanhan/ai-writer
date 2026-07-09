@@ -75,20 +75,6 @@
   flex-direction: column;
 }
 
-/* ---- Detail Panel Utilities ---- */
-.detailPanel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-.detailBody {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--space-4);
-}
-
 /* ---- Empty State ---- */
 .emptyRight {
   flex: 1;
