@@ -5,13 +5,14 @@ import {
   deleteStoryFact,
 } from "@/server/storage/fact-store";
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+interface FactRouteParams {
+  params: Promise<{ bookId: string; factId: string }>;
+}
+
+export async function GET(_request: Request, { params }: FactRouteParams) {
   try {
-    const { id } = await params;
-    const fact = await getStoryFactById(id);
+    const { factId } = await params;
+    const fact = await getStoryFactById(factId);
     if (!fact) {
       return NextResponse.json({ error: "事实不存在" }, { status: 404 });
     }
@@ -22,14 +23,11 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: Request, { params }: FactRouteParams) {
   try {
-    const { id } = await params;
+    const { factId } = await params;
     const body = await request.json();
-    const fact = await updateStoryFact(id, body);
+    const fact = await updateStoryFact(factId, body);
     if (!fact) {
       return NextResponse.json({ error: "事实不存在" }, { status: 404 });
     }
@@ -40,13 +38,10 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: Request, { params }: FactRouteParams) {
   try {
-    const { id } = await params;
-    const deleted = await deleteStoryFact(id);
+    const { factId } = await params;
+    const deleted = await deleteStoryFact(factId);
     if (!deleted) {
       return NextResponse.json({ error: "事实不存在" }, { status: 404 });
     }

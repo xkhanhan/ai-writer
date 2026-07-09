@@ -127,7 +127,7 @@ export default function FactLibrary({ book }: FactLibraryProps) {
         : [];
 
       if (editingFact) {
-        const res = await updateFact(editingFact.id, {
+        const res = await updateFact(book.id, editingFact.id, {
           content: values.content,
           chapterNumber: values.chapterNumber,
           relatedCharacterIds: characterIds,
@@ -163,7 +163,7 @@ export default function FactLibrary({ book }: FactLibraryProps) {
   // 删除
   const handleDelete = (id: string) => {
     confirmDelete("确认删除这条事实？", async () => {
-      const res = await deleteFact(id);
+      const res = await deleteFact(book.id, id);
       if (res.ok) {
         showSuccess("事实已删除");
         if (selectedId === id) setSelectedId(null);
