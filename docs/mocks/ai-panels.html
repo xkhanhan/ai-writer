@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI 面板设计稿 — 四种交互模式</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cp:#2F5D50;--cp-h:#1e4438;--cp-bg:rgba(47,93,80,0.06);
+  --cs:#2E8B57;--cs-bg:rgba(46,139,87,0.1);
+  --cw:#964400;--cw-bg:rgba(150,68,0,0.1);
+  --ce:#ba1a1a;--ce-bg:rgba(186,26,26,0.06);
+  --bg:#f0ece4;--bg2:#faf8f4;--bg3:#f5f2ec;--bg4:#e8e4dc;
+  --t1:#1a1814;--t2:#4a4640;--t3:#807b74;--tl:#b5b0a8;
+  --bd:#ddd8d0;--bl:#ebe7e0;
+  --fd:'Noto Serif SC',serif;--fb:'Inter','Noto Sans SC',sans-serif;
+  --fm:'JetBrains Mono','Fira Code',monospace
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--fb);background:var(--bg);color:var(--t1);padding:40px}
+
+/* ── 页面头部 ── */
+.ph{max-width:1400px;margin:0 auto 32px}
+.ph h1{font-family:var(--fd);font-size:26px;font-weight:700;margin-bottom:6px}
+.ph p{font-size:13px;color:var(--t2);line-height:1.6}
+.ph-sub{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
+.mode-tag{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid}
+.mode-tag .dot{width:6px;height:6px;border-radius:50%}
+.m-explore{background:var(--cp-bg);color:var(--cp);border-color:rgba(47,93,80,.2)}.m-explore .dot{background:var(--cp)}
+.m-plan{background:var(--cs-bg);color:var(--cs);border-color:rgba(46,139,87,.2)}.m-plan .dot{background:var(--cs)}
+.m-draft{background:var(--cw-bg);color:var(--cw);border-color:rgba(150,68,0,.15)}.m-draft .dot{background:var(--cw)}
+.m-check{background:rgba(70,95,136,0.08);color:#465f88;border-color:rgba(70,95,136,.2)}.m-check .dot{background:#465f88}
+
+/* ── 场景容器 ── */
+.sc{max-width:1400px;margin:0 auto 40px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.sh{padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
+.sn{width:26px;height:26px;border-radius:50%;background:var(--cp);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.st{font-size:15px;font-weight:600}.sd{font-size:12px;color:var(--t3);margin-left:auto}
+.fn{padding:14px 20px;background:var(--cp-bg);border-top:1px solid var(--bd);font-size:12px;color:var(--t2);line-height:1.7}
+.fn strong{color:var(--cp)}
+
+/* ── 应用布局 ── */
+.app{display:flex;height:640px;overflow:hidden}
+.side{width:260px;min-width:260px;background:var(--bg2);border-right:1px solid var(--bd);display:flex;flex-direction:column}
+.side-hd{padding:10px 16px;border-bottom:1px solid var(--bl);font-size:13px;font-weight:600}
+.tr{padding:4px 0}
+.tn{display:flex;align-items:center;gap:6px;padding:5px 12px;cursor:pointer;font-size:13px;transition:background .15s}
+.tn:hover{background:var(--bg3)}.tn.sel{background:var(--cp-bg);font-weight:500}
+.tw{width:16px;font-size:10px;color:var(--t3);flex-shrink:0;text-align:center}
+.tt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── 面包屑 ── */
+.bc{padding:10px 20px;border-bottom:1px solid var(--bl);font-size:13px}
+.bc span{color:var(--t3);cursor:pointer}.bc span:hover{color:var(--cp)}
+.bc .cur{color:var(--t1);font-weight:500;cursor:default}
+
+/* ── 书籍信息栏 ── */
+.book-bar{display:flex;gap:16px;padding:12px 20px;background:var(--bg3);border-bottom:1px solid var(--bl);flex-wrap:wrap}
+.book-item{font-size:12px;color:var(--t3)}.book-item strong{color:var(--t2);font-weight:500}
+
+/* ── 主内容区 ── */
+.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#fff}
+.content-scroll{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* ── 表单 ── */
+.fi{margin-bottom:16px}
+.fl{display:block;font-size:13px;color:var(--t1);margin-bottom:6px;font-weight:500}
+.fl .rq{color:var(--ce);margin-left:2px}
+.fh{font-size:12px;color:var(--t3);margin-top:4px}
+.inp{width:100%;height:32px;padding:4px 11px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--cp);box-shadow:0 0 0 2px rgba(47,93,80,.1)}
+.txa{width:100%;min-height:72px;padding:6px 11px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;outline:none;resize:vertical;line-height:1.6}
+.txa:focus{border-color:var(--cp);box-shadow:0 0 0 2px rgba(47,93,80,.1)}
+.inp-lg{height:40px;font-size:14px;padding:6px 14px}
+.txa-lg{min-height:88px;font-size:14px;padding:8px 14px;line-height:1.7}
+
+/* ── 按钮 ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 15px;border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s;border:1px solid var(--bd);background:#fff;color:var(--t1)}
+.btn:hover{border-color:var(--cp);color:var(--cp)}
+.btn-p{background:var(--cp);border-color:var(--cp);color:#fff}
+.btn-p:hover{background:var(--cp-h);border-color:var(--cp-h);color:#fff}
+.btn-sm{height:26px;padding:0 10px;font-size:12px;border-radius:4px}
+.btn-t{border:none;background:none;padding:0 4px}
+.btn-t:hover{color:var(--cp);border:none;background:var(--cp-bg)}
+.btn-d{border:1px dashed var(--cp);background:var(--cp-bg);color:var(--cp)}
+.btn-d:hover{background:var(--cp);color:#fff;border-style:solid}
+.btn-g{border:1px solid var(--cs);color:var(--cs);background:#fff}
+.btn-g:hover,.btn-g.on{background:var(--cs);color:#fff}
+
+/* ── AI 面板 ── */
+.ai-panel{width:380px;min-width:380px;border-left:1px solid var(--bd);display:flex;flex-direction:column;background:var(--bg2)}
+.ai-hd{padding:10px 16px;border-bottom:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between}
+.ai-hd-t{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.ai-hd-mode{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:4px;font-size:10px;font-weight:600}
+.ai-bd{flex:1;overflow-y:auto;padding:12px 16px}
+.ai-ft{padding:12px 16px;border-top:1px solid var(--bl);background:#fff}
+.ai-tpl{display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--t2);cursor:pointer;background:#fff;transition:border-color .15s}
+.ai-tpl:hover{border-color:var(--cp);color:var(--cp)}
+.ai-tpl .arrow{font-size:8px;color:var(--t3)}
+
+/* ── 空态 ── */
+.ai-empty{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:32px 20px}
+.ai-empty-icon{font-size:32px;margin-bottom:10px}
+.ai-empty-title{font-size:14px;font-weight:500;color:var(--t2);margin-bottom:4px}
+.ai-empty-desc{font-size:12px;color:var(--t3);line-height:1.6;max-width:240px}
+
+/* ── 用户输入 ── */
+.ai-input{width:100%;min-height:56px;padding:8px 12px;border:1px solid var(--bd);border-radius:6px;font-size:12px;color:var(--t1);background:#fff;outline:none;resize:vertical;line-height:1.5;font-family:var(--fb)}
+.ai-input:focus{border-color:var(--cp);box-shadow:0 0 0 2px rgba(47,93,80,.1)}
+.ai-input::placeholder{color:var(--tl)}
+
+/* ── 用户输入摘要 ── */
+.ai-summary{padding:6px 10px;background:#fff;border:1px solid var(--bl);border-radius:6px;font-size:11px;color:var(--t2);margin-bottom:10px}
+.ai-summary b{color:var(--t3);font-weight:normal}
+
+/* ── AI 卡片（通用） ── */
+.ai-card{border:1px solid var(--bd);border-radius:8px;background:#fff;overflow:hidden;margin-bottom:8px;transition:border-color .2s}
+.ai-card.done{border-color:var(--cs);background:#fcfefc}
+.ai-card-hd{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--bl);background:var(--bg3);font-size:11px}
+.ai-card.done .ai-card-hd{background:var(--cs-bg);border-bottom-color:rgba(46,139,87,.1)}
+.ai-card-t{font-weight:600;color:var(--t2)}
+.ai-card-s{font-size:10px;font-weight:500;color:var(--cs)}
+.ai-card-bd{padding:8px 10px}
+.ai-card-ct{font-size:12px;color:var(--t1);line-height:1.6;min-height:20px;outline:none;word-break:break-word}
+.ai-card-ft{padding:6px 10px;border-top:1px solid var(--bl);background:var(--bg3);display:flex;align-items:center;gap:6px}
+.ai-card.done .ai-card-ft{background:var(--cs-bg)}
+
+/* ── Explore: 选项卡片 ── */
+.opt-card{border:1px solid var(--bd);border-radius:8px;background:#fff;overflow:hidden;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.opt-card:hover{border-color:var(--cp);box-shadow:0 2px 8px rgba(47,93,80,.08)}
+.opt-card.selected{border-color:var(--cp);background:var(--cp-bg)}
+.opt-card-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--cp-bg);color:var(--cp);font-size:10px;font-weight:700;flex-shrink:0}
+.opt-card-hd{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bl)}
+.opt-card-t{font-size:13px;font-weight:600;color:var(--t1);flex:1}
+.opt-card-bd{padding:10px 12px}
+.opt-card-ct{font-size:12px;color:var(--t2);line-height:1.7}
+.opt-card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.opt-card-tag{display:inline-flex;height:20px;padding:0 6px;border-radius:4px;font-size:10px;font-weight:500;background:var(--bg3);color:var(--t3);align-items:center}
+.opt-card.selected .opt-card-hd{background:var(--cp-bg);border-bottom-color:rgba(47,93,80,.1)}
+.opt-card.selected .opt-card-num{background:var(--cp);color:#fff}
+
+/* ── Draft: 全文预览 ── */
+.draft-preview{border:1px solid var(--bd);border-radius:8px;background:#fff;overflow:hidden}
+.draft-hd{padding:8px 12px;border-bottom:1px solid var(--bl);background:var(--bg3);display:flex;align-items:center;justify-content:space-between}
+.draft-title{font-size:13px;font-weight:600;color:var(--t1)}
+.draft-meta{font-size:10px;color:var(--t3)}
+.draft-body{padding:12px}
+.draft-text{font-size:13px;color:var(--t1);line-height:1.9;font-family:var(--fb)}
+.draft-text p{margin-bottom:10px;text-indent:2em}
+.draft-actions{padding:8px 12px;border-top:1px solid var(--bl);display:flex;gap:6px}
+
+/* ── Check: 问题列表 ── */
+.issue-card{border:1px solid var(--bd);border-radius:8px;background:#fff;overflow:hidden;margin-bottom:8px}
+.issue-hd{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--bl)}
+.issue-icon{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.issue-icon.err{background:var(--ce-bg);color:var(--ce)}
+.issue-icon.warn{background:var(--cw-bg);color:var(--cw)}
+.issue-title{font-size:12px;font-weight:600;color:var(--t1);flex:1}
+.issue-severity{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px}
+.issue-severity.err{background:var(--ce-bg);color:var(--ce)}
+.issue-severity.warn{background:var(--cw-bg);color:var(--cw)}
+.issue-bd{padding:8px 10px}
+.issue-desc{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:6px}
+.issue-chapters{display:flex;gap:4px;flex-wrap:wrap}
+.issue-ch{display:inline-flex;height:20px;padding:0 6px;border-radius:4px;font-size:10px;background:var(--bg3);color:var(--t3);align-items:center}
+.issue-ft{padding:6px 10px;border-top:1px solid var(--bl);background:var(--bg3);display:flex;align-items:center;justify-content:space-between}
+
+/* ── 统计条 ── */
+.stats-bar{display:flex;gap:12px;padding:8px 12px;background:var(--bg3);border-radius:6px;margin-bottom:10px}
+.stat{font-size:11px;color:var(--t3)}.stat strong{color:var(--t2);font-weight:600}
+
+/* ── Loading ── */
+.loading{display:flex;align-items:center;gap:8px;padding:16px;font-size:12px;color:var(--t3)}
+.loading-dots{display:flex;gap:3px}
+.loading-dots span{width:4px;height:4px;border-radius:50%;background:var(--cp);animation:dot-pulse 1.2s infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot-pulse{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+/* ── 分隔 ── */
+.dv{border:none;border-top:1px solid var(--bl);margin:12px 0}
+
+/* ── 进度条 ── */
+.pg{display:flex;align-items:center;gap:8px}.pg-b{flex:1;height:6px;background:var(--bl);border-radius:3px;overflow:hidden}.pg-f{height:100%;background:var(--cp);border-radius:3px;transition:width .3s}.pg-t{font-size:11px;color:var(--t3);white-space:nowrap}
+
+/* ── 标签 ── */
+.tg{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;font-size:12px;font-weight:500;border:1px solid}
+.tg-g{background:var(--cs-bg);color:var(--cs);border-color:rgba(46,139,87,.2)}
+.tg-w{background:var(--cw-bg);color:var(--cw);border-color:rgba(150,68,0,.1)}
+.tg-b{background:rgba(47,93,80,0.08);color:var(--cp);border-color:rgba(47,93,80,.2)}
+.tg-r{background:var(--ce-bg);color:var(--ce);border-color:rgba(186,26,26,.15)}
+
+/* ── Diff 行 ── */
+.diff-add{background:rgba(46,139,87,.08);border-left:3px solid var(--cs);padding:4px 8px;margin:4px 0;border-radius:0 4px 4px 0}
+.diff-del{background:rgba(186,26,26,.06);border-left:3px solid var(--ce);padding:4px 8px;margin:4px 0;border-radius:0 4px 4px 0;text-decoration:line-through;color:var(--t3)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     页面头部
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="ph">
+  <h1>AI 面板设计稿 — 四种交互模式</h1>
+  <p>基于 <b>StageAdapter</b> 架构，每种交互模式对应一个面板组件。面板是纯展示+交互壳，不含业务逻辑。</p>
+  <div class="ph-sub">
+    <span class="mode-tag m-explore"><span class="dot"></span>explore 探索</span>
+    <span class="mode-tag m-plan"><span class="dot"></span>plan 规划</span>
+    <span class="mode-tag m-draft"><span class="dot"></span>draft 写作</span>
+    <span class="mode-tag m-check"><span class="dot"></span>check 检查</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     A: Explore — 总纲探索（多选项卡片）
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">A</span>
+    <span class="st">Explore — 总纲探索</span>
+    <span class="sd">AiExplorePanel · 多选项卡片 · multiTurn</span>
+  </div>
+  <div class="app">
+    <div class="side">
+      <div class="side-hd">创作区</div>
+      <div class="tr"><div class="tn sel"><span class="tw"></span><span class="tt">总纲</span></div></div>
+    </div>
+    <div class="main-content">
+      <div class="bc"><span class="cur">总纲</span></div>
+      <div class="book-bar">
+        <div class="book-item"><strong>题材</strong> 仙侠 · 凡人流</div>
+        <div class="book-item"><strong>文风</strong> 平实内敛</div>
+        <div class="book-item"><strong>受众</strong> 男频</div>
+        <div class="book-item"><strong>参考</strong> 凡人修仙传</div>
+      </div>
+      <div class="content-scroll">
+        <div class="fi"><label class="fl">① 故事核心（一句话）<span class="rq">*</span></label><input class="inp inp-lg" value="一个山村少年在修仙门派中低调求存、步步为营的故事。"></div>
+        <div class="fi"><label class="fl">② 主角<span class="rq">*</span></label><div style="border:1px dashed var(--bd);border-radius:8px;padding:16px;text-align:center;color:var(--t3);font-size:13px;">+ 关联角色</div></div>
+        <div class="fi"><label class="fl">③ 核心冲突<span class="rq">*</span></label><textarea class="txa txa-lg" rows="2"></textarea></div>
+        <div class="fi"><label class="fl">④ 结局方向<span class="rq">*</span></label><textarea class="txa" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="ai-panel">
+      <div class="ai-hd">
+        <div class="ai-hd-t">
+          <span class="ai-hd-mode m-explore"><span class="dot"></span>探索</span>
+          AI 探索
+        </div>
+        <div class="ai-tpl">默认总纲探索 <span class="arrow">▾</span></div>
+      </div>
+      <div class="ai-bd">
+        <div class="ai-summary"><b>你的想法：</b>凡人流，主角低调发育，不要有太多金手指</div>
+
+        <!-- 选项 1 -->
+        <div class="opt-card selected">
+          <div class="opt-card-hd">
+            <span class="opt-card-num">1</span>
+            <span class="opt-card-t">凡人流 · 低调崛起</span>
+            <span class="tg tg-b" style="font-size:10px;height:18px;">推荐</span>
+          </div>
+          <div class="opt-card-bd">
+            <div class="opt-card-ct">一个山村少年资质平庸，偶得残破功法，在门派底层摸爬滚打。没有逆天机缘，只靠谨慎和隐忍在修仙界存活。核心卖点：每次突破都来之不易，读者跟着主角一起紧张。</div>
+            <div class="opt-card-tags">
+              <span class="opt-card-tag">低魔设定</span>
+              <span class="opt-card-tag">慢热成长</span>
+              <span class="opt-card-tag">权谋暗斗</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 选项 2 -->
+        <div class="opt-card">
+          <div class="opt-card-hd">
+            <span class="opt-card-num">2</span>
+            <span class="opt-card-t">凡人流 · 底层求生</span>
+          </div>
+          <div class="opt-card-bd">
+            <div class="opt-card-ct">主角是灵根最差的杂役弟子，在门派中被视为废物。一次意外进入禁地，获得一部残缺古法，从此走上以弱胜强的道路。</div>
+            <div class="opt-card-tags">
+              <span class="opt-card-tag">废柴逆袭</span>
+              <span class="opt-card-tag">禁地探险</span>
+              <span class="opt-card-tag">弱胜强</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 选项 3 -->
+        <div class="opt-card">
+          <div class="opt-card-hd">
+            <span class="opt-card-num">3</span>
+            <span class="opt-card-t">凡人流 · 散修漂泊</span>
+          </div>
+          <div class="opt-card-bd">
+            <div class="opt-card-ct">主角不愿加入任何门派，以散修身份在各城邦间游历。靠买卖灵材、帮人炼丹为生，在夹缝中求存。</div>
+            <div class="opt-card-tags">
+              <span class="opt-card-tag">散修视角</span>
+              <span class="opt-card-tag">自由度高</span>
+              <span class="opt-card-tag">见闻录</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-ft">
+        <textarea class="ai-input" rows="2" placeholder="调整方向，继续探索..."></textarea>
+        <div style="margin-top:8px;display:flex;gap:6px;">
+          <button class="btn btn-sm btn-p" style="flex:1;font-weight:600;">继续探索</button>
+          <button class="btn btn-sm btn-g">采纳选中</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>Explore 模式：</strong>多选项卡片，用户选择一个方向后可编辑、采纳。支持多轮对话（<code>multiTurn: true</code>），用户可继续追问或调整方向。</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     B: Plan — 卷纲规划（字段卡片 + 采纳）
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">B</span>
+    <span class="st">Plan — 卷纲规划</span>
+    <span class="sd">AiPlanPanel · 字段卡片 · structured output · multiTurn</span>
+  </div>
+  <div class="app">
+    <div class="side">
+      <div class="side-hd">创作区</div>
+      <div class="tr">
+        <div class="tn"><span class="tw">▾</span><span class="tt">总纲</span></div>
+        <div class="tn"><span class="tw">▾</span><span class="tt">卷纲</span></div>
+        <div class="tn sel" style="padding-left:36px;"><span class="tw"></span><span class="tt">第一卷 · 踏入仙途</span></div>
+        <div class="tn" style="padding-left:36px;"><span class="tw"></span><span class="tt">第二卷 · 暗流涌动</span></div>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="bc"><span>卷纲</span> <span style="color:var(--tl);margin:0 4px;">/</span> <span class="cur">第二卷 · 暗流涌动</span></div>
+      <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+        <div class="fi"><label class="fl">卷标题<span class="rq">*</span></label><input class="inp" value="第二卷 · 暗流涌动"></div>
+        <div class="fi"><label class="fl">卷梗概<span class="rq">*</span></label><textarea class="txa txa-lg" rows="3"></textarea></div>
+        <div class="fi"><label class="fl">核心冲突<span class="rq">*</span></label><textarea class="txa" rows="2"></textarea></div>
+        <div class="fi"><label class="fl">发展弧线</label><textarea class="txa" rows="2"></textarea></div>
+        <div class="fi"><label class="fl">预计看点</label><textarea class="txa" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="ai-panel">
+      <div class="ai-hd">
+        <div class="ai-hd-t">
+          <span class="ai-hd-mode m-plan"><span class="dot"></span>规划</span>
+          AI 规划
+        </div>
+        <div class="ai-tpl">默认卷纲规划 <span class="arrow">▾</span></div>
+      </div>
+      <div class="ai-bd">
+        <div class="ai-summary"><b>你的想法：</b>门派内部矛盾爆发，主角被迫卷入派系斗争</div>
+
+        <!-- 卷标题（已采纳） -->
+        <div class="ai-card done">
+          <div class="ai-card-hd"><div class="ai-card-t">卷标题</div><div class="ai-card-s">已采纳</div></div>
+          <div class="ai-card-bd"><div class="ai-card-ct">暗流涌动</div></div>
+          <div class="ai-card-ft"><button class="btn btn-sm btn-g on" style="font-size:10px;">已采纳</button></div>
+        </div>
+
+        <!-- 卷梗概（当前编辑） -->
+        <div class="ai-card">
+          <div class="ai-card-hd"><div class="ai-card-t">卷梗概</div><div class="ai-card-s">必填</div></div>
+          <div class="ai-card-bd"><div class="ai-card-ct" contenteditable="true" style="min-height:48px;">门派内部三大长老争夺掌门之位，主角所在的外门成为各方拉拢的战场。主角在夹缝中发现了一个关于门派起源的秘密，这个秘密足以颠覆整个门派的权力格局。</div></div>
+          <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button><span style="font-size:10px;color:var(--t3);margin-left:auto;">可在左侧编辑后采纳</span></div>
+        </div>
+
+        <!-- 核心冲突 -->
+        <div class="ai-card">
+          <div class="ai-card-hd"><div class="ai-card-t">核心冲突</div><div class="ai-card-s">必填</div></div>
+          <div class="ai-card-bd"><div class="ai-card-ct" contenteditable="true">三大长老各怀鬼胎，主角被迫选边站队。但他发现无论站在哪一边，最终都会成为棋子。唯一的出路是找到第三条路。</div></div>
+          <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button></div>
+        </div>
+
+        <!-- 发展弧线 -->
+        <div class="ai-card">
+          <div class="ai-card-hd"><div class="ai-card-t">发展弧线</div></div>
+          <div class="ai-card-bd"><div class="ai-card-ct" contenteditable="true">被动卷入 → 发现秘密 → 主动布局 → 短暂得利 → 新的危机</div></div>
+          <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button></div>
+        </div>
+
+        <!-- 预计看点 -->
+        <div class="ai-card">
+          <div class="ai-card-hd"><div class="ai-card-t">预计看点</div></div>
+          <div class="ai-card-bd"><div class="ai-card-ct" contenteditable="true">1. 门派内斗的权谋博弈<br>2. 主角以弱胜强的智斗场景<br>3. 门派起源秘密的逐步揭露</div></div>
+          <div class="ai-card-ft"><button class="btn btn-sm ai-act-accept">采纳</button></div>
+        </div>
+      </div>
+      <div class="ai-ft">
+        <textarea class="ai-input" rows="2" placeholder="调整方向后重新生成..."></textarea>
+        <div style="margin-top:8px;display:flex;gap:6px;">
+          <button class="btn btn-sm btn-p" style="flex:1;font-weight:600;">一键采纳全部</button>
+          <button class="btn btn-sm">重新生成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>Plan 模式：</strong>structured 输出，每个字段独立卡片。用户可在卡片内编辑后单独采纳，或一键全部采纳。<code>adopted_fields</code> 记录采纳了哪些字段，未采纳的字段由调用层决定是否保留。</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     C: Draft — 正文生成（全文预览）
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">C</span>
+    <span class="st">Draft — 正文生成</span>
+    <span class="sd">AiDraftPanel · 全文预览 · text output · streaming</span>
+  </div>
+  <div class="app">
+    <div class="side">
+      <div class="side-hd">创作区</div>
+      <div class="tr">
+        <div class="tn"><span class="tw">▾</span><span class="tt">总纲</span></div>
+        <div class="tn"><span class="tw">▾</span><span class="tt">卷纲</span></div>
+        <div class="tn"><span class="tw">▾</span><span class="tt">第二卷 · 暗流涌动</span></div>
+        <div class="tn sel" style="padding-left:36px;"><span class="tw"></span><span class="tt">第 8 章 · 暗棋</span><span class="tg tg-w" style="font-size:10px;height:18px;">写作中</span></div>
+        <div class="tn" style="padding-left:36px;"><span class="tw"></span><span class="tt">第 9 章 · 初心</span></div>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="bc"><span>卷纲</span> <span style="color:var(--tl);margin:0 4px;">/</span> <span>第二卷</span> <span style="color:var(--tl);margin:0 4px;">/</span> <span class="cur">第 8 章 · 暗棋</span></div>
+      <div class="content-scroll">
+        <div class="fi"><label class="fl">章标题</label><input class="inp" value="第八章 · 暗棋"></div>
+        <div class="fi"><label class="fl">章梗概</label><textarea class="txa" rows="2">主角在门派集市偶遇一个神秘散修，对方似乎知道一些关于禁地的事情。主角决定暗中调查。</textarea></div>
+        <div style="margin-top:16px;">
+          <label class="fl">正文</label>
+          <div style="border:1px solid var(--bd);border-radius:8px;min-height:200px;padding:16px;background:#fff;line-height:1.9;font-size:14px;">
+            <p style="text-indent:2em;margin-bottom:10px;color:var(--t1);">清晨的集市还没有完全热闹起来。萧炎提着一篮灵草，穿梭在稀稀落落的摊位之间。他习惯性地走在阴影处，目光却始终没有离开那个坐在角落里的灰衣老人。</p>
+            <p style="text-indent:2em;margin-bottom:10px;color:var(--t1);">三天前，就是这个老人在酒楼里说了一句「禁地的东西，不是你们能碰的」。当时满座修士都没在意，但萧炎记住了。</p>
+            <p style="text-indent:2em;color:var(--t3);">（续写中...）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-panel">
+      <div class="ai-hd">
+        <div class="ai-hd-t">
+          <span class="ai-hd-mode m-draft"><span class="dot"></span>写作</span>
+          AI 写作
+        </div>
+        <div class="ai-tpl">正文生成 · 凡人流 <span class="arrow">▾</span></div>
+      </div>
+      <div class="ai-bd">
+        <!-- 上下文摘要 -->
+        <div style="padding:8px 10px;background:#fff;border:1px solid var(--bl);border-radius:6px;margin-bottom:10px;">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:4px;">上下文</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span class="tg tg-b" style="font-size:10px;height:18px;">总纲 ✓</span>
+            <span class="tg tg-b" style="font-size:10px;height:18px;">章纲 ✓</span>
+            <span class="tg tg-b" style="font-size:10px;height:18px;">前章末尾 ✓</span>
+            <span class="tg tg-b" style="font-size:10px;height:18px;">设定 3条 ✓</span>
+            <span class="tg tg-b" style="font-size:10px;height:18px;">规则 ✓</span>
+            <span class="tg tg-b" style="font-size:10px;height:18px;">事实 12条 ✓</span>
+          </div>
+        </div>
+
+        <!-- 全文预览 -->
+        <div class="draft-preview">
+          <div class="draft-hd">
+            <span class="draft-title">第 8 章 · 暗棋</span>
+            <span class="draft-meta">约 3,200 字 · 预计阅读 8 分钟</span>
+          </div>
+          <div class="draft-body">
+            <div class="draft-text">
+              <p>清晨的集市还没有完全热闹起来。萧炎提着一篮灵草，穿梭在稀稀落落的摊位之间。他习惯性地走在阴影处，目光却始终没有离开那个坐在角落里的灰衣老人。</p>
+              <p>三天前，就是这个老人在酒楼里说了一句「禁地的东西，不是你们能碰的」。当时满座修士都没在意，但萧炎记住了。</p>
+              <p>他放下灵草篮子，在对面的茶摊坐下。一壶最便宜的灵茶，他喝了整整一个时辰。</p>
+              <p>灰衣老人终于动了。他颤巍巍地站起来，朝集市东头走去。萧炎没有跟上去，而是等他走出二十丈后，才不紧不慢地起身。</p>
+            </div>
+          </div>
+          <div class="draft-actions">
+            <button class="btn btn-sm btn-g" style="flex:1;font-weight:600;">采纳全文</button>
+            <button class="btn btn-sm">复制</button>
+            <button class="btn btn-sm">重新生成</button>
+          </div>
+        </div>
+
+        <!-- Token 信息 -->
+        <div style="margin-top:8px;display:flex;justify-content:space-between;font-size:10px;color:var(--t3);">
+          <span>模型：creative · Token: 1,280 / 3,420</span>
+          <span>耗时：18.3s</span>
+        </div>
+      </div>
+      <div class="ai-ft">
+        <textarea class="ai-input" rows="2" placeholder="补充写作要求（如：增加对话、调整节奏...）"></textarea>
+        <div style="margin-top:8px;">
+          <button class="btn btn-sm btn-d" style="width:100%;font-weight:600;">重新生成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>Draft 模式：</strong>text 输出，全文预览。面板头部显示上下文加载状态（哪些层已加载）。支持流式响应（<code>stream: true</code>）。采纳时整体写入 <code>chapters.content</code>，同时自动创建版本快照。</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     D: Check — 一致性检查（问题列表）
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">D</span>
+    <span class="st">Check — 一致性检查</span>
+    <span class="sd">AiCheckPanel · 问题列表 · report output</span>
+  </div>
+  <div class="app">
+    <div class="side">
+      <div class="side-hd">创作区</div>
+      <div class="tr">
+        <div class="tn"><span class="tw">▾</span><span class="tt">总纲</span></div>
+        <div class="tn"><span class="tw">▾</span><span class="tt">卷纲</span></div>
+        <div class="tn"><span class="tw">▾</span><span class="tt">第二卷 · 暗流涌动</span></div>
+        <div class="tn sel" style="padding-left:36px;"><span class="tw"></span><span class="tt">第 8 章 · 暗棋</span></div>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="bc"><span>卷纲</span> <span style="color:var(--tl);margin:0 4px;">/</span> <span>第二卷</span> <span style="color:var(--tl);margin:0 4px;">/</span> <span class="cur">第 8 章 · 暗棋</span></div>
+      <div class="content-scroll">
+        <div class="fi"><label class="fl">章标题</label><input class="inp" value="第八章 · 暗棋"></div>
+        <div class="fi"><label class="fl">章梗概</label><textarea class="txa" rows="2">主角在门派集市偶遇一个神秘散修，对方似乎知道一些关于禁地的事情。主角决定暗中调查。</textarea></div>
+        <div class="fi"><label class="fl">正文</label>
+          <div style="border:1px solid var(--bd);border-radius:8px;padding:16px;line-height:1.9;font-size:14px;">
+            <p style="text-indent:2em;margin-bottom:10px;">清晨的集市还没有完全热闹起来。萧炎提着一篮灵草，穿梭在稀稀落落的摊位之间。</p>
+            <p style="text-indent:2em;margin-bottom:10px;">三天前，就是这个老人在酒楼里说了一句「禁地的东西，不是你们能碰的」。</p>
+            <p style="text-indent:2em;">他放下灵草篮子，在对面的茶摊坐下。一壶最便宜的灵茶，他喝了整整一个时辰。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-panel">
+      <div class="ai-hd">
+        <div class="ai-hd-t">
+          <span class="ai-hd-mode m-check"><span class="dot"></span>检查</span>
+          AI 检查
+        </div>
+      </div>
+      <div class="ai-bd">
+        <!-- 统计概览 -->
+        <div class="stats-bar">
+          <div class="stat">检查范围 <strong>第 1-8 章</strong></div>
+          <div class="stat">发现 <strong style="color:var(--ce);">2 个错误</strong></div>
+          <div class="stat"><strong style="color:var(--cw);">3 个警告</strong></div>
+        </div>
+
+        <!-- 问题 1: error -->
+        <div class="issue-card">
+          <div class="issue-hd">
+            <span class="issue-icon err">!</span>
+            <span class="issue-title">角色状态矛盾</span>
+            <span class="issue-severity err">错误</span>
+          </div>
+          <div class="issue-bd">
+            <div class="issue-desc">「药老」在第 3 章被描述为"已经陨落"，但在第 7 章再次出现并指导主角修炼。</div>
+            <div class="issue-chapters">
+              <span class="issue-ch">第 3 章</span>
+              <span class="issue-ch">第 7 章</span>
+            </div>
+          </div>
+          <div class="issue-ft">
+            <span style="font-size:11px;color:var(--t3);">AI 建议：将第 3 章改为"重伤沉睡"而非"陨落"</span>
+            <button class="btn btn-sm btn-t" style="font-size:11px;color:var(--cp);">查看修复 →</button>
+          </div>
+        </div>
+
+        <!-- 问题 2: error -->
+        <div class="issue-card">
+          <div class="issue-hd">
+            <span class="issue-icon err">!</span>
+            <span class="issue-title">事实链断裂</span>
+            <span class="issue-severity err">错误</span>
+          </div>
+          <div class="issue-bd">
+            <div class="issue-desc">第 5 章提到主角获得"聚灵丹"，但第 6 章说主角"从未见过丹药"。两处描述矛盾。</div>
+            <div class="issue-chapters">
+              <span class="issue-ch">第 5 章</span>
+              <span class="issue-ch">第 6 章</span>
+            </div>
+          </div>
+          <div class="issue-ft">
+            <span style="font-size:11px;color:var(--t3);">需要手动修正其中一处</span>
+            <button class="btn btn-sm btn-t" style="font-size:11px;color:var(--cp);">查看上下文 →</button>
+          </div>
+        </div>
+
+        <!-- 问题 3: warning -->
+        <div class="issue-card">
+          <div class="issue-hd">
+            <span class="issue-icon warn">⚠</span>
+            <span class="issue-title">伏笔超期未回收</span>
+            <span class="issue-severity warn">警告</span>
+          </div>
+          <div class="issue-bd">
+            <div class="issue-desc">伏笔「神秘玉佩的秘密」已在第 2 章埋下，至今 6 章未有推进。</div>
+            <div class="issue-chapters">
+              <span class="issue-ch">第 2 章（埋设）</span>
+            </div>
+          </div>
+          <div class="issue-ft">
+            <span style="font-size:11px;color:var(--t3);">建议在近 3 章内安排回收</span>
+          </div>
+        </div>
+
+        <!-- 问题 4: warning -->
+        <div class="issue-card">
+          <div class="issue-hd">
+            <span class="issue-icon warn">⚠</span>
+            <span class="issue-title">设定一致性</span>
+            <span class="issue-severity warn">警告</span>
+          </div>
+          <div class="issue-bd">
+            <div class="issue-desc">第 8 章中「集市」的时间描写为"清晨"，但第 3 章设定中集市只在"午时"开放。</div>
+            <div class="issue-chapters">
+              <span class="issue-ch">第 3 章</span>
+              <span class="issue-ch">第 8 章</span>
+            </div>
+          </div>
+          <div class="issue-ft">
+            <button class="btn btn-sm btn-t" style="font-size:11px;color:var(--cp);">查看修复 →</button>
+          </div>
+        </div>
+
+        <!-- 问题 5: warning -->
+        <div class="issue-card">
+          <div class="issue-hd">
+            <span class="issue-icon warn">⚠</span>
+            <span class="issue-title">时间线模糊</span>
+            <span class="issue-severity warn">警告</span>
+          </div>
+          <div class="issue-bd">
+            <div class="issue-desc">第 6-8 章之间的时间跨度不明确，读者可能无法判断是几天还是几个月。</div>
+            <div class="issue-chapters">
+              <span class="issue-ch">第 6 章</span>
+              <span class="issue-ch">第 7 章</span>
+              <span class="issue-ch">第 8 章</span>
+            </div>
+          </div>
+          <div class="issue-ft">
+            <span style="font-size:11px;color:var(--t3);">建议补充时间标记</span>
+          </div>
+        </div>
+      </div>
+      <div class="ai-ft">
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm btn-p" style="flex:1;font-weight:600;">重新检查</button>
+          <button class="btn btn-sm">导出报告</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fn"><strong>Check 模式：</strong>report 输出，按严重度分组展示问题。每个问题显示涉及的章节、AI 修复建议、可选的修复操作。检查范围由 <code>queryScope.recentChapters</code> 控制。</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     E: 组件架构总览
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="sc">
+  <div class="sh">
+    <span class="sn">E</span>
+    <span class="st">组件架构总览</span>
+    <span class="sd">四种面板 × 统一接口 × 数据流</span>
+  </div>
+  <div style="padding:24px;">
+    <div style="max-width:1200px;margin:0 auto;">
+
+      <!-- 面板与模式对照 -->
+      <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px;">面板 × 模式对照</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <tr style="border-bottom:2px solid var(--bd);color:var(--t3);font-weight:500;">
+            <td style="padding:10px 8px;">面板组件</td>
+            <td style="padding:10px 8px;">模式</td>
+            <td style="padding:10px 8px;">输出格式</td>
+            <td style="padding:10px 8px;">多轮</td>
+            <td style="padding:10px 8px;">典型场景</td>
+            <td style="padding:10px 8px;">核心交互</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--bl);">
+            <td style="padding:10px 8px;font-weight:500;">AiExplorePanel</td>
+            <td style="padding:10px 8px;"><span class="mode-tag m-explore" style="height:22px;font-size:11px;"><span class="dot"></span>explore</span></td>
+            <td style="padding:10px 8px;">options</td>
+            <td style="padding:10px 8px;">Yes</td>
+            <td style="padding:10px 8px;">总纲方向探索、题材选择</td>
+            <td style="padding:10px 8px;">多选项卡片 → 选择/编辑/采纳</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--bl);">
+            <td style="padding:10px 8px;font-weight:500;">AiPlanPanel</td>
+            <td style="padding:10px 8px;"><span class="mode-tag m-plan" style="height:22px;font-size:11px;"><span class="dot"></span>plan</span></td>
+            <td style="padding:10px 8px;">structured</td>
+            <td style="padding:10px 8px;">Yes</td>
+            <td style="padding:10px 8px;">卷纲规划、章纲规划、角色创建</td>
+            <td style="padding:10px 8px;">字段卡片 → 逐字段采纳/全部采纳</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--bl);">
+            <td style="padding:10px 8px;font-weight:500;">AiDraftPanel</td>
+            <td style="padding:10px 8px;"><span class="mode-tag m-draft" style="height:22px;font-size:11px;"><span class="dot"></span>draft</span></td>
+            <td style="padding:10px 8px;">text</td>
+            <td style="padding:10px 8px;">No</td>
+            <td style="padding:10px 8px;">正文生成、扩写、润色</td>
+            <td style="padding:10px 8px;">全文预览 → 整体采纳</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 8px;font-weight:500;">AiCheckPanel</td>
+            <td style="padding:10px 8px;"><span class="mode-tag m-check" style="height:22px;font-size:11px;"><span class="dot"></span>check</span></td>
+            <td style="padding:10px 8px;">report</td>
+            <td style="padding:10px 8px;">No</td>
+            <td style="padding:10px 8px;">一致性检查、角色弧线分析</td>
+            <td style="padding:10px 8px;">问题列表 → 逐条查看/修复</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- 统一接口 -->
+      <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px;">统一接口</div>
+        <pre style="font-size:12px;line-height:1.8;color:var(--t2);background:var(--bg3);padding:14px;border-radius:6px;overflow-x:auto;font-family:var(--fm);"><code>// 所有面板共享相同的 props 接口
+&lt;AiPanelBase
+  adapterId: string            // 适配器 ID（决定面板行为）
+  context: {
+    bookId: string
+    chapterId?: string
+    volumeId?: string
+  }
+  onAdopt: (results[]) => void // 采纳回调
+  onClose?: () => void         // 关闭回调
+/&gt;
+
+// 数据流（单向）
+调用层传入 context → API: POST /api/ai/execute
+  → AdapterExecutor 串通
+  → 返回 AdapterExecutionResult
+  → 面板渲染结果
+  → 用户交互（编辑/选择）
+  → onAdopt(results) → 调用层处理写入</code></pre>
+      </div>
+
+      <!-- 设计原则 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px;">面板知道的</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.9;">- 当前适配器 ID 和模式<br>- 要生成的字段 / 输出格式<br>- 有哪些提示词模板<br>- 用户输入了什么想法<br>- 用户编辑/采纳了哪些卡片<br>- 对话历史（多轮模式）</div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:16px 20px;">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px;">面板不知道的</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.9;">- 字段保护/锁定逻辑<br>- 采纳后数据写入哪里<br>- 表单的校验规则<br>- 业务规则<br>- 数据持久化<br>- 版本控制</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>
