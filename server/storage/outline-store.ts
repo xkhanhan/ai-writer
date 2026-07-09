@@ -7,7 +7,7 @@ import type {
   ChapterOutline,
   ArchivedChapter,
   KeyPoint
-} from "@/app/types";
+} from "@/shared/types";
 
 // ============ Row 类型 ============
 

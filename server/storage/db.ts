@@ -265,6 +265,22 @@ function initializeTables(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_tag_categories_parent_id ON tag_categories(parent_id);
   `);
 
+  // 事实一致性库
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS story_facts (
+      id TEXT PRIMARY KEY,
+      book_id TEXT NOT NULL,
+      chapter_id TEXT DEFAULT '',
+      chapter_number INTEGER DEFAULT 0,
+      content TEXT DEFAULT '',
+      related_character_ids TEXT DEFAULT '[]',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_story_facts_book_id ON story_facts(book_id);
+  `);
+
   // 设定库 - 设定实体
   db.exec(`
     CREATE TABLE IF NOT EXISTS setting_entities (

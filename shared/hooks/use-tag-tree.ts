@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { fetchTagTree } from "@/app/api-client/tags";
+import { fetchTagTree } from "@/shared/api/tags";
 import type { TagCategory } from "@/shared/types";
 
 /** 全局缓存：同一 bookId 只请求一次 */

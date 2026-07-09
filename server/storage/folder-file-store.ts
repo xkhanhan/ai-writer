@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { BookFile, Folder } from "@/app/types";
+import type { BookFile, Folder } from "@/shared/types";
 import { getDb } from "@/server/storage/db";
 
 type FolderRow = {

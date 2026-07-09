@@ -5,7 +5,7 @@ import type {
   StoryFact,
   CreateStoryFactDTO,
   UpdateStoryFactDTO,
-} from "@/app/types";
+} from "@/shared/types";
 
 // ============ Row 类型 ============
 

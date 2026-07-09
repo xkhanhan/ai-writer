@@ -6,7 +6,7 @@ import type {
   SettingCategory,
   CreateSettingEntityDTO,
   UpdateSettingEntityDTO,
-} from "@/app/types";
+} from "@/shared/types";
 
 // ============ Row 类型 ============
 

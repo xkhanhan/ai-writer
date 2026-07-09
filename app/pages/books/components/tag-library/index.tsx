@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Button, Input, Spin, Divider } from "antd";
-import { TagsOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { SplitPanel } from "@/shared/ui/split-panel";
+import { Button, Input, Divider } from "antd";
+import { DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  PanelContainer,
+  PanelGroup,
+  Panel,
+  Divider as PanelDivider,
+} from "@/shared/ui/panel-container";
 import BaseModal from "@/shared/ui/base-modal";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import { TagTree } from "@/shared/ui/tag-tree";
@@ -270,120 +274,7 @@ export default function TagLibrary({ book }: TagLibraryProps) {
   const isEdit = view.type === "edit";
   const modalTitle = view.type === "create" ? "新建标签" : "编辑标签";
 
-  // ---- 左侧面板 ----
-
-  const leftPanel = (
-    <div className={styles.leftPanel}>
-      <div className={styles.leftHeader}>
-        <span className={styles.leftTitle}>标签大类</span>
-        <span className={styles.listCount}>{categories.length} 个</span>
-      </div>
-      <div className={styles.searchWrap}>
-        <Input
-          placeholder="搜索标签名称、编码…"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          allowClear
-          size="small"
-          prefix={<SearchOutlined />}
-        />
-      </div>
-      <div className={styles.catList}>
-        {categories.length === 0 ? (
-          <div className={styles.emptyList}>暂无标签大类</div>
-        ) : (
-          categories.map((cat) => (
-            <div
-              key={cat.id}
-              className={`${styles.catItem} ${
-                selectedCategoryId === cat.id ? styles.catItemActive : ""
-              }`}
-              onClick={() => handleSelectCategory(cat)}
-            >
-              <span className={styles.catName}>{cat.name}</span>
-              <span className={styles.catCount}>
-                {cat.children?.length ?? 0}
-              </span>
-            </div>
-          ))
-        )}
-      </div>
-      <div className={styles.bottomBar}>
-        <Button
-          type="primary"
-          block
-          size="small"
-          onClick={handleCreateCategory}
-        >
-          + 新建大类
-        </Button>
-      </div>
-    </div>
-  );
-
   // ---- 右侧面板 ----
-
-  const rightPanel = !selectedCategory ? (
-    <EmptyState
-      icon={<TagsOutlined />}
-      title="选择一个标签大类"
-      description="从左侧选择大类查看其下标签，或新建大类开始"
-      action={<button onClick={handleCreateCategory}>+ 新建大类</button>}
-    />
-  ) : (
-    <div className={styles.rightPanel}>
-      <div className={styles.rightHeader}>
-        <span className={styles.rightTitle}>
-          {selectedCategory.name} 的标签
-        </span>
-        <Button
-          type="link"
-          size="small"
-          onClick={() => handleCreateSubTag(selectedCategory.id)}
-        >
-          + 添加子标签
-        </Button>
-      </div>
-      <div className={styles.treeWrap}>
-        {(selectedCategory.children?.length ?? 0) > 0 ? (
-          <TagTree
-            tags={selectedCategory.children ?? []}
-            expandedKeys={effectiveExpandedKeys}
-            onExpand={handleTreeExpand}
-            selectedKey={selectedTagId}
-            onSelect={handleTreeSelect}
-            onEdit={handleTreeEdit}
-            onAddChild={handleCreateSubTag}
-            matchedIds={matchedIds}
-          />
-        ) : (
-          <div className={styles.emptyList}>
-            暂无子标签，点击「+ 新建大类」或节点上的{" "}
-            <PlusOutlined style={{ fontSize: 10 }} /> 创建
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  // ---- 加载状态 ----
-
-  if (loading && categories.length === 0) {
-    return (
-      <div className={styles.container}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%",
-          }}
-        >
-          <Spin />
-        </div>
-      </div>
-    );
-  }
 
   // ---- 弹窗内容 ----
 
@@ -480,12 +371,122 @@ export default function TagLibrary({ book }: TagLibraryProps) {
   // ---- 主视图 ----
 
   return (
-    <div className={styles.container}>
-      <SplitPanel
-        left={leftPanel}
-        right={rightPanel}
-        emptyHint="选择一个标签大类"
-      />
+    <>
+      <PanelContainer>
+        <PanelGroup direction="horizontal">
+          <Panel
+            title="标签大类"
+            defaultSize={280}
+            minSize={200}
+            maxSize={500}
+            collapsible
+            actions={
+              <span className={styles.listCount}>{categories.length} 个</span>
+            }
+          >
+            <div className={styles.searchWrap}>
+              <Input
+                placeholder="搜索标签名称、编码…"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                allowClear
+                size="small"
+                prefix={<SearchOutlined />}
+              />
+            </div>
+            <div className={styles.catList}>
+              {categories.length === 0 ? (
+                <div className={styles.emptyList}>暂无标签大类</div>
+              ) : (
+                categories.map((cat) => (
+                  <div
+                    key={cat.id}
+                    className={`${styles.catItem} ${
+                      selectedCategoryId === cat.id ? styles.catItemActive : ""
+                    }`}
+                    onClick={() => handleSelectCategory(cat)}
+                  >
+                    <span className={styles.catName}>{cat.name}</span>
+                    <span className={styles.catCount}>
+                      {cat.children?.length ?? 0}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className={styles.bottomBar}>
+              <Button
+                type="primary"
+                block
+                size="small"
+                onClick={handleCreateCategory}
+              >
+                + 新建大类
+              </Button>
+            </div>
+          </Panel>
+
+          <PanelDivider />
+
+          <Panel
+            title={selectedCategory ? `${selectedCategory.name} 的标签` : "标签详情"}
+            defaultSize={600}
+            minSize={400}
+            actions={
+              selectedCategory ? (
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => handleCreateSubTag(selectedCategory.id)}
+                >
+                  + 添加子标签
+                </Button>
+              ) : undefined
+            }
+          >
+            {selectedCategory ? (
+              <div className={styles.treeWrap}>
+                {(selectedCategory.children?.length ?? 0) > 0 ? (
+                  <TagTree
+                    tags={selectedCategory.children ?? []}
+                    expandedKeys={effectiveExpandedKeys}
+                    onExpand={handleTreeExpand}
+                    selectedKey={selectedTagId}
+                    onSelect={handleTreeSelect}
+                    onEdit={handleTreeEdit}
+                    onAddChild={handleCreateSubTag}
+                    matchedIds={matchedIds}
+                  />
+                ) : (
+                  <div className={styles.emptyList}>
+                    暂无子标签，点击「+ 新建大类」或节点上的{" "}
+                    <PlusOutlined style={{ fontSize: 10 }} /> 创建
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 13,
+                    color: "var(--text-tertiary)",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  选择一个标签大类
+                </span>
+              </div>
+            )}
+          </Panel>
+        </PanelGroup>
+      </PanelContainer>
 
       <BaseModal
         open={modalOpen}
@@ -497,6 +498,6 @@ export default function TagLibrary({ book }: TagLibraryProps) {
       >
         {modalOpen && modalContent}
       </BaseModal>
-    </div>
+    </>
   );
 }
