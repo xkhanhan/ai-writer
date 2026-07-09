@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Button, Input, Divider } from "antd";
 import { TagsOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { EmptyState } from "@/shared/ui/empty-state";
 import { SplitPanel } from "@/shared/ui/split-panel";
 import BaseModal from "@/shared/ui/base-modal";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
@@ -323,27 +322,27 @@ export default function TagLibrary({ book }: TagLibraryProps) {
 
   // ---- 右侧面板 ----
 
-  const rightPanel = !selectedCategory ? (
-    <EmptyState
-      icon={<TagsOutlined />}
-      title="选择一个标签大类"
-      description="从左侧选择大类查看其下标签，或新建大类开始"
-      action={<button onClick={handleCreateCategory}>+ 新建大类</button>}
-    />
-  ) : (
-    <div className={styles.rightPanel}>
-      <div className={styles.rightHeader}>
-        <span className={styles.rightTitle}>
+  const rightHeader = selectedCategory ? (
+    <div className={styles.detailHeader}>
+      <div className={styles.detailTitleRow}>
+        <span className={styles.detailTitle}>
           {selectedCategory.name} 的标签
         </span>
-        <Button
-          type="link"
-          size="small"
-          onClick={() => handleCreateSubTag(selectedCategory.id)}
-        >
-          + 添加子标签
-        </Button>
+        <div className={styles.detailActions}>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => handleCreateSubTag(selectedCategory.id)}
+          >
+            + 添加子标签
+          </Button>
+        </div>
       </div>
+    </div>
+  ) : null;
+
+  const rightPanel = selectedCategory ? (
+    <div className={styles.detailBody}>
       <div className={styles.treeWrap}>
         {(selectedCategory.children?.length ?? 0) > 0 ? (
           <TagTree
@@ -364,7 +363,7 @@ export default function TagLibrary({ book }: TagLibraryProps) {
         )}
       </div>
     </div>
-  );
+  ) : null;
 
   // ---- 弹窗内容 ----
 
@@ -465,6 +464,8 @@ export default function TagLibrary({ book }: TagLibraryProps) {
       <SplitPanel
         left={leftPanel}
         right={rightPanel}
+        rightHeader={rightHeader}
+        emptyHint="选择一个标签大类"
         loading={loading && categories.length === 0}
       />
 

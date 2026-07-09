@@ -40,7 +40,7 @@ export function SplitPanel({
   leftWidth: initialLeftWidth = 280,
   leftMinWidth = 200,
   leftMaxWidth = 500,
-  resizable = false,
+  resizable = true,
   leftHeader,
   rightHeader,
   emptyState,

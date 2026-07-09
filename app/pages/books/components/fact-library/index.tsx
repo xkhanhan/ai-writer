@@ -253,64 +253,65 @@ export default function FactLibrary({ book }: FactLibraryProps) {
   );
 
   // 右侧面板
-  const rightPanel = selectedFact ? (
-    <div className={styles.detailPanel}>
-      <div className={styles.detailHeader}>
-        <div className={styles.detailTitleRow}>
-          <span className={styles.detailTitle}>事实详情</span>
-          <div className={styles.detailActions}>
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEditModal(selectedFact)}
-            >
-              编辑
-            </Button>
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDelete(selectedFact.id)}
-            >
-              删除
-            </Button>
-          </div>
-        </div>
-        <div className={styles.detailMeta}>
-          <span>
-            来源：
-            <span style={{ fontWeight: 500 }}>
-              第 {selectedFact.chapterNumber} 章
-            </span>
-          </span>
-          <span>
-            记录于：<span>{selectedFact.createdAt}</span>
-          </span>
+  const rightHeader = selectedFact ? (
+    <div className={styles.detailHeader}>
+      <div className={styles.detailTitleRow}>
+        <span className={styles.detailTitle}>事实详情</span>
+        <div className={styles.detailActions}>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => openEditModal(selectedFact)}
+          >
+            编辑
+          </Button>
+          <Button
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(selectedFact.id)}
+          >
+            删除
+          </Button>
         </div>
       </div>
-      <div className={styles.detailContent}>
-        <div className={styles.contentCard}>
-          <div className={styles.contentCardHeader}>
-            <span className={styles.contentCardTitle}>事实内容</span>
-          </div>
-          <div className={styles.contentCardBody}>
-            <p className={styles.detailText}>{selectedFact.content}</p>
-          </div>
+      <div className={styles.detailMeta}>
+        <span>
+          来源：
+          <span style={{ fontWeight: 500 }}>
+            第 {selectedFact.chapterNumber} 章
+          </span>
+        </span>
+        <span>
+          记录于：<span>{selectedFact.createdAt}</span>
+        </span>
+      </div>
+    </div>
+  ) : null;
+
+  const rightPanel = selectedFact ? (
+    <div className={styles.detailBody}>
+      <div className={styles.contentCard}>
+        <div className={styles.contentCardHeader}>
+          <span className={styles.contentCardTitle}>事实内容</span>
         </div>
-        <div className={styles.relatedSection}>
-          <div className={styles.relatedLabel}>涉及角色</div>
-          {selectedFact.relatedCharacterIds.length > 0 ? (
-            <div className={styles.relatedTags}>
-              {selectedFact.relatedCharacterIds.map((c) => (
-                <span key={c} className={styles.relatedTag}>
-                  {c}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className={styles.detailEmpty}>无关联角色（纯事件记录）</p>
-          )}
+        <div className={styles.contentCardBody}>
+          <p className={styles.detailText}>{selectedFact.content}</p>
         </div>
+      </div>
+      <div className={styles.relatedSection}>
+        <div className={styles.relatedLabel}>涉及角色</div>
+        {selectedFact.relatedCharacterIds.length > 0 ? (
+          <div className={styles.relatedTags}>
+            {selectedFact.relatedCharacterIds.map((c) => (
+              <span key={c} className={styles.relatedTag}>
+                {c}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className={styles.detailEmpty}>无关联角色（纯事件记录）</p>
+        )}
       </div>
     </div>
   ) : null;
@@ -320,6 +321,7 @@ export default function FactLibrary({ book }: FactLibraryProps) {
       <SplitPanel
         left={leftPanel}
         right={rightPanel}
+        rightHeader={rightHeader}
         emptyHint="选择一条事实查看详情"
         loading={loading && facts.length === 0}
       />

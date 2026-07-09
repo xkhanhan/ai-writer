@@ -464,48 +464,49 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
 
   // ============ 右侧面板 ============
 
-  const rightPanel = activeEntity ? (
-    <>
-      <div className={styles.detailHeader}>
-        <div className={styles.detailTitleRow}>
-          <h3 className={styles.detailTitle}>{activeEntity.name}</h3>
-          <Tag color={LEVEL_MAP[activeEntity.level]?.color}>
-            {LEVEL_MAP[activeEntity.level]?.label}
-          </Tag>
-          <Tag>{CAT_META[activeEntity.category]?.label}</Tag>
-          {activeEntity.deprecated && <Tag color="error">已废弃</Tag>}
-        </div>
-        <div className={styles.detailMeta}>
-          创建于{" "}
-          {new Date(activeEntity.createdAt).toLocaleString("zh-CN")} · 更新于{" "}
-          {new Date(activeEntity.updatedAt).toLocaleString("zh-CN")}
-        </div>
-        <div className={styles.detailActions}>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => openEdit(activeEntity)}
-          >
-            编辑
-          </Button>
-          <Button
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(activeEntity)}
-          >
-            删除
-          </Button>
-          <Button
-            size="small"
-            onClick={() => handleToggleDeprecated(activeEntity)}
-          >
-            {activeEntity.deprecated ? "取消废弃" : "废弃"}
-          </Button>
-        </div>
+  const rightHeader = activeEntity ? (
+    <div className={styles.detailHeader}>
+      <div className={styles.detailTitleRow}>
+        <h3 className={styles.detailTitle}>{activeEntity.name}</h3>
+        <Tag color={LEVEL_MAP[activeEntity.level]?.color}>
+          {LEVEL_MAP[activeEntity.level]?.label}
+        </Tag>
+        <Tag>{CAT_META[activeEntity.category]?.label}</Tag>
+        {activeEntity.deprecated && <Tag color="error">已废弃</Tag>}
       </div>
+      <div className={styles.detailMeta}>
+        创建于{" "}
+        {new Date(activeEntity.createdAt).toLocaleString("zh-CN")} · 更新于{" "}
+        {new Date(activeEntity.updatedAt).toLocaleString("zh-CN")}
+      </div>
+      <div className={styles.detailActions}>
+        <Button
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => openEdit(activeEntity)}
+        >
+          编辑
+        </Button>
+        <Button
+          size="small"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => handleDelete(activeEntity)}
+        >
+          删除
+        </Button>
+        <Button
+          size="small"
+          onClick={() => handleToggleDeprecated(activeEntity)}
+        >
+          {activeEntity.deprecated ? "取消废弃" : "废弃"}
+        </Button>
+      </div>
+    </div>
+  ) : null;
 
-      <div className={styles.detailBody}>
+  const rightPanel = activeEntity ? (
+    <div className={styles.detailBody}>
         {/* 6 个通用信息字段卡片 */}
         {INFO_FIELDS.map((f) => {
           const val = activeEntity[f.key];
@@ -617,8 +618,7 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
             )}
           </div>
         </div>
-      </div>
-    </>
+    </div>
   ) : null;
 
   // ============ 弹窗表单 ============
@@ -738,7 +738,7 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
 
   return (
     <>
-      <SplitPanel left={leftPanel} right={rightPanel} />
+      <SplitPanel left={leftPanel} right={rightPanel} rightHeader={rightHeader} />
       <BaseModal
         title={modalTitle}
         open={modalOpen}

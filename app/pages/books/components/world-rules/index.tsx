@@ -301,110 +301,107 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
 
   // ============ 右侧详情面板 ============
 
+  const rightHeader = activeRule ? (
+    <div className={styles.detailHeader}>
+      <div className={styles.detailTitleRow}>
+        <h3 className={styles.detailTitle}>{activeRule.name}</h3>
+        <Tag color={CATEGORY_META[activeRule.category].tagColor}>
+          {CATEGORY_META[activeRule.category].label}
+        </Tag>
+        {activeRule.isFixed && (
+          <Tag icon={<LockOutlined />} color="error">
+            固定规则
+          </Tag>
+        )}
+      </div>
+      <span className={styles.detailTime}>
+        更新于{" "}
+        {new Date(activeRule.updatedAt).toLocaleString("zh-CN")}
+      </span>
+      <div className={styles.detailActions}>
+        <Button
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => openEdit(activeRule)}
+        >
+          编辑
+        </Button>
+        {!activeRule.isFixed && (
+          <Button
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(activeRule)}
+          >
+            删除
+          </Button>
+        )}
+      </div>
+    </div>
+  ) : null;
+
   const rightPanel = activeRule ? (
-    <div>
-      {/* 头部 */}
-      <div className={styles.detailHeader}>
-        <div className={styles.detailTitleRow}>
-          <h3 className={styles.detailTitle}>{activeRule.name}</h3>
+    <div className={styles.detailBody}>
+      <div className={styles.contentCard}>
+        <div className={styles.contentCardHeader}>
+          <span className={styles.contentCardTitle}>规则内容</span>
           <Tag color={CATEGORY_META[activeRule.category].tagColor}>
             {CATEGORY_META[activeRule.category].label}
           </Tag>
-          {activeRule.isFixed && (
-            <Tag icon={<LockOutlined />} color="error">
-              固定规则
-            </Tag>
-          )}
         </div>
-        <span className={styles.detailTime}>
-          更新于{" "}
-          {new Date(activeRule.updatedAt).toLocaleString("zh-CN")}
-        </span>
-        <div className={styles.detailActions}>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => openEdit(activeRule)}
-          >
-            编辑
-          </Button>
-          {!activeRule.isFixed && (
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDelete(activeRule)}
-            >
-              删除
-            </Button>
+        <div className={styles.contentCardBody}>
+          {activeRule.content ? (
+            <p className={styles.detailText}>{activeRule.content}</p>
+          ) : (
+            <p className={styles.detailEmpty}>暂无内容</p>
           )}
         </div>
       </div>
 
-      {/* 规则内容卡片 */}
-      <div className={styles.detailContent}>
+      {activeRule.category === "setting" && activeRule.settingType && (
         <div className={styles.contentCard}>
           <div className={styles.contentCardHeader}>
-            <span className={styles.contentCardTitle}>规则内容</span>
-            <Tag color={CATEGORY_META[activeRule.category].tagColor}>
-              {CATEGORY_META[activeRule.category].label}
-            </Tag>
+            <InfoCircleOutlined />
+            <span className={styles.contentCardTitle}>设定规则配置</span>
           </div>
           <div className={styles.contentCardBody}>
-            {activeRule.content ? (
-              <p className={styles.detailText}>{activeRule.content}</p>
-            ) : (
-              <p className={styles.detailEmpty}>暂无内容</p>
+            <div className={styles.configRow}>
+              <span className={styles.configLabel}>值类型</span>
+              <Tag color={SETTING_TYPE_COLORS[activeRule.settingType]}>
+                {SETTING_TYPE_LABELS[activeRule.settingType]}
+              </Tag>
+            </div>
+            {activeRule.settingType === "select" &&
+              activeRule.selectOptions.length > 0 && (
+                <div className={styles.configRow}>
+                  <span className={styles.configLabel}>可选值</span>
+                  <div className={styles.configValue}>
+                    {activeRule.selectOptions.map((opt, i) => (
+                      <Tag key={i}>{opt}</Tag>
+                    ))}
+                  </div>
+                </div>
+              )}
+            {activeRule.settingType === "number" && (
+              <div className={styles.configRow}>
+                <span className={styles.configLabel}>取值范围</span>
+                <span className={styles.configValue}>
+                  {activeRule.numberMin} ~ {activeRule.numberMax}{" "}
+                  {activeRule.numberUnit}
+                </span>
+              </div>
+            )}
+            {activeRule.content && (
+              <div className={styles.configRow}>
+                <span className={styles.configLabel}>校验说明</span>
+                <span className={styles.configValue}>
+                  {activeRule.content}
+                </span>
+              </div>
             )}
           </div>
         </div>
-
-        {/* 设定规则配置区 */}
-        {activeRule.category === "setting" && activeRule.settingType && (
-          <div className={styles.contentCard}>
-            <div className={styles.contentCardHeader}>
-              <InfoCircleOutlined />
-              <span className={styles.contentCardTitle}>设定规则配置</span>
-            </div>
-            <div className={styles.contentCardBody}>
-              <div className={styles.configRow}>
-                <span className={styles.configLabel}>值类型</span>
-                <Tag color={SETTING_TYPE_COLORS[activeRule.settingType]}>
-                  {SETTING_TYPE_LABELS[activeRule.settingType]}
-                </Tag>
-              </div>
-              {activeRule.settingType === "select" &&
-                activeRule.selectOptions.length > 0 && (
-                  <div className={styles.configRow}>
-                    <span className={styles.configLabel}>可选值</span>
-                    <div className={styles.configValue}>
-                      {activeRule.selectOptions.map((opt, i) => (
-                        <Tag key={i}>{opt}</Tag>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              {activeRule.settingType === "number" && (
-                <div className={styles.configRow}>
-                  <span className={styles.configLabel}>取值范围</span>
-                  <span className={styles.configValue}>
-                    {activeRule.numberMin} ~ {activeRule.numberMax}{" "}
-                    {activeRule.numberUnit}
-                  </span>
-                </div>
-              )}
-              {activeRule.content && (
-                <div className={styles.configRow}>
-                  <span className={styles.configLabel}>校验说明</span>
-                  <span className={styles.configValue}>
-                    {activeRule.content}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   ) : null;
 
@@ -413,6 +410,7 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
       <SplitPanel
         left={leftPanel}
         right={rightPanel}
+        rightHeader={rightHeader}
         emptyHint="选择一条规则查看详情"
       />
 
