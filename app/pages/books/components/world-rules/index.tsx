@@ -302,7 +302,7 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
   // ============ 右侧详情面板 ============
 
   const rightPanel = activeRule ? (
-    <div className={styles.detailPanel}>
+    <div>
       {/* 头部 */}
       <div className={styles.detailHeader}>
         <div className={styles.detailTitleRow}>
@@ -413,7 +413,6 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
       <SplitPanel
         left={leftPanel}
         right={rightPanel}
-        leftWidth={280}
         emptyHint="选择一条规则查看详情"
       />
 
