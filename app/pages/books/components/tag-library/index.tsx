@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Button, Input, Spin, Divider } from "antd";
-import { TagsOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { TagsOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { SplitPanel } from "@/shared/ui/split-panel";
 import BaseModal from "@/shared/ui/base-modal";
@@ -276,9 +276,7 @@ export default function TagLibrary({ book }: TagLibraryProps) {
     <div className={styles.leftPanel}>
       <div className={styles.leftHeader}>
         <span className={styles.leftTitle}>标签大类</span>
-        <Button type="link" size="small" onClick={handleCreateCategory}>
-          + 新建大类
-        </Button>
+        <span className={styles.listCount}>{categories.length} 个</span>
       </div>
       <div className={styles.searchWrap}>
         <Input
@@ -287,6 +285,7 @@ export default function TagLibrary({ book }: TagLibraryProps) {
           onChange={(e) => setSearchValue(e.target.value)}
           allowClear
           size="small"
+          prefix={<SearchOutlined />}
         />
       </div>
       <div className={styles.catList}>
@@ -308,6 +307,16 @@ export default function TagLibrary({ book }: TagLibraryProps) {
             </div>
           ))
         )}
+      </div>
+      <div className={styles.bottomBar}>
+        <Button
+          type="primary"
+          block
+          size="small"
+          onClick={handleCreateCategory}
+        >
+          + 新建大类
+        </Button>
       </div>
     </div>
   );

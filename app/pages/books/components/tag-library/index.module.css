@@ -26,7 +26,13 @@
   font-family: var(--font-display);
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
+}
+
+.listCount {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink-tertiary);
 }
 
 .searchWrap {
@@ -65,12 +71,12 @@
 .catName {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .catCount {
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--ink-tertiary);
   background: var(--bg-muted);
   padding: 1px 6px;
   border-radius: var(--radius-full);
@@ -82,7 +88,14 @@
   padding: 24px 12px;
   text-align: center;
   font-size: 12px;
-  color: var(--text-tertiary);
+  color: var(--ink-tertiary);
+}
+
+/* ---- 左侧底部操作栏 ---- */
+.bottomBar {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 /* ---- 右侧面板 ---- */
@@ -106,7 +119,7 @@
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -121,7 +134,7 @@
   margin: 8px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--bg-elevated);
+  background: var(--panel);
 }
 
 /* ---- 弹窗内容 ---- */
@@ -161,18 +174,18 @@
 .formLabel {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .formLabelHint {
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--ink-tertiary);
   font-weight: 400;
 }
 
 .formHint {
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--ink-tertiary);
   margin-top: 2px;
 }
 
