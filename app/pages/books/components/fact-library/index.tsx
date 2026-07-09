@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Button, Input, Spin, Modal, Form, InputNumber } from "antd";
+import { Button, Input, Modal, Form, InputNumber } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -317,17 +317,12 @@ export default function FactLibrary({ book }: FactLibraryProps) {
 
   return (
     <>
-      {loading && facts.length === 0 ? (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
-          <Spin />
-        </div>
-      ) : (
-        <SplitPanel
-          left={leftPanel}
-          right={rightPanel}
-          emptyHint="选择一条事实查看详情"
-        />
-      )}
+      <SplitPanel
+        left={leftPanel}
+        right={rightPanel}
+        emptyHint="选择一条事实查看详情"
+        loading={loading && facts.length === 0}
+      />
 
       <Modal
         title={editingFact ? "编辑事实" : "新建事实"}
