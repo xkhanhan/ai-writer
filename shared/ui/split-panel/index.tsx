@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { Spin } from "antd";
 import styles from "./index.module.css";
 
@@ -50,41 +50,55 @@ export function SplitPanel({
 }: SplitPanelProps) {
   const [leftWidth, setLeftWidth] = useState(initialLeftWidth);
   const [isDragging, setIsDragging] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const startXRef = useRef(0);
-  const startWidthRef = useRef(0);
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+    cleanupRef.current?.();
+    cleanupRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+    };
+  }, []);
 
   const handleDragStart = useCallback(
     (e: React.PointerEvent) => {
       if (!resizable) return;
       e.preventDefault();
       setIsDragging(true);
-      startXRef.current = e.clientX;
-      startWidthRef.current = leftWidth;
+      const startX = e.clientX;
+      const startWidth = leftWidth;
 
       const handleDragMove = (ev: PointerEvent) => {
-        const delta = ev.clientX - startXRef.current;
+        const delta = ev.clientX - startX;
         const newWidth = Math.min(
           leftMaxWidth,
-          Math.max(leftMinWidth, startWidthRef.current + delta)
+          Math.max(leftMinWidth, startWidth + delta)
         );
         setLeftWidth(newWidth);
-      };
-
-      const handleDragEnd = () => {
-        setIsDragging(false);
-        document.removeEventListener("pointermove", handleDragMove);
-        document.removeEventListener("pointerup", handleDragEnd);
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
       };
 
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
       document.addEventListener("pointermove", handleDragMove);
       document.addEventListener("pointerup", handleDragEnd);
+
+      cleanupRef.current = () => {
+        document.removeEventListener("pointermove", handleDragMove);
+        document.removeEventListener("pointerup", handleDragEnd);
+      };
     },
-    [resizable, leftWidth, leftMinWidth, leftMaxWidth]
+    [resizable, leftWidth, leftMinWidth, leftMaxWidth, handleDragEnd]
   );
 
   if (loading) {
@@ -106,7 +120,6 @@ export function SplitPanel({
 
   return (
     <div
-      ref={containerRef}
       className={`${styles.splitPanel} ${isDragging ? styles.dragging : ""}`}
     >
       {showLeftPanel && (
