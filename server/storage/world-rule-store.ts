@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
 import { parseJsonArray } from "@/server/utils/json";
-import type { WorldRule, CreateWorldRuleDTO, UpdateWorldRuleDTO } from "@/app/types";
+import type { WorldRule, CreateWorldRuleDTO, UpdateWorldRuleDTO } from "@/shared/types";
 
 // ============ Row 类型 ============
 
