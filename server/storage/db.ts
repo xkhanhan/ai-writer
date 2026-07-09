@@ -37,6 +37,9 @@ export async function getDb(): Promise<Database.Database> {
   // 迁移：为 chapters 表补充新字段
   migrateChapterNewFields(db);
 
+  // 迁移：创建事实一致性库表
+  migrateStoryFacts(db);
+
   return db;
 }
 
@@ -97,6 +100,24 @@ function migrateChapterNewFields(db: Database.Database) {
       db.exec(`ALTER TABLE chapters ADD COLUMN ${col.name} ${col.def}`);
     }
   }
+}
+
+function migrateStoryFacts(db: Database.Database) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS story_facts (
+      id TEXT PRIMARY KEY,
+      book_id TEXT NOT NULL,
+      chapter_id TEXT NOT NULL DEFAULT '',
+      chapter_number INTEGER NOT NULL DEFAULT 0,
+      content TEXT NOT NULL DEFAULT '',
+      related_character_ids TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_story_facts_book_id ON story_facts(book_id);
+    CREATE INDEX IF NOT EXISTS idx_story_facts_chapter_number ON story_facts(book_id, chapter_number);
+  `);
 }
 
 function initializeTables(db: Database.Database) {

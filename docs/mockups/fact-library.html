@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>事实库 — 视觉稿 v1</title>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@5/dist/index.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary:#2F5D50;--color-primary-hover:#1e4438;
+    --color-primary-bg:rgba(47,93,80,0.05);--color-primary-bg-hover:rgba(47,93,80,0.10);
+    --color-primary-border:rgba(47,93,80,0.20);
+    --color-success:#2E8B57;--color-success-bg:rgba(46,139,87,0.1);
+    --color-warning:#964400;--color-warning-bg:rgba(150,68,0,0.1);
+    --color-error:#ba1a1a;--color-error-bg:rgba(186,26,26,0.06);
+    --bg-page:#f0ece4;--bg-elevated:#faf8f4;--bg-muted:#f5f2ec;--bg-strong:#e8e4dc;
+    --text-primary:#1a1814;--text-secondary:#4a4640;--text-tertiary:#807b74;--text-light:#b5b0a8;--text-inverse:#fff;
+    --border:#ddd8d0;--border-strong:#c0bbb3;--border-light:#ebe7e0;
+    --shadow:0 1px 3px rgba(24,28,34,0.08);--shadow-md:0 4px 12px rgba(24,28,34,0.12);
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;
+    --radius-sm:0.25rem;--radius-md:0.375rem;--radius-lg:0.5rem;--radius-xl:0.75rem;--radius-full:9999px;
+    --font-display:'Noto Serif SC',serif;--font-body:'Inter','Noto Sans','Noto Sans SC',sans-serif;
+    --accent:var(--color-primary);--accent-soft:var(--color-primary-bg);
+    --panel:var(--bg-elevated);--panel-soft:var(--bg-muted);--panel-strong:var(--bg-strong);
+    --text:var(--text-primary);--ink-tertiary:var(--text-tertiary);--line:var(--border);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--font-body);background:var(--bg-page);color:var(--text);font-size:14px;}
+  .ant-btn-primary{background:var(--color-primary)!important;border-color:var(--color-primary)!important;}
+  .ant-btn-primary:hover{background:var(--color-primary-hover)!important;border-color:var(--color-primary-hover)!important;}
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  /* SplitPanel */
+  .splitPanel{display:flex;height:100vh;gap:1px;background:var(--border-light);overflow:hidden;}
+  .leftPanel{width:280px;min-width:280px;display:flex;flex-direction:column;background:var(--panel);overflow:hidden;flex-shrink:0;}
+  .rightPanel{flex:1;min-width:0;background:var(--panel);display:flex;flex-direction:column;overflow:hidden;}
+
+  /* Left toolbar */
+  .listToolbar{display:flex;align-items:center;justify-content:space-between;padding:var(--space-3);flex-shrink:0;border-bottom:1px solid var(--line);}
+  .listTitle{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);}
+  .listCount{font-weight:600;font-size:13px;color:var(--ink-tertiary);}
+
+  /* Filter bar */
+  .filterBar{display:flex;gap:var(--space-1);padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--line);flex-shrink:0;}
+  .filterBtn{padding:3px 10px;border-radius:var(--radius-md);font-size:11px;border:1px solid var(--border);background:var(--panel);color:var(--ink-tertiary);cursor:pointer;transition:all 0.15s;font-family:var(--font-body);}
+  .filterBtn:hover{border-color:var(--color-primary);color:var(--color-primary);}
+  .filterBtn.active{background:var(--color-primary);border-color:var(--color-primary);color:var(--text-inverse);}
+
+  /* Search */
+  .searchBar{padding:var(--space-2) var(--space-3);flex-shrink:0;border-bottom:1px solid var(--line);}
+
+  /* Fact list */
+  .factList{flex:1;overflow-y:auto;padding:var(--space-2) var(--space-3);}
+  .chapterGroup{margin-bottom:var(--space-1);}
+  .chapterHeader{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-1);font-size:11px;font-weight:600;color:var(--ink-tertiary);letter-spacing:0.05em;user-select:none;}
+  .chapterHeaderLine{flex:1;height:1px;background:var(--line);}
+  .factItem{padding:var(--space-2);border-radius:var(--radius-md);margin-bottom:2px;border-left:3px solid transparent;cursor:pointer;transition:all 0.15s;}
+  .factItem:hover{background:var(--panel-soft);}
+  .factItemActive{background:var(--accent-soft);border-left-color:var(--accent);}
+  .factItemContent{font-size:13px;color:var(--text);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .factItemMeta{display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-1);flex-wrap:wrap;}
+  .factItemTag{font-size:10px;padding:1px 6px;border-radius:var(--radius-full);background:var(--color-primary-bg);color:var(--color-primary);}
+
+  /* Right detail */
+  .detailPanel{display:flex;flex-direction:column;height:100%;overflow:hidden;}
+  .detailHeader{padding:var(--space-4) var(--space-6);border-bottom:1px solid var(--line);flex-shrink:0;}
+  .detailTitleRow{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2);}
+  .detailTitle{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text);flex:1;min-width:0;}
+  .detailMeta{font-size:12px;color:var(--ink-tertiary);display:flex;align-items:center;gap:var(--space-3);}
+  .detailActions{display:flex;gap:var(--space-2);margin-left:auto;}
+  .detailBody{flex:1;overflow-y:auto;padding:var(--space-5) var(--space-6);}
+
+  /* Content card */
+  .contentCard{background:var(--panel-soft);border:1px solid var(--border-light);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:var(--space-4);}
+  .contentCardHeader{display:flex;align-items:center;justify-content:space-between;padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border-light);background:rgba(0,0,0,0.02);}
+  .contentCardTitle{font-size:13px;font-weight:600;color:var(--text);}
+  .contentCardBody{padding:var(--space-4);font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;min-height:60px;}
+  .contentCardBody.empty{color:var(--ink-tertiary);font-style:italic;}
+
+  /* Related section */
+  .relatedSection{margin-top:var(--space-3);}
+  .relatedLabel{font-size:12px;font-weight:600;color:var(--ink-tertiary);margin-bottom:var(--space-2);letter-spacing:0.05em;}
+  .relatedTags{display:flex;flex-wrap:wrap;gap:var(--space-2);}
+  .relatedTag{display:inline-flex;align-items:center;gap:var(--space-1);padding:3px 10px;border-radius:var(--radius-full);font-size:12px;background:var(--color-primary-bg);color:var(--color-primary);cursor:pointer;transition:all 0.15s;border:1px solid transparent;}
+  .relatedTag:hover{border-color:var(--color-primary);background:var(--color-primary-bg-hover);}
+
+  /* Empty */
+  .emptyRight{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-3);}
+  .emptyHint{font-size:13px;color:var(--ink-tertiary);}
+
+  /* Chapter info card */
+  .chapterInfoCard{background:var(--panel-soft);border:1px solid var(--border-light);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:var(--space-4);}
+  .chapterInfoHeader{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border-light);background:rgba(0,0,0,0.02);}
+  .chapterInfoTitle{font-size:13px;font-weight:600;color:var(--text);}
+  .chapterInfoBody{padding:var(--space-3) var(--space-4);font-size:12px;color:var(--text-secondary);line-height:1.6;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const{useState,useMemo}=React;
+const{Button,Input,Tag}=antd;
+const{PlusOutlined,BookOutlined,EditOutlined,DeleteOutlined,SearchOutlined}=icons;
+
+const mockFacts=[
+  {id:'1',chapterNumber:1,content:'张三在青云镇的集市上买到了一把生锈的铁剑，剑身上刻有一个古老的符文。',relatedCharacters:['张三'],createdAt:'2026-07-01'},
+  {id:'2',chapterNumber:1,content:'青云镇每月初一有庙会，镇上的人都会去山上的青云寺祈福。',relatedCharacters:[],createdAt:'2026-07-01'},
+  {id:'3',chapterNumber:3,content:'张三在青云寺后山发现了一个隐藏的山洞，洞口被藤蔓遮挡。',relatedCharacters:['张三'],createdAt:'2026-07-02'},
+  {id:'4',chapterNumber:3,content:'李四是青云镇的铁匠，性格暴躁但手艺精湛，与张三是旧识。',relatedCharacters:['李四','张三'],createdAt:'2026-07-02'},
+  {id:'5',chapterNumber:5,content:'张三在山洞中找到了一本残破的功法秘籍，名为《青云诀》。',relatedCharacters:['张三'],createdAt:'2026-07-03'},
+  {id:'6',chapterNumber:5,content:'王五是青云镇的镇长，暗中与山匪勾结，收取过路费。',relatedCharacters:['王五'],createdAt:'2026-07-03'},
+  {id:'7',chapterNumber:7,content:'张三开始修炼《青云诀》，发现铁剑上的符文与秘籍内容有关联。',relatedCharacters:['张三'],createdAt:'2026-07-04'},
+  {id:'8',chapterNumber:7,content:'李四发现张三最近行为异常，经常深夜外出，怀疑他在修炼邪功。',relatedCharacters:['李四','张三'],createdAt:'2026-07-04'},
+];
+
+const chapters=[...new Set(mockFacts.map(f=>f.chapterNumber))].sort((a,b)=>a-b);
+
+function App(){
+  const[selectedId,setSelectedId]=useState('1');
+  const[search,setSearch]=useState('');
+  const[filter,setFilter]=useState('all');
+
+  const selectedFact=mockFacts.find(f=>f.id===selectedId);
+
+  const filteredFacts=useMemo(()=>{
+    let result=mockFacts;
+    if(search.trim()){
+      const q=search.trim().toLowerCase();
+      result=result.filter(f=>
+        f.content.toLowerCase().includes(q)||
+        f.relatedCharacters.some(c=>c.toLowerCase().includes(q))
+      );
+    }
+    if(filter==='with-characters') result=result.filter(f=>f.relatedCharacters.length>0);
+    else if(filter==='no-characters') result=result.filter(f=>f.relatedCharacters.length===0);
+    return result;
+  },[search,filter]);
+
+  const groupedFacts=useMemo(()=>{
+    const groups={};
+    filteredFacts.forEach(f=>{
+      if(!groups[f.chapterNumber]) groups[f.chapterNumber]=[];
+      groups[f.chapterNumber].push(f);
+    });
+    return groups;
+  },[filteredFacts]);
+
+  const filters=[{key:'all',label:'全部'},{key:'with-characters',label:'含角色'},{key:'no-characters',label:'纯事件'}];
+
+  // Left panel
+  const leftPanel=React.createElement(React.Fragment,null,
+    React.createElement('div',{className:'listToolbar'},
+      React.createElement('span',{className:'listTitle'},'事实库'),
+      React.createElement('span',{className:'listCount'},`${filteredFacts.length} 条`)
+    ),
+    React.createElement('div',{className:'filterBar'},
+      filters.map(f=>
+        React.createElement('button',{key:f.key,className:`filterBtn ${filter===f.key?'active':''}`,onClick:()=>setFilter(f.key)},f.label)
+      )
+    ),
+    React.createElement('div',{className:'searchBar'},
+      React.createElement(Input,{placeholder:'搜索事实内容或角色...',size:'small',allowClear:true,prefix:React.createElement(SearchOutlined,null),value:search,onChange:e=>setSearch(e.target.value)})
+    ),
+    React.createElement('div',{className:'factList'},
+      chapters.map(ch=>{
+        const facts=groupedFacts[ch]||[];
+        if(facts.length===0) return null;
+        return React.createElement('div',{key:ch,className:'chapterGroup'},
+          React.createElement('div',{className:'chapterHeader'},
+            React.createElement('span',null,`第 ${ch} 章`),
+            React.createElement('div',{className:'chapterHeaderLine'}),
+            React.createElement('span',null,`${facts.length} 条`)
+          ),
+          facts.map(f=>
+            React.createElement('div',{key:f.id,className:`factItem ${f.id===selectedId?'factItemActive':''}`,onClick:()=>setSelectedId(f.id)},
+              React.createElement('div',{className:'factItemContent'},f.content),
+              f.relatedCharacters.length>0?React.createElement('div',{className:'factItemMeta'},
+                f.relatedCharacters.map(c=>
+                  React.createElement('span',{key:c,className:'factItemTag'},c)
+                )
+              ):null
+            )
+          )
+        );
+      }),
+      filteredFacts.length===0?React.createElement('div',{style:{padding:'40px 20px',textAlign:'center'}},
+        React.createElement('div',{style:{fontSize:13,color:'var(--ink-tertiary)'}},'暂无匹配的事实')
+      ):null
+    )
+  );
+
+  // Right panel
+  const rightPanel=selectedFact?React.createElement('div',{className:'detailPanel'},
+    React.createElement('div',{className:'detailHeader'},
+      React.createElement('div',{className:'detailTitleRow'},
+        React.createElement('span',{className:'detailTitle'},'事实详情'),
+        React.createElement('div',{className:'detailActions'},
+          React.createElement(Button,{size:'small',icon:React.createElement(EditOutlined,null)},'编辑'),
+          React.createElement(Button,{size:'small',danger:true,icon:React.createElement(DeleteOutlined,null)},'删除')
+        )
+      ),
+      React.createElement('div',{className:'detailMeta'},
+        React.createElement('span',null,
+          React.createElement('span',{style:{color:'var(--ink-tertiary)'}},'来源：'),
+          React.createElement('span',{style:{fontWeight:500}},`第 ${selectedFact.chapterNumber} 章`)
+        ),
+        React.createElement('span',null,
+          React.createElement('span',{style:{color:'var(--ink-tertiary)'}},'记录于：'),
+          React.createElement('span',null,selectedFact.createdAt)
+        )
+      )
+    ),
+    React.createElement('div',{className:'detailBody'},
+      // 事实内容卡片
+      React.createElement('div',{className:'contentCard'},
+        React.createElement('div',{className:'contentCardHeader'},
+          React.createElement('span',{className:'contentCardTitle'},'事实内容')
+        ),
+        React.createElement('div',{className:'contentCardBody'},selectedFact.content)
+      ),
+      // 涉及角色
+      React.createElement('div',{className:'relatedSection'},
+        React.createElement('div',{className:'relatedLabel'},'涉及角色'),
+        selectedFact.relatedCharacters.length>0?
+          React.createElement('div',{className:'relatedTags'},
+            selectedFact.relatedCharacters.map(c=>
+              React.createElement('span',{key:c,className:'relatedTag'},c)
+            )
+          ):
+          React.createElement('div',{style:{fontSize:12,color:'var(--ink-tertiary)',fontStyle:'italic'}},'无关联角色（纯事件记录）')
+      )
+    )
+  ):React.createElement('div',{className:'emptyRight'},
+    React.createElement(BookOutlined,{style:{fontSize:40,color:'var(--text-light)'}}),
+    React.createElement('span',{className:'emptyHint'},'选择一条事实查看详情')
+  );
+
+  return React.createElement('div',{className:'splitPanel'},
+    React.createElement('div',{className:'leftPanel'},leftPanel),
+    React.createElement('div',{className:'rightPanel'},rightPanel)
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>

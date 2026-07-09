@@ -113,7 +113,7 @@ export interface SaveAiConfigDTO {
   advancedConfig?: Record<string, unknown>;
 }
 
-export type ActivePanel = "info" | "world-rules" | "settings" | "tag-library" | "creation" | "foreshadow" | "archive";
+export type ActivePanel = "info" | "world-rules" | "settings" | "tag-library" | "creation" | "foreshadow" | "archive" | "fact-library";
 
 // 创作区数据类型
 export interface BookOutline {
@@ -240,6 +240,32 @@ export type ChapterStatus = "draft" | "generated" | "approved";
 export type ForeshadowStatus = "hidden" | "revealed";
 
 // 伏笔
+// 事实一致性库
+export interface StoryFact {
+  id: string;
+  bookId: string;
+  chapterId: string;
+  chapterNumber: number;
+  content: string;
+  relatedCharacterIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateStoryFactDTO {
+  chapterId: string;
+  chapterNumber: number;
+  content: string;
+  relatedCharacterIds?: string[];
+}
+
+export interface UpdateStoryFactDTO {
+  chapterId?: string;
+  chapterNumber?: number;
+  content?: string;
+  relatedCharacterIds?: string[];
+}
+
 export interface Foreshadow {
   id: string;
   bookId: string;
