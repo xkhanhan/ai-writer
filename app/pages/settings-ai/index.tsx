@@ -1,201 +1,238 @@
 "use client";
 
-import { useState } from "react";
-import { Button, Card, Divider, Form, Grid, Select } from "antd";
-import { ArrowLeftOutlined, SaveOutlined, SettingOutlined, ThunderboltOutlined } from "@ant-design/icons";
+import { useState, useCallback } from "react";
+import { Popconfirm } from "antd";
+import {
+  SettingOutlined,
+  ThunderboltOutlined,
+  ArrowLeftOutlined,
+  PlusOutlined,
+  ApiOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { AiConfig, Book } from "@/app/types";
-import { useAiConfig } from "./hooks/use-ai-config";
-import ProviderSelector from "./components/provider-selector";
-import BasicConfig from "./components/basic-config";
-import ConnectionTest from "./components/connection-test";
-import AdvancedJson from "./components/advanced-json";
-import PromptLibrary from "@/app/pages/books/components/prompt-library";
+import { useConfigList } from "./hooks/use-config-list";
+import type { StoredConfig } from "./hooks/use-config-list";
+import ConfigDetail from "./components/config-detail";
+import ConfigModal from "./components/config-modal";
 import styles from "./index.module.css";
-
-const { useBreakpoint } = Grid;
 
 type SettingsTab = "ai-config" | "prompt-library";
 
 interface AiConfigFormProps {
   onBack: () => void;
+  /** @deprecated No longer used in activity-bar layout */
   initialConfig?: AiConfig | null;
   initialBooks?: Book[];
 }
 
-export default function AiConfigForm({ onBack, initialConfig, initialBooks = [] }: AiConfigFormProps) {
-  const screens = useBreakpoint();
+/**
+ * Settings AI page — activity bar layout with list + detail panels.
+ *
+ * AI 配置 tab:
+ *   - Left: config list (232px) with add/delete
+ *   - Right: detail view for selected config
+ *
+ * 提示词库 tab: placeholder for now.
+ */
+export default function AiConfigForm({
+  onBack,
+}: AiConfigFormProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("ai-config");
-  const [selectedBookId, setSelectedBookId] = useState<string | null>(
-    initialBooks.length > 0 ? initialBooks[0].id : null,
-  );
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingConfig, setEditingConfig] = useState<StoredConfig | null>(null);
 
   const {
-    providerId,
-    provider,
-    apiFormat,
-    baseUrl,
-    apiKey,
-    model,
-    availableModels,
-    contextSize,
-    temperature,
-    modelsLoading,
-    testStatus,
-    testMessage,
-    advancedJson,
-    jsonValid,
-    jsonError,
-    saving,
-    handleProviderChange,
-    handleApiFormatChange,
-    handleBaseUrlChange,
-    handleApiKeyChange,
-    handleModelChange,
-    handleContextSizeChange,
-    handleTemperatureChange,
-    handleAdvancedJsonChange,
-    handleFetchModels,
-    handleTestConnection,
-    handleSave,
-  } = useAiConfig(initialConfig);
+    configs,
+    selectedId,
+    selectedConfig,
+    loaded,
+    selectConfig,
+    addConfig,
+    updateConfig,
+    deleteConfig,
+  } = useConfigList();
 
-  const canTest = Boolean(baseUrl && apiKey && model);
-  const selectedBook = initialBooks.find((b) => b.id === selectedBookId) ?? null;
+  const handleAdd = useCallback(() => {
+    setEditingConfig(null);
+    setModalOpen(true);
+  }, []);
+
+  const handleEdit = useCallback((config: StoredConfig) => {
+    setEditingConfig(config);
+    setModalOpen(true);
+  }, []);
+
+  const handleSave = useCallback(
+    (config: Omit<StoredConfig, "id" | "status">) => {
+      if (editingConfig) {
+        updateConfig(editingConfig.id, config);
+      } else {
+        addConfig(config);
+      }
+    },
+    [editingConfig, addConfig, updateConfig],
+  );
+
+  const handleCloseModal = useCallback(() => {
+    setModalOpen(false);
+    setEditingConfig(null);
+  }, []);
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      deleteConfig(id);
+    },
+    [deleteConfig],
+  );
 
   return (
     <div className={styles.container}>
-      {/* Left sidebar - tab navigation */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <h2 className={styles.sidebarTitle}>设置</h2>
-        </div>
-        <nav className={styles.sidebarNav}>
-          <button
-            className={`${styles.tabItem} ${activeTab === "ai-config" ? styles.tabItemActive : ""}`}
-            onClick={() => setActiveTab("ai-config")}
-            type="button"
-          >
-            <SettingOutlined />
-            AI 配置
-          </button>
-          <button
-            className={`${styles.tabItem} ${activeTab === "prompt-library" ? styles.tabItemActive : ""}`}
-            onClick={() => setActiveTab("prompt-library")}
-            type="button"
-          >
-            <ThunderboltOutlined />
-            提示词库
-          </button>
-        </nav>
-        <div className={styles.sidebarFooter}>
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={onBack}
-            className={styles.backButton}
-          >
-            返回首页
-          </Button>
-        </div>
+      {/* Activity Bar */}
+      <aside className={styles.activityBar}>
+        <button
+          className={`${styles.activityButton} ${styles.activityTooltip} ${
+            activeTab === "ai-config" ? styles.activityButtonActive : ""
+          }`}
+          onClick={() => setActiveTab("ai-config")}
+          type="button"
+          data-tooltip="AI 配置"
+          aria-label="AI 配置"
+        >
+          <SettingOutlined />
+        </button>
+
+        <button
+          className={`${styles.activityButton} ${styles.activityTooltip} ${
+            activeTab === "prompt-library" ? styles.activityButtonActive : ""
+          }`}
+          onClick={() => setActiveTab("prompt-library")}
+          type="button"
+          data-tooltip="提示词库"
+          aria-label="提示词库"
+        >
+          <ThunderboltOutlined />
+        </button>
+
+        <div className={styles.activitySpacer} />
+
+        <button
+          className={`${styles.backButton} ${styles.activityTooltip}`}
+          onClick={onBack}
+          type="button"
+          data-tooltip="返回首页"
+          aria-label="返回首页"
+        >
+          <ArrowLeftOutlined />
+        </button>
       </aside>
 
-      {/* Right content area */}
+      {/* Content Area */}
       <main className={styles.contentArea}>
         {activeTab === "ai-config" && (
-          <div className={styles.tabContent}>
-            <div className={styles.aiConfigTab}>
-              <Form
-                layout="vertical"
-                requiredMark="optional"
-                size={screens.md ? "middle" : "small"}
-                className={styles.form}
-              >
-                <Card title="厂商与连接">
-                  <ProviderSelector value={providerId} onChange={handleProviderChange} />
+          <div className={styles.configBody}>
+            {/* Config List */}
+            <nav className={styles.configList}>
+              <div className={styles.configListHeader}>
+                <h2 className={styles.configListTitle}>AI 配置</h2>
+                <button
+                  className={styles.addConfigButton}
+                  onClick={handleAdd}
+                  type="button"
+                  aria-label="新建配置"
+                >
+                  <PlusOutlined />
+                </button>
+              </div>
 
-                  <Divider style={{ margin: "16px 0" }} />
+              <div className={styles.configListBody}>
+                {loaded && configs.length === 0 ? (
+                  <div className={styles.configListEmpty}>
+                    <ApiOutlined className={styles.configListEmptyIcon} />
+                    <span>暂无配置</span>
+                    <span>点击 + 新建</span>
+                  </div>
+                ) : (
+                  configs.map((cfg) => (
+                    <div
+                      key={cfg.id}
+                      className={`${styles.configItem} ${
+                        cfg.id === selectedId ? styles.configItemActive : ""
+                      }`}
+                      onClick={() => selectConfig(cfg.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          selectConfig(cfg.id);
+                        }
+                      }}
+                    >
+                      <div className={styles.configItemIcon}>
+                        <ApiOutlined />
+                      </div>
+                      <div className={styles.configItemInfo}>
+                        <span className={styles.configItemName}>{cfg.name}</span>
+                        <span className={styles.configItemProvider}>
+                          {cfg.providerName || cfg.provider}
+                        </span>
+                      </div>
+                      <Popconfirm
+                        title="确认删除此配置？"
+                        onConfirm={(e) => handleDelete(e as React.MouseEvent, cfg.id)}
+                        okText="删除"
+                        cancelText="取消"
+                      >
+                        <button
+                          className={styles.configItemDelete}
+                          type="button"
+                          aria-label="删除配置"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <DeleteOutlined />
+                        </button>
+                      </Popconfirm>
+                    </div>
+                  ))
+                )}
+              </div>
+            </nav>
 
-                  <BasicConfig
-                    provider={provider}
-                    apiFormat={apiFormat}
-                    baseUrl={baseUrl}
-                    apiKey={apiKey}
-                    model={model}
-                    availableModels={availableModels}
-                    contextSize={contextSize}
-                    temperature={temperature}
-                    modelsLoading={modelsLoading}
-                    onApiFormatChange={handleApiFormatChange}
-                    onBaseUrlChange={handleBaseUrlChange}
-                    onApiKeyChange={handleApiKeyChange}
-                    onModelChange={handleModelChange}
-                    onContextSizeChange={handleContextSizeChange}
-                    onTemperatureChange={handleTemperatureChange}
-                    onFetchModels={handleFetchModels}
-                  />
-                </Card>
-
-                <Card title="连通性测试">
-                  <ConnectionTest
-                    status={testStatus}
-                    message={testMessage}
-                    disabled={!canTest}
-                    onTest={handleTestConnection}
-                  />
-                </Card>
-
-                <Card title="高级配置 JSON">
-                  <AdvancedJson
-                    value={advancedJson}
-                    valid={jsonValid}
-                    error={jsonError}
-                    onChange={handleAdvancedJsonChange}
-                  />
-                </Card>
-              </Form>
-            </div>
-            <div className={styles.footer}>
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                onClick={handleSave}
-                loading={saving}
-                size="large"
-              >
-                保存配置
-              </Button>
-            </div>
+            {/* Config Detail */}
+            <section className={styles.configDetail}>
+              {selectedConfig ? (
+                <ConfigDetail config={selectedConfig} onEdit={handleEdit} />
+              ) : (
+                <div className={styles.promptPlaceholder}>
+                  <ApiOutlined className={styles.promptPlaceholderIcon} />
+                  <span>
+                    {configs.length === 0
+                      ? "暂无配置，请点击左上角 + 新建"
+                      : "选择一个配置查看详情"}
+                  </span>
+                </div>
+              )}
+            </section>
           </div>
         )}
 
         {activeTab === "prompt-library" && (
-          <div className={styles.tabContent}>
-            <div className={styles.bookSelector}>
-              <span className={styles.bookSelectorLabel}>选择书籍（用于定制）：</span>
-              <Select
-                style={{ minWidth: 200 }}
-                placeholder="选择一本书以定制提示词"
-                value={selectedBookId}
-                onChange={setSelectedBookId}
-                options={initialBooks.map((book) => ({
-                  label: book.title,
-                  value: book.id,
-                }))}
-                allowClear
-              />
-            </div>
-            <div className={styles.promptLibraryContent}>
-              {selectedBook ? (
-                <PromptLibrary book={selectedBook} />
-              ) : (
-                <div style={{ padding: 40, textAlign: "center", color: "var(--text-secondary)" }}>
-                  选择一本书以查看或定制提示词，不选择则编辑全局模板
-                </div>
-              )}
-            </div>
+          <div className={styles.promptPlaceholder}>
+            <ThunderboltOutlined className={styles.promptPlaceholderIcon} />
+            <span>提示词库功能即将上线</span>
           </div>
         )}
       </main>
+
+      {/* Create / Edit Modal */}
+      <ConfigModal
+        open={modalOpen}
+        editingConfig={editingConfig}
+        onClose={handleCloseModal}
+        onSave={handleSave}
+      />
     </div>
   );
 }

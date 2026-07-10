@@ -1,0 +1,202 @@
+"use client";
+
+import { useCallback, useEffect } from "react";
+import { Form, Input, InputNumber, Select, Slider } from "antd";
+import { AI_PROVIDERS } from "@/shared/ai/providers";
+import type { StoredConfig } from "../hooks/use-config-list";
+import BaseModal from "@/shared/ui/base-modal";
+import styles from "../index.module.css";
+
+interface ConfigModalProps {
+  open: boolean;
+  editingConfig: StoredConfig | null;
+  onClose: () => void;
+  onSave: (config: Omit<StoredConfig, "id" | "status">) => void;
+}
+
+const PROVIDER_MAP = new Map(
+  AI_PROVIDERS.map((p) => [
+    p.id,
+    {
+      name: p.name,
+      baseUrl: p.baseUrl,
+      apiFormat: p.apiFormat,
+      defaultModel: p.defaultModel,
+      maxContextSize: p.maxContextSize,
+      temperatureRange: p.temperatureRange,
+      models: p.models,
+    },
+  ]),
+);
+
+const FORM_INITIAL: Omit<StoredConfig, "id" | "status"> = {
+  name: "",
+  provider: "openai",
+  providerName: "OpenAI",
+  apiFormat: "openai",
+  baseUrl: "https://api.openai.com/v1",
+  apiKey: "",
+  model: "gpt-4o-mini",
+  contextSize: 128000,
+  temperature: 0.7,
+};
+
+export default function ConfigModal({
+  open,
+  editingConfig,
+  onClose,
+  onSave,
+}: ConfigModalProps) {
+  const [form] = Form.useForm();
+  const watchedProvider = Form.useWatch("provider", form) ?? "openai";
+
+  useEffect(() => {
+    if (open) {
+      if (editingConfig) {
+        form.setFieldsValue(editingConfig);
+      } else {
+        form.setFieldsValue(FORM_INITIAL);
+      }
+    }
+  }, [open, editingConfig, form]);
+
+  const handleProviderChange = useCallback(
+    (providerId: string) => {
+      const info = PROVIDER_MAP.get(providerId);
+      if (!info) return;
+      form.setFieldsValue({
+        providerName: info.name,
+        apiFormat: info.apiFormat,
+        baseUrl: info.baseUrl,
+        model: info.defaultModel,
+        contextSize: info.maxContextSize,
+        temperature:
+          (info.temperatureRange[0] + info.temperatureRange[1]) / 2,
+      });
+    },
+    [form],
+  );
+
+  const handleOk = useCallback(async () => {
+    const values = await form.validateFields();
+    const info = PROVIDER_MAP.get(values.provider);
+    onSave({
+      ...values,
+      providerName: info?.name ?? values.provider,
+    });
+    onClose();
+  }, [form, onSave, onClose]);
+
+  const providerInfo = PROVIDER_MAP.get(watchedProvider);
+
+  return (
+    <BaseModal
+      open={open}
+      title={editingConfig ? "编辑配置" : "新建配置"}
+      onCancel={onClose}
+      onOk={handleOk}
+      okText={editingConfig ? "保存" : "创建"}
+      width={560}
+      destroyOnClose
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        requiredMark="optional"
+        className={styles.modalForm}
+      >
+        <Form.Item
+          name="name"
+          label="配置名称"
+          rules={[{ required: true, message: "请输入配置名称" }]}
+        >
+          <Input placeholder="例如：主力模型" />
+        </Form.Item>
+
+        <Form.Item name="provider" label="厂商选择" required>
+          <Select
+            onChange={handleProviderChange}
+            options={AI_PROVIDERS.map((p) => ({
+              value: p.id,
+              label: p.name,
+            }))}
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label as string)
+                ?.toLowerCase()
+                .includes(input.toLowerCase())
+            }
+          />
+        </Form.Item>
+
+        <Form.Item name="apiFormat" label="API 格式" hidden>
+          <Input />
+        </Form.Item>
+        <Form.Item name="providerName" label="厂商名称" hidden>
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          name="baseUrl"
+          label="Base URL"
+          rules={[{ required: true, message: "请输入 Base URL" }]}
+        >
+          <Input placeholder="https://api.example.com/v1" />
+        </Form.Item>
+
+        <Form.Item
+          name="apiKey"
+          label="API Key"
+          rules={[{ required: true, message: "请输入 API Key" }]}
+        >
+          <Input.Password placeholder="sk-..." />
+        </Form.Item>
+
+        <Form.Item name="model" label="模型" required>
+          <Select
+            showSearch
+            placeholder="选择模型"
+            options={
+              providerInfo
+                ? providerInfo.models.map((m) => ({
+                    value: m,
+                    label: m,
+                  }))
+                : []
+            }
+            filterOption={(input, option) =>
+              (option?.label as string)
+                ?.toLowerCase()
+                .includes(input.toLowerCase())
+            }
+          />
+        </Form.Item>
+
+        <Form.Item name="contextSize" label="上下文大小 (tokens)">
+          <InputNumber
+            min={1024}
+            max={1000000}
+            step={1024}
+            className={styles.modalInputFull}
+            formatter={(value) =>
+              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            }
+          />
+        </Form.Item>
+
+        <Form.Item name="temperature" label="温度">
+          <Slider
+            min={0}
+            max={providerInfo?.temperatureRange[1] ?? 2}
+            step={0.1}
+            marks={{
+              0: "0",
+              [providerInfo?.temperatureRange[1] ?? 2]:
+                String(providerInfo?.temperatureRange[1] ?? 2),
+            }}
+          />
+        </Form.Item>
+      </Form>
+    </BaseModal>
+  );
+}

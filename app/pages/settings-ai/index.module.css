@@ -1,4 +1,4 @@
-/* Settings page - tabbed layout with PanelContainer */
+/* Settings page — Activity bar layout with list+detail */
 
 .container {
   height: 100%;
@@ -7,204 +7,490 @@
   background: var(--bg);
 }
 
-/* ===== Left sidebar (tab navigation) ===== */
-.sidebar {
-  width: 200px;
-  min-width: 200px;
+/* ===== Activity Bar (56px, jade accent) ===== */
+.activityBar {
+  width: 56px;
+  min-width: 56px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: var(--panel);
+  align-items: center;
+  padding: 12px 0;
+  gap: 4px;
+  background: linear-gradient(
+    180deg,
+    var(--panel-strong) 0%,
+    rgba(47, 93, 80, 0.06) 100%
+  );
   border-right: 1px solid var(--line);
-  overflow-y: auto;
 }
 
-.sidebarHeader {
-  padding: 16px 16px 8px;
+.activityButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--ink-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  position: relative;
+  font-size: 16px;
+}
+
+.activityButton::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: var(--color-primary);
+  border-radius: 0 2px 2px 0;
+  transition: height 0.25s ease;
+}
+
+.activityButton:hover {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.activityButtonActive {
+  background: var(--panel);
+  color: var(--color-primary);
+  box-shadow: var(--shadow);
+}
+
+.activityButtonActive::before {
+  height: 20px;
+}
+
+.activityTooltip {
+  position: relative;
+}
+
+.activityTooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 52px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--text);
+  color: var(--panel);
+  font-size: 12px;
+  font-family: var(--font-body);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+}
+
+.activitySpacer {
+  flex: 1;
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--ink-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.backButton:hover {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+/* ===== Main Content ===== */
+.contentArea {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===== AI Config: List + Detail ===== */
+.configBody {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.configList {
+  width: 232px;
+  min-width: 232px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.configListHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--line);
 }
 
-.sidebarTitle {
+.configListTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.addConfigButton {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: opacity 0.15s;
+}
+
+.addConfigButton:hover {
+  opacity: 0.85;
+}
+
+.configListBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.configItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 2px;
+}
+
+.configItem:hover {
+  background: var(--bg-muted);
+}
+
+.configItemActive {
+  background: var(--color-primary-bg);
+}
+
+.configItemIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.configItemInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.configItemName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.configItemProvider {
+  font-size: 11px;
+  color: var(--ink-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.configItemDelete {
+  opacity: 0;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.configItem:hover .configItemDelete {
+  opacity: 1;
+}
+
+.configItemDelete:hover {
+  color: var(--color-error, #ba1a1a);
+  background: rgba(186, 26, 26, 0.08);
+}
+
+.configListEmpty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--ink-tertiary);
+  font-size: 13px;
+}
+
+.configListEmptyIcon {
+  font-size: 28px;
+  opacity: 0.4;
+}
+
+/* ===== Config Detail ===== */
+.configDetail {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.detailContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+
+.detailHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.detailHeaderIcon {
+  font-size: 22px;
+  color: var(--color-primary);
+}
+
+.detailTitle {
   margin: 0;
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 600;
   color: var(--text);
-  letter-spacing: 0.03em;
 }
 
-.sidebarNav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px;
-  flex: 1;
+.detailSubtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-tertiary);
 }
 
-.sidebarFooter {
-  padding: 8px;
-  border-top: 1px solid var(--line);
-  margin-top: auto;
-}
-
-.backButton {
-  width: 100%;
-  justify-content: flex-start;
-  color: var(--text-secondary);
-}
-
-.tabItem {
+.detailHeaderRight {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: left;
-}
-
-.tabItem:hover {
-  background: var(--bg-muted);
-  color: var(--text);
-}
-
-.tabItemActive {
-  background: var(--bg-muted);
-  color: var(--text);
-  font-weight: 600;
-}
-
-/* ===== Right content area ===== */
-.contentArea {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.tabContent {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ===== AI Config tab ===== */
-.aiConfigTab {
-  flex: 1;
-  overflow-y: auto;
-  padding: 32px;
-  max-width: 960px;
-  width: 100%;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.footer {
-  padding: 16px 32px;
-  border-top: 1px solid var(--line);
-  background: var(--panel);
-  display: flex;
-  justify-content: flex-end;
   gap: 12px;
   flex-shrink: 0;
 }
 
-/* ===== Prompt Library tab ===== */
-.promptLibraryTab {
+.detailStatus {
+  margin-inline-end: 0 !important;
+}
+
+/* ===== Detail Grid ===== */
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  padding: 0 28px;
+}
+
+.detailField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.detailField:nth-child(odd) {
+  padding-right: 24px;
+}
+
+.detailField:nth-child(even) {
+  padding-left: 24px;
+  border-left: 1px solid var(--border-light);
+}
+
+.detailLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-tertiary);
+  letter-spacing: 0.02em;
+}
+
+.detailValue {
+  font-size: 14px;
+  color: var(--text);
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.detailValueMono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* ===== Prompt Library Placeholder ===== */
+.promptPlaceholder {
   flex: 1;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--ink-tertiary);
+  padding: 60px 24px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.promptPlaceholderIcon {
+  font-size: 40px;
+  opacity: 0.35;
+  margin-bottom: 4px;
+}
+
+/* ===== Modal helpers ===== */
+.modalForm {
   display: flex;
   flex-direction: column;
 }
 
-.bookSelector {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--line);
-  background: var(--bg-elevated);
-  flex-shrink: 0;
-}
-
-.bookSelectorLabel {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  white-space: nowrap;
-}
-
-.promptLibraryContent {
-  flex: 1;
-  overflow: hidden;
+.modalInputFull {
+  width: 100%;
 }
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
-  .container {
-    flex-direction: column;
+  .activityBar {
+    width: 48px;
+    min-width: 48px;
+    padding: 8px 0;
   }
 
-  .sidebar {
-    width: 100%;
-    min-width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--line);
+  .activityButton {
+    width: 36px;
+    height: 36px;
   }
 
-  .sidebarHeader {
-    padding: 12px 16px 6px;
+  .activityTooltip:hover::after {
+    left: 48px;
   }
 
-  .sidebarNav {
-    flex-direction: row;
-    gap: 4px;
-    overflow-x: auto;
+  .configList {
+    width: 200px;
+    min-width: 200px;
   }
 
-  .tabItem {
-    white-space: nowrap;
+  .detailGrid {
+    padding: 0 20px;
   }
 
-  .aiConfigTab {
-    padding: 20px;
+  .detailHeader {
+    padding: 16px 20px;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
-  .footer {
-    padding: 12px 20px;
+  .detailTitle {
+    font-size: 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .sidebarTitle {
-    font-size: 16px;
+  .activityBar {
+    width: 40px;
+    min-width: 40px;
+    padding: 6px 0;
   }
 
-  .aiConfigTab {
-    padding: 16px;
+  .activityButton {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
   }
 
-  .footer {
-    padding: 10px 16px;
+  .activityTooltip:hover::after {
+    left: 40px;
+  }
+
+  .configBody {
     flex-direction: column;
   }
 
-  .footer button {
+  .configList {
     width: 100%;
+    min-width: 100%;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+    padding: 0 16px;
+  }
+
+  .detailField:nth-child(odd),
+  .detailField:nth-child(even) {
+    padding-left: 0;
+    padding-right: 0;
+    border-left: none;
   }
 }
