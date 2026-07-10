@@ -61,13 +61,14 @@ export default function AppShell({
   const handleBackToHome = useCallback(() => {
     setSelectedBook(null);
     setCurrentView("home");
-    syncUrl("home", null);
-  }, [syncUrl]);
+    // 不同步 URL — 避免 router.replace 触发服务端重渲染导致闪烁
+    window.history.replaceState(null, "", "/");
+  }, []);
 
   const handleGoToSettings = useCallback(() => {
     setCurrentView("settings");
-    syncUrl("settings", null);
-  }, [syncUrl]);
+    window.history.replaceState(null, "", "/?view=settings");
+  }, []);
 
   // 监听 Topbar 设置按钮的自定义事件
   useEffect(() => {
