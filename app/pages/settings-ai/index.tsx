@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Card, Divider, Form, Grid, Select } from "antd";
-import { SaveOutlined, SettingOutlined, ThunderboltOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, SaveOutlined, SettingOutlined, ThunderboltOutlined } from "@ant-design/icons";
 import type { AiConfig, Book } from "@/app/types";
 import { useAiConfig } from "./hooks/use-ai-config";
 import ProviderSelector from "./components/provider-selector";
@@ -87,6 +87,16 @@ export default function AiConfigForm({ onBack, initialConfig, initialBooks = [] 
             提示词库
           </button>
         </nav>
+        <div className={styles.sidebarFooter}>
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={onBack}
+            className={styles.backButton}
+          >
+            返回首页
+          </Button>
+        </div>
       </aside>
 
       {/* Right content area */}

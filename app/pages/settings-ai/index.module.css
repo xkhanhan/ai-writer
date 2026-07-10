@@ -38,6 +38,19 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px;
+  flex: 1;
+}
+
+.sidebarFooter {
+  padding: 8px;
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+}
+
+.backButton {
+  width: 100%;
+  justify-content: flex-start;
+  color: var(--text-secondary);
 }
 
 .tabItem {
