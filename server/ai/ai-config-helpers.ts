@@ -33,10 +33,10 @@ export async function resolveAiConfig(
   }
 
   const advanced = config.advanced;
-  const baseUrl = config.baseUrl || advanced.baseUrl;
-  const model = config.model || advanced.model;
-  const temperature = input.temperature ?? advanced.temperature;
-  const topP = advanced.topP;
+  const baseUrl = config.baseUrl || (advanced?.baseUrl ?? "");
+  const model = config.model || (advanced?.model ?? "");
+  const temperature = input.temperature ?? advanced?.temperature ?? 0.7;
+  const topP = advanced?.topP ?? 1;
 
   if (temperature < 0 || temperature > 2) {
     throw new Error("temperature 必须在 0 到 2 之间。");
@@ -48,8 +48,8 @@ export async function resolveAiConfig(
     temperature,
     topP,
     apiKey: config.apiKey,
-    headers: advanced.headers,
-    maxTokens: advanced.maxTokens,
-    extraBody: advanced.extraBody,
+    headers: advanced?.headers ?? {},
+    maxTokens: advanced?.maxTokens ?? null,
+    extraBody: advanced?.extraBody ?? {},
   };
 }

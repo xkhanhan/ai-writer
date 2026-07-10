@@ -35,7 +35,7 @@ const ALL_FUNCTION_KEYS: string[] = PANEL_GROUPS.flatMap((g) =>
 // ============ Component ============
 
 interface PromptLibraryProps {
-  book: Book;
+  book?: Book;
 }
 
 export default function PromptLibrary({ book }: PromptLibraryProps) {
@@ -68,10 +68,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   // ===== Load templates =====
   const loadTemplates = useCallback(async () => {
     setLoading(true);
-    const res = await fetchTemplates(book.id);
+    const res = await fetchTemplates(book?.id ?? "");
     if (res.ok) setTemplates(res.data);
     setLoading(false);
-  }, [book.id]);
+  }, [book?.id]);
 
   /* eslint-disable react-hooks/set-state-in-effect -- async load calls setState in async callback */
   useEffect(() => {
@@ -272,7 +272,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   const handleCopyAsCustom = useCallback(async () => {
     if (!selectedTemplate) return;
     setSaving(true);
-    const res = await copyAsCustom(selectedTemplate.id, book.id);
+    const res = await copyAsCustom(selectedTemplate.id, book?.id);
     setSaving(false);
     if (res.ok) {
       showSuccess("已复制为自定义模板");
@@ -281,7 +281,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     } else {
       showError(res.error);
     }
-  }, [selectedTemplate, book.id, loadTemplates]);
+  }, [selectedTemplate, book?.id, loadTemplates]);
 
   // ===== Delete custom template =====
   const handleDelete = useCallback(async () => {

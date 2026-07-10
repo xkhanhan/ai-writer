@@ -13,6 +13,7 @@ import {
 import type { AiConfig, Book } from "@/app/types";
 import { useConfigList } from "./hooks/use-config-list";
 import type { StoredConfig } from "./hooks/use-config-list";
+import PromptLibrary from "@/app/pages/books/components/prompt-library";
 import ConfigDetail from "./components/config-detail";
 import ConfigModal from "./components/config-modal";
 import styles from "./index.module.css";
@@ -232,9 +233,8 @@ export default function AiConfigForm({
         )}
 
         {activeTab === "prompt-library" && (
-          <div className={styles.promptPlaceholder}>
-            <FileTextOutlined className={styles.promptPlaceholderIcon} />
-            <span>提示词库功能即将上线</span>
+          <div style={{ flex: 1, overflow: "hidden" }}>
+            <PromptLibrary />
           </div>
         )}
       </main>
