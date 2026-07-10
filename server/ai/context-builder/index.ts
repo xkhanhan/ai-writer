@@ -9,7 +9,13 @@
  *   5. Final Assembly     — system prompt + user prompt + token estimate
  */
 
-import type { ContextInput, BuiltContext, AiFunctionKey } from "./types";
+import type { ContextInput, BuiltContext, StoreDeps } from "./types";
+import { getBookById } from "@/server/storage/book-store";
+import { getChapterById, getChaptersByVolumeId, getVolumesByBookId } from "@/server/storage/outline-store";
+import { getWorldRulesByBookId } from "@/server/storage/world-rule-store";
+import { getSettingEntitiesByBookId } from "@/server/storage/setting-entity-store";
+import { getStoryFactsByBookId } from "@/server/storage/fact-store";
+import { getActivePromptTemplate } from "@/server/storage/prompt-template-store";
 import { buildContentGenerationContext } from "./builders/content-generate";
 import { buildReviewContext } from "./builders/deslop";
 import { buildTextProcessingContext } from "./builders/polish";
@@ -18,7 +24,19 @@ import { buildFactConsistencyContext } from "./builders/foreshadow-extract";
 import { buildCharacterAuditContext } from "./builders/character-extract";
 import { buildWorldRuleSuggestContext } from "./builders/world-rule-suggest";
 
-export type { AiFunctionKey, ContextInput, BuiltContext } from "./types";
+export type { AiFunctionKey, ContextInput, BuiltContext, StoreDeps } from "./types";
+
+/** Default store dependencies wired to real DB stores. */
+export const defaultStoreDeps: StoreDeps = {
+  getBookById,
+  getChapterById,
+  getChaptersByVolumeId,
+  getVolumesByBookId,
+  getWorldRulesByBookId,
+  getSettingEntitiesByBookId,
+  getStoryFactsByBookId,
+  getActivePromptTemplate,
+};
 
 /**
  * Build the full AI context (system + user prompt) for a given function key.
@@ -35,31 +53,32 @@ export type { AiFunctionKey, ContextInput, BuiltContext } from "./types";
  */
 export async function buildContext(
   input: ContextInput,
+  deps: StoreDeps = defaultStoreDeps,
 ): Promise<BuiltContext> {
   switch (input.functionKey) {
     case "content_generate":
-      return buildContentGenerationContext(input);
+      return buildContentGenerationContext(input, deps);
 
     case "review_extract":
-      return buildReviewContext(input);
+      return buildReviewContext(input, deps);
 
     case "polish":
     case "deslop":
     case "expand":
     case "book_synopsis_expand":
-      return buildTextProcessingContext(input);
+      return buildTextProcessingContext(input, deps);
 
     case "character_audit":
-      return buildCharacterAuditContext(input);
+      return buildCharacterAuditContext(input, deps);
 
     case "fact_consistency":
-      return buildFactConsistencyContext(input);
+      return buildFactConsistencyContext(input, deps);
 
     case "book_info_suggest":
-      return buildBookInfoSuggestContext(input);
+      return buildBookInfoSuggestContext(input, deps);
 
     case "world_rule_suggest":
-      return buildWorldRuleSuggestContext(input);
+      return buildWorldRuleSuggestContext(input, deps);
 
     default:
       throw new Error(

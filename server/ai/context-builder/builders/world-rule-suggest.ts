@@ -1,18 +1,16 @@
-import { getBookById } from "@/server/storage/book-store";
-import { getWorldRulesByBookId } from "@/server/storage/world-rule-store";
-import { getActivePromptTemplate } from "@/server/storage/prompt-template-store";
-import type { ContextInput, BuiltContext } from "../types";
+import type { ContextInput, BuiltContext, StoreDeps } from "../types";
 import { estimateTokens, renderTemplate } from "../utils";
 
 export async function buildWorldRuleSuggestContext(
   input: ContextInput,
+  deps: StoreDeps,
 ): Promise<BuiltContext> {
-  const book = await getBookById(input.bookId);
+  const book = await deps.getBookById(input.bookId);
   if (!book) {
     throw new Error(`书籍不存在（bookId: ${input.bookId}）`);
   }
 
-  const existingRules = await getWorldRulesByBookId(book.id);
+  const existingRules = await deps.getWorldRulesByBookId(book.id);
   const existingRulesText =
     existingRules.length > 0
       ? existingRules
@@ -20,7 +18,7 @@ export async function buildWorldRuleSuggestContext(
           .join("\n")
       : "（暂无）";
 
-  const activeTemplate = await getActivePromptTemplate(
+  const activeTemplate = await deps.getActivePromptTemplate(
     book.id,
     input.functionKey,
   );

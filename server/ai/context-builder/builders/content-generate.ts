@@ -1,13 +1,4 @@
-import { getBookById } from "@/server/storage/book-store";
-import {
-  getChaptersByVolumeId,
-  getChapterById,
-} from "@/server/storage/outline-store";
-import { getWorldRulesByBookId } from "@/server/storage/world-rule-store";
-import { getSettingEntitiesByBookId } from "@/server/storage/setting-entity-store";
-import { getStoryFactsByBookId } from "@/server/storage/fact-store";
-import { getActivePromptTemplate } from "@/server/storage/prompt-template-store";
-import type { ContextInput, BuiltContext } from "../types";
+import type { ContextInput, BuiltContext, StoreDeps } from "../types";
 import {
   estimateTokens,
   renderTemplate,
@@ -17,8 +8,8 @@ import {
 } from "../utils";
 
 /** Ensure the book exists or throw. */
-async function requireBook(bookId: string) {
-  const book = await getBookById(bookId);
+async function requireBook(deps: StoreDeps, bookId: string) {
+  const book = await deps.getBookById(bookId);
   if (!book) {
     throw new Error(`书籍不存在（bookId: ${bookId}）`);
   }
@@ -26,8 +17,8 @@ async function requireBook(bookId: string) {
 }
 
 /** Ensure the chapter exists or throw. */
-async function requireChapter(chapterId: string) {
-  const chapter = await getChapterById(chapterId);
+async function requireChapter(deps: StoreDeps, chapterId: string) {
+  const chapter = await deps.getChapterById(chapterId);
   if (!chapter) {
     throw new Error(`章纲不存在（chapterId: ${chapterId}）`);
   }
@@ -38,8 +29,11 @@ async function requireChapter(chapterId: string) {
  * Find the chapter that comes immediately before `currentChapter`
  * by walking its volume's chapter list.
  */
-async function findPreviousChapter(currentChapter: { id: string; volumeId: string }) {
-  const siblings = await getChaptersByVolumeId(currentChapter.volumeId);
+async function findPreviousChapter(
+  deps: StoreDeps,
+  currentChapter: { id: string; volumeId: string },
+) {
+  const siblings = await deps.getChaptersByVolumeId(currentChapter.volumeId);
   // Chapters are returned sorted by sort_order ASC
   const idx = siblings.findIndex((c) => c.id === currentChapter.id);
   if (idx <= 0) return null;
@@ -56,21 +50,22 @@ function extractEnding(content: string, maxLen = 500): string {
 
 export async function buildContentGenerationContext(
   input: ContextInput,
+  deps: StoreDeps,
 ): Promise<BuiltContext> {
-  const book = await requireBook(input.bookId);
-  const chapter = await requireChapter(input.chapterId!);
+  const book = await requireBook(deps, input.bookId);
+  const chapter = await requireChapter(deps, input.chapterId!);
 
-  const allChapters = await getChaptersByVolumeId(chapter.volumeId);
+  const allChapters = await deps.getChaptersByVolumeId(chapter.volumeId);
   const chapterNumber =
     allChapters.findIndex((c) => c.id === chapter.id) + 1;
 
   const [globalRules, writingRules] = await Promise.all([
-    getWorldRulesByBookId(book.id, "global"),
-    getWorldRulesByBookId(book.id, "writing"),
+    deps.getWorldRulesByBookId(book.id, "global"),
+    deps.getWorldRulesByBookId(book.id, "writing"),
   ]);
 
   const chapterCharacterNames = new Set(chapter.characters);
-  const allCharacters = await getSettingEntitiesByBookId(
+  const allCharacters = await deps.getSettingEntitiesByBookId(
     book.id,
     "character",
   );
@@ -84,7 +79,7 @@ export async function buildContentGenerationContext(
           (c) => c.level === "core" || c.level === "important",
         );
 
-  const allFacts = await getStoryFactsByBookId(book.id);
+  const allFacts = await deps.getStoryFactsByBookId(book.id);
   const relevantFacts = allFacts.filter(
     (f) => f.chapterNumber > 0 && f.chapterNumber < chapterNumber,
   );
@@ -94,7 +89,7 @@ export async function buildContentGenerationContext(
       ? chapter.foreshadowings.map((f) => `- ${f}`).join("\n")
       : "（无活跃伏笔）";
 
-  const prevChapter = await findPreviousChapter(chapter);
+  const prevChapter = await findPreviousChapter(deps, chapter);
   let previousEnding = "（第一章，无前文）";
   if (prevChapter?.content) {
     previousEnding = extractEnding(prevChapter.content);
@@ -102,7 +97,7 @@ export async function buildContentGenerationContext(
     previousEnding = `上一章「${prevChapter.title}」摘要：${prevChapter.summary || "暂无"}`;
   }
 
-  const activeTemplate = await getActivePromptTemplate(
+  const activeTemplate = await deps.getActivePromptTemplate(
     book.id,
     "content_generate",
   );

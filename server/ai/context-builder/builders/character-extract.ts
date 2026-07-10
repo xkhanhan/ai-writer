@@ -1,16 +1,11 @@
-import { getBookById } from "@/server/storage/book-store";
-import { getVolumesByBookId, getChaptersByVolumeId } from "@/server/storage/outline-store";
-import { getWorldRulesByBookId } from "@/server/storage/world-rule-store";
-import { getSettingEntitiesByBookId } from "@/server/storage/setting-entity-store";
-import { getStoryFactsByBookId } from "@/server/storage/fact-store";
-import { getActivePromptTemplate } from "@/server/storage/prompt-template-store";
-import type { ContextInput, BuiltContext } from "../types";
+import type { ContextInput, BuiltContext, StoreDeps } from "../types";
 import { estimateTokens, renderTemplate, formatRules, formatFactList } from "../utils";
 
 export async function buildCharacterAuditContext(
   input: ContextInput,
+  deps: StoreDeps,
 ): Promise<BuiltContext> {
-  const book = await getBookById(input.bookId);
+  const book = await deps.getBookById(input.bookId);
   if (!book) {
     throw new Error(`书籍不存在（bookId: ${input.bookId}）`);
   }
@@ -18,26 +13,26 @@ export async function buildCharacterAuditContext(
   if (!input.characterId) {
     throw new Error("character_audit 需要提供 characterId");
   }
-  const allEntities = await getSettingEntitiesByBookId(book.id);
+  const allEntities = await deps.getSettingEntitiesByBookId(book.id);
   const character = allEntities.find((e) => e.id === input.characterId);
   if (!character) {
     throw new Error(`角色不存在（characterId: ${input.characterId}）`);
   }
 
   const [globalRules, writingRules] = await Promise.all([
-    getWorldRulesByBookId(book.id, "global"),
-    getWorldRulesByBookId(book.id, "writing"),
+    deps.getWorldRulesByBookId(book.id, "global"),
+    deps.getWorldRulesByBookId(book.id, "writing"),
   ]);
 
-  const allFacts = await getStoryFactsByBookId(book.id);
+  const allFacts = await deps.getStoryFactsByBookId(book.id);
   const relatedFacts = allFacts.filter((f) =>
     f.relatedCharacterIds.includes(character.id),
   );
 
-  const allVolumes = await getVolumesByBookId(book.id);
+  const allVolumes = await deps.getVolumesByBookId(book.id);
   const appearances: string[] = [];
   for (const vol of allVolumes) {
-    const chapters = await getChaptersByVolumeId(vol.id);
+    const chapters = await deps.getChaptersByVolumeId(vol.id);
     for (const ch of chapters) {
       if (!ch.content) continue;
       const paragraphs = ch.content.split(/\n+/);
@@ -52,7 +47,7 @@ export async function buildCharacterAuditContext(
     }
   }
 
-  const activeTemplate = await getActivePromptTemplate(
+  const activeTemplate = await deps.getActivePromptTemplate(
     book.id,
     "character_audit",
   );

@@ -1,3 +1,15 @@
+import type {
+  Book,
+  ChapterOutline,
+  VolumeOutline,
+  WorldRule,
+  WorldRuleCategory,
+  SettingEntity,
+  SettingCategory,
+  StoryFact,
+  PromptTemplate,
+} from "@/shared/types";
+
 export type AiFunctionKey =
   | "content_generate"
   | "review_extract"
@@ -30,4 +42,16 @@ export interface BuiltContext {
     charactersInvolved?: string[];
     factsCount?: number;
   };
+}
+
+/** Store function dependencies injected into builders for testability. */
+export interface StoreDeps {
+  getBookById: (id: string) => Promise<Book | null>;
+  getChapterById: (id: string) => Promise<ChapterOutline | null>;
+  getChaptersByVolumeId: (volumeId: string) => Promise<ChapterOutline[]>;
+  getVolumesByBookId: (bookId: string) => Promise<VolumeOutline[]>;
+  getWorldRulesByBookId: (bookId: string, category?: WorldRuleCategory) => Promise<WorldRule[]>;
+  getSettingEntitiesByBookId: (bookId: string, category?: SettingCategory) => Promise<SettingEntity[]>;
+  getStoryFactsByBookId: (bookId: string) => Promise<StoryFact[]>;
+  getActivePromptTemplate: (bookId: string, functionKey: string) => Promise<PromptTemplate | null>;
 }

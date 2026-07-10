@@ -1,23 +1,20 @@
-import { getBookById } from "@/server/storage/book-store";
-import { getChapterById } from "@/server/storage/outline-store";
-import { getWorldRulesByBookId } from "@/server/storage/world-rule-store";
-import { getActivePromptTemplate } from "@/server/storage/prompt-template-store";
-import type { ContextInput, BuiltContext } from "../types";
+import type { ContextInput, BuiltContext, StoreDeps } from "../types";
 import { estimateTokens, renderTemplate, formatRules } from "../utils";
 
 export async function buildTextProcessingContext(
   input: ContextInput,
+  deps: StoreDeps,
 ): Promise<BuiltContext> {
-  const book = await getBookById(input.bookId);
+  const book = await deps.getBookById(input.bookId);
   if (!book) {
     throw new Error(`书籍不存在（bookId: ${input.bookId}）`);
   }
 
-  const writingRules = await getWorldRulesByBookId(book.id, "writing");
+  const writingRules = await deps.getWorldRulesByBookId(book.id, "writing");
 
   let chapterContext = "（无章纲上下文）";
   if (input.chapterId) {
-    const chapter = await getChapterById(input.chapterId);
+    const chapter = await deps.getChapterById(input.chapterId);
     if (chapter) {
       chapterContext = [
         `标题：${chapter.title}`,
@@ -28,7 +25,7 @@ export async function buildTextProcessingContext(
     }
   }
 
-  const activeTemplate = await getActivePromptTemplate(
+  const activeTemplate = await deps.getActivePromptTemplate(
     book.id,
     input.functionKey,
   );

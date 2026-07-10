@@ -1,32 +1,29 @@
-import { getBookById } from "@/server/storage/book-store";
-import { getChapterById, getChaptersByVolumeId } from "@/server/storage/outline-store";
-import { getSettingEntitiesByBookId } from "@/server/storage/setting-entity-store";
-import { getActivePromptTemplate } from "@/server/storage/prompt-template-store";
-import type { ContextInput, BuiltContext } from "../types";
+import type { ContextInput, BuiltContext, StoreDeps } from "../types";
 import { estimateTokens, renderTemplate } from "../utils";
 
 export async function buildReviewContext(
   input: ContextInput,
+  deps: StoreDeps,
 ): Promise<BuiltContext> {
-  const book = await getBookById(input.bookId);
+  const book = await deps.getBookById(input.bookId);
   if (!book) {
     throw new Error(`书籍不存在（bookId: ${input.bookId}）`);
   }
-  const chapter = await getChapterById(input.chapterId!);
+  const chapter = await deps.getChapterById(input.chapterId!);
   if (!chapter) {
     throw new Error(`章纲不存在（chapterId: ${input.chapterId}）`);
   }
 
-  const allChapters = await getChaptersByVolumeId(chapter.volumeId);
+  const allChapters = await deps.getChaptersByVolumeId(chapter.volumeId);
   const chapterNumber =
     allChapters.findIndex((c) => c.id === chapter.id) + 1;
 
-  const allCharacters = await getSettingEntitiesByBookId(
+  const allCharacters = await deps.getSettingEntitiesByBookId(
     book.id,
     "character",
   );
 
-  const allChaptersInVolume = await getChaptersByVolumeId(
+  const allChaptersInVolume = await deps.getChaptersByVolumeId(
     chapter.volumeId,
   );
   const foreshadowSet = new Set<string>();
@@ -39,7 +36,7 @@ export async function buildReviewContext(
     }
   }
 
-  const activeTemplate = await getActivePromptTemplate(
+  const activeTemplate = await deps.getActivePromptTemplate(
     book.id,
     "review_extract",
   );
