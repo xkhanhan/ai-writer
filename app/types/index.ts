@@ -48,6 +48,10 @@ export type {
   SettingEntity,
   CreateSettingEntityDTO,
   UpdateSettingEntityDTO,
+  // AI 提示词模板
+  PromptTemplate,
+  PromptVariable,
+  UpdatePromptTemplateDTO,
 } from "@/shared/types";
 
 // Re-export the GenreTreeNode that now lives in shared (used by BookOptions)
