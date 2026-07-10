@@ -10,6 +10,7 @@ export async function GET(request: Request) {
   const bookId = searchParams.get("bookId");
   const functionKey = searchParams.get("functionKey") ?? undefined;
 
+  // bookId is required so we can include both book-specific and system-level templates
   if (!bookId) {
     return jsonError("bookId is required.");
   }
@@ -32,8 +33,11 @@ export async function POST(request: Request) {
       ? (body as Record<string, unknown>)
       : {};
 
+  // bookId is optional — null/absent means system-level template
   const bookId =
-    typeof payload.bookId === "string" ? payload.bookId.trim() : "";
+    typeof payload.bookId === "string" && payload.bookId.trim() !== ""
+      ? payload.bookId.trim()
+      : null;
   const functionKey =
     typeof payload.functionKey === "string" ? payload.functionKey.trim() : "";
   const displayName =
@@ -43,10 +47,6 @@ export async function POST(request: Request) {
   const template =
     typeof payload.template === "string" ? payload.template.trim() : "";
   const variables = Array.isArray(payload.variables) ? payload.variables : [];
-
-  if (!bookId) {
-    return jsonError("bookId is required.");
-  }
 
   if (!functionKey) {
     return jsonError("functionKey is required.");

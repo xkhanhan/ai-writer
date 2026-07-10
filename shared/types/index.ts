@@ -449,7 +449,7 @@ export interface CreateGenerationSessionDTO {
 
 export interface PromptTemplate {
   id: string;
-  bookId: string;
+  bookId: string | null;  // null = system-level template
   functionKey: string;
   displayName: string;
   description: string;
@@ -469,6 +469,7 @@ export interface PromptVariable {
 }
 
 export interface CreatePromptTemplateDTO {
+  bookId?: string | null;  // optional, null for system-level templates
   functionKey: string;
   displayName: string;
   description?: string;

@@ -37,6 +37,9 @@ export async function getDb(): Promise<Database.Database> {
   // 迁移：为 chapters 表补充新字段
   migrateChapterNewFields(db);
 
+  // 迁移：为 prompt_templates 表补充元信息列
+  migratePromptTemplates(db);
+
   return db;
 }
 
@@ -97,6 +100,46 @@ function migrateChapterNewFields(db: Database.Database) {
       db.exec(`ALTER TABLE chapters ADD COLUMN ${col.name} ${col.def}`);
     }
   }
+}
+
+/**
+ * Migrate prompt_templates to allow nullable book_id (for system-level templates).
+ * Drops and recreates the table since SQLite doesn't support ALTER COLUMN.
+ * Existing data is preserved.
+ */
+function migratePromptTemplates(db: Database.Database) {
+  const tableInfo = db.prepare(
+    `SELECT sql FROM sqlite_master WHERE type='table' AND name='prompt_templates'`,
+  ).get() as { sql: string } | undefined;
+
+  if (!tableInfo) return; // table doesn't exist yet, will be created by initializeTables
+
+  // Check if book_id is NOT NULL (old schema)
+  if (!tableInfo.sql.includes("NOT NULL")) return; // already migrated
+
+  // Rebuild the table with nullable book_id
+  db.exec(`
+    CREATE TABLE prompt_templates_new (
+      id            TEXT PRIMARY KEY,
+      book_id       TEXT,
+      function_key  TEXT NOT NULL,
+      display_name  TEXT NOT NULL,
+      description   TEXT DEFAULT '',
+      template      TEXT NOT NULL,
+      variables     TEXT DEFAULT '[]',
+      is_default    INTEGER DEFAULT 0,
+      is_active     INTEGER DEFAULT 1,
+      created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    INSERT INTO prompt_templates_new (id, book_id, function_key, display_name, description, template, variables, is_default, is_active, created_at, updated_at)
+      SELECT id, book_id, function_key, display_name, description, template, variables, is_default, is_active, created_at, updated_at
+      FROM prompt_templates;
+    DROP TABLE prompt_templates;
+    ALTER TABLE prompt_templates_new RENAME TO prompt_templates;
+    CREATE INDEX IF NOT EXISTS idx_prompt_func ON prompt_templates(book_id, function_key);
+    CREATE INDEX IF NOT EXISTS idx_prompt_func_key ON prompt_templates(function_key);
+  `);
 }
 
 function initializeTables(db: Database.Database) {
@@ -330,11 +373,11 @@ function initializeTables(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_gen_sessions_chapter ON ai_generation_sessions(chapter_id);
   `);
 
-  // AI 提示词模板
+  // AI 提示词模板（system-level: book_id IS NULL; book-specific: book_id = bookId）
   db.exec(`
     CREATE TABLE IF NOT EXISTS prompt_templates (
       id            TEXT PRIMARY KEY,
-      book_id       TEXT NOT NULL,
+      book_id       TEXT,
       function_key  TEXT NOT NULL,
       display_name  TEXT NOT NULL,
       description   TEXT DEFAULT '',
@@ -343,10 +386,10 @@ function initializeTables(db: Database.Database) {
       is_default    INTEGER DEFAULT 0,
       is_active     INTEGER DEFAULT 1,
       created_at    TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+      updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_prompt_func ON prompt_templates(book_id, function_key);
+    CREATE INDEX IF NOT EXISTS idx_prompt_func_key ON prompt_templates(function_key);
   `);
 }
 

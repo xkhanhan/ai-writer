@@ -3,7 +3,7 @@ import { getDb } from "@/server/storage/db";
 
 export type PromptTemplateRow = {
   id: string;
-  book_id: string;
+  book_id: string | null;
   function_key: string;
   display_name: string;
   description: string;
@@ -17,7 +17,7 @@ export type PromptTemplateRow = {
 
 export type PromptTemplate = {
   id: string;
-  bookId: string;
+  bookId: string | null;
   functionKey: string;
   displayName: string;
   description: string;
@@ -37,6 +37,7 @@ export type PromptVariable = {
 };
 
 export type CreatePromptTemplateDTO = {
+  bookId?: string | null;  // optional, null for system-level templates
   functionKey: string;
   displayName: string;
   description?: string;
@@ -76,14 +77,18 @@ export async function getPromptTemplatesByBook(
   if (functionKey) {
     const rows = db
       .prepare(
-        `SELECT * FROM prompt_templates WHERE book_id = ? AND function_key = ? ORDER BY created_at DESC`,
+        `SELECT * FROM prompt_templates
+         WHERE (book_id = ? OR book_id IS NULL) AND function_key = ?
+         ORDER BY created_at DESC`,
       )
       .all(bookId, functionKey) as PromptTemplateRow[];
     return rows.map(mapRow);
   }
   const rows = db
     .prepare(
-      `SELECT * FROM prompt_templates WHERE book_id = ? ORDER BY created_at DESC`,
+      `SELECT * FROM prompt_templates
+       WHERE book_id = ? OR book_id IS NULL
+       ORDER BY created_at DESC`,
     )
     .all(bookId) as PromptTemplateRow[];
   return rows.map(mapRow);
@@ -100,11 +105,12 @@ export async function getPromptTemplate(
 }
 
 export async function createPromptTemplate(
-  bookId: string,
+  bookId: string | null | undefined,
   data: CreatePromptTemplateDTO,
 ): Promise<PromptTemplate> {
   const db = await getDb();
   const id = randomUUID();
+  const finalBookId = data.bookId !== undefined ? data.bookId : (bookId ?? null);
   const variables = JSON.stringify(data.variables ?? []);
 
   db.prepare(
@@ -112,7 +118,7 @@ export async function createPromptTemplate(
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
-    bookId,
+    finalBookId,
     data.functionKey,
     data.displayName,
     data.description ?? "",
@@ -192,7 +198,7 @@ export async function getActivePromptTemplate(
 ): Promise<PromptTemplate | null> {
   const db = await getDb();
 
-  // Prefer the user's active template
+  // Priority 1: book-specific active template
   const active = db
     .prepare(
       `SELECT * FROM prompt_templates
@@ -203,8 +209,19 @@ export async function getActivePromptTemplate(
 
   if (active) return mapRow(active);
 
-  // Fall back to the system default
-  const fallback = db
+  // Priority 2: system-level default template
+  const systemDefault = db
+    .prepare(
+      `SELECT * FROM prompt_templates
+       WHERE book_id IS NULL AND function_key = ? AND is_default = 1
+       LIMIT 1`,
+    )
+    .get(functionKey) as PromptTemplateRow | undefined;
+
+  if (systemDefault) return mapRow(systemDefault);
+
+  // Priority 3: book-specific default (legacy fallback)
+  const bookDefault = db
     .prepare(
       `SELECT * FROM prompt_templates
        WHERE book_id = ? AND function_key = ? AND is_default = 1
@@ -212,5 +229,5 @@ export async function getActivePromptTemplate(
     )
     .get(bookId, functionKey) as PromptTemplateRow | undefined;
 
-  return fallback ? mapRow(fallback) : null;
+  return bookDefault ? mapRow(bookDefault) : null;
 }
