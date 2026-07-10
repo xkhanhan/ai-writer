@@ -6,6 +6,18 @@ import type {
   UpdateTagCategoryDTO,
 } from "@/app/types";
 
+/** 获取标签树（级联结构） */
+export async function fetchTagTree(
+  bookId: string
+): Promise<Result<TagCategory[]>> {
+  const res = await client.get<{ tags: TagCategory[] }>(
+    "/api/tags",
+    { bookId }
+  );
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.tags ?? [] };
+}
+
 /** 获取单个标签 */
 export async function getTag(
   id: string
