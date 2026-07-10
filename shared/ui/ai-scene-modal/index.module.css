@@ -9,6 +9,17 @@
   flex-direction: column;
 }
 
+.inputSection :global(.ant-input-textarea-show-count) {
+  height: auto;
+}
+
+.inputSection :global(.ant-input-textarea-show-count::after) {
+  position: static;
+  display: block;
+  text-align: right;
+  margin-top: 4px;
+}
+
 .inputLabel {
   font-size: 13px;
   font-weight: 500;
@@ -19,13 +30,8 @@
 .inputFooter {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-top: 8px;
-}
-
-.charCount {
-  font-size: 12px;
-  color: var(--text-tertiary);
 }
 
 .resultSection {

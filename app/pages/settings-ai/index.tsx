@@ -1,24 +1,33 @@
 "use client";
 
-import { Button, Card, Divider, Form, Grid } from "antd";
-import { ArrowLeftOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons";
-import type { AiConfig } from "@/app/types";
+import { useState } from "react";
+import { Button, Card, Divider, Form, Grid, Select } from "antd";
+import { ArrowLeftOutlined, SaveOutlined, SettingOutlined, ThunderboltOutlined } from "@ant-design/icons";
+import type { AiConfig, Book } from "@/app/types";
 import { useAiConfig } from "./hooks/use-ai-config";
 import ProviderSelector from "./components/provider-selector";
 import BasicConfig from "./components/basic-config";
 import ConnectionTest from "./components/connection-test";
 import AdvancedJson from "./components/advanced-json";
+import PromptLibrary from "@/app/pages/books/components/prompt-library";
 import styles from "./index.module.css";
 
 const { useBreakpoint } = Grid;
 
+type SettingsTab = "ai-config" | "prompt-library";
+
 interface AiConfigFormProps {
   onBack: () => void;
   initialConfig?: AiConfig | null;
+  initialBooks?: Book[];
 }
 
-export default function AiConfigForm({ onBack, initialConfig }: AiConfigFormProps) {
+export default function AiConfigForm({ onBack, initialConfig, initialBooks = [] }: AiConfigFormProps) {
   const screens = useBreakpoint();
+  const [activeTab, setActiveTab] = useState<SettingsTab>("ai-config");
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(
+    initialBooks.length > 0 ? initialBooks[0].id : null,
+  );
 
   const {
     providerId,
@@ -51,19 +60,32 @@ export default function AiConfigForm({ onBack, initialConfig }: AiConfigFormProp
   } = useAiConfig(initialConfig);
 
   const canTest = Boolean(baseUrl && apiKey && model);
+  const selectedBook = initialBooks.find((b) => b.id === selectedBookId) ?? null;
 
   return (
     <div className={styles.container}>
-      {/* Left sidebar */}
+      {/* Left sidebar - tab navigation */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <h2 className={styles.sidebarTitle}>设置</h2>
         </div>
         <nav className={styles.sidebarNav}>
-          <span className={`${styles.tabItem} ${styles.tabItemActive}`}>
+          <button
+            className={`${styles.tabItem} ${activeTab === "ai-config" ? styles.tabItemActive : ""}`}
+            onClick={() => setActiveTab("ai-config")}
+            type="button"
+          >
             <SettingOutlined />
             AI 配置
-          </span>
+          </button>
+          <button
+            className={`${styles.tabItem} ${activeTab === "prompt-library" ? styles.tabItemActive : ""}`}
+            onClick={() => setActiveTab("prompt-library")}
+            type="button"
+          >
+            <ThunderboltOutlined />
+            提示词库
+          </button>
         </nav>
         <div className={styles.sidebarFooter}>
           <Button
@@ -79,7 +101,8 @@ export default function AiConfigForm({ onBack, initialConfig }: AiConfigFormProp
 
       {/* Right content area */}
       <main className={styles.contentArea}>
-        <div className={styles.tabContent}>
+        {activeTab === "ai-config" && (
+          <div className={styles.tabContent}>
             <div className={styles.aiConfigTab}>
               <Form
                 layout="vertical"
@@ -143,6 +166,35 @@ export default function AiConfigForm({ onBack, initialConfig }: AiConfigFormProp
               </Button>
             </div>
           </div>
+        )}
+
+        {activeTab === "prompt-library" && (
+          <div className={styles.tabContent}>
+            <div className={styles.bookSelector}>
+              <span className={styles.bookSelectorLabel}>选择书籍（用于定制）：</span>
+              <Select
+                style={{ minWidth: 200 }}
+                placeholder="选择一本书以定制提示词"
+                value={selectedBookId}
+                onChange={setSelectedBookId}
+                options={initialBooks.map((book) => ({
+                  label: book.title,
+                  value: book.id,
+                }))}
+                allowClear
+              />
+            </div>
+            <div className={styles.promptLibraryContent}>
+              {selectedBook ? (
+                <PromptLibrary book={selectedBook} />
+              ) : (
+                <div style={{ padding: 40, textAlign: "center", color: "var(--text-secondary)" }}>
+                  选择一本书以查看或定制提示词，不选择则编辑全局模板
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

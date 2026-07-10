@@ -184,13 +184,13 @@ export function AiSceneModal({
   };
 
   // --- Footer ---
-  const footer = hasResult
-    ? [
-        <Button key="cancel" onClick={handleClose}>放弃</Button>,
-        <Button key="regenerate" onClick={() => { resetAll(); void handleGenerate(); }} loading={loading}>重新生成</Button>,
-        <Button key="save" type="primary" icon={<CheckOutlined />} onClick={() => void handleSave()}>保存</Button>,
-      ]
-    : null;
+  const footer = [
+    <Button key="cancel" onClick={handleClose}>关闭</Button>,
+    ...(hasResult ? [
+      <Button key="regenerate" onClick={() => { resetAll(); void handleGenerate(); }} loading={loading}>重新生成</Button>,
+      <Button key="save" type="primary" icon={<CheckOutlined />} onClick={() => void handleSave()}>保存</Button>,
+    ] : []),
+  ];
 
   const rec = parsedResult as Record<string, unknown> | null;
 
@@ -202,7 +202,6 @@ export function AiSceneModal({
       width={640}
       footer={footer}
       closable
-      maskClosable
       destroyOnClose
     >
       <div className={styles.body}>
@@ -215,10 +214,10 @@ export function AiSceneModal({
             placeholder={scene.inputPlaceholder}
             rows={3}
             maxLength={500}
+            showCount
             disabled={loading}
           />
           <div className={styles.inputFooter}>
-            <span className={styles.charCount}>{concept.length}/500</span>
             <Button
               type="primary"
               icon={<ThunderboltOutlined />}
