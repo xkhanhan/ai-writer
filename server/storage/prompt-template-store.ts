@@ -179,11 +179,11 @@ export async function updatePromptTemplate(
 export async function deletePromptTemplate(id: string): Promise<boolean> {
   const db = await getDb();
   const row = db
-    .prepare(`SELECT is_default FROM prompt_templates WHERE id = ?`)
-    .get(id) as { is_default: number } | undefined;
+    .prepare(`SELECT is_default, book_id FROM prompt_templates WHERE id = ?`)
+    .get(id) as { is_default: number; book_id: string | null } | undefined;
 
   if (!row) return false;
-  if (row.is_default === 1) {
+  if (row.is_default === 1 && row.book_id === null) {
     throw new Error("Cannot delete a system default template.");
   }
 
@@ -237,6 +237,40 @@ export async function copyGlobalToBook(
     globalRow.description,
     globalRow.template,
     globalRow.variables,
+  );
+
+  const newRow = db
+    .prepare(`SELECT * FROM prompt_templates WHERE id = ?`)
+    .get(newId) as PromptTemplateRow;
+  return mapRow(newRow);
+}
+
+export async function copyAsCustom(
+  bookId: string | null,
+  sourceTemplateId: string,
+): Promise<PromptTemplate> {
+  const db = await getDb();
+
+  const sourceRow = db
+    .prepare(`SELECT * FROM prompt_templates WHERE id = ?`)
+    .get(sourceTemplateId) as PromptTemplateRow | undefined;
+
+  if (!sourceRow) {
+    throw new Error(`Source template with id "${sourceTemplateId}" not found.`);
+  }
+
+  const newId = randomUUID();
+  db.prepare(
+    `INSERT INTO prompt_templates (id, book_id, function_key, display_name, description, template, variables, is_default, is_active)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)`,
+  ).run(
+    newId,
+    bookId,
+    sourceRow.function_key,
+    sourceRow.display_name,
+    sourceRow.description,
+    sourceRow.template,
+    sourceRow.variables,
   );
 
   const newRow = db
@@ -310,7 +344,18 @@ export async function getActivePromptTemplate(
 
   if (active) return mapRow(active);
 
-  // Priority 2: system-level default template
+  // Priority 2: user global custom active template (not a system default)
+  const globalCustom = db
+    .prepare(
+      `SELECT * FROM prompt_templates
+       WHERE book_id IS NULL AND function_key = ? AND is_active = 1 AND is_default = 0
+       LIMIT 1`,
+    )
+    .get(functionKey) as PromptTemplateRow | undefined;
+
+  if (globalCustom) return mapRow(globalCustom);
+
+  // Priority 3: system-level default template
   const systemDefault = db
     .prepare(
       `SELECT * FROM prompt_templates
@@ -319,18 +364,7 @@ export async function getActivePromptTemplate(
     )
     .get(functionKey) as PromptTemplateRow | undefined;
 
-  if (systemDefault) return mapRow(systemDefault);
-
-  // Priority 3: book-specific default (legacy fallback)
-  const bookDefault = db
-    .prepare(
-      `SELECT * FROM prompt_templates
-       WHERE book_id = ? AND function_key = ? AND is_default = 1
-       LIMIT 1`,
-    )
-    .get(bookId, functionKey) as PromptTemplateRow | undefined;
-
-  return bookDefault ? mapRow(bookDefault) : null;
+  return systemDefault ? mapRow(systemDefault) : null;
 }
 
 // ============================================================================

@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Button, Input, Tag, Tooltip } from "antd";
+import { Button, Tag, Tooltip, Select } from "antd";
 import {
   EditOutlined,
   ThunderboltOutlined,
   GlobalOutlined,
   BookOutlined,
   CopyOutlined,
-  UndoOutlined,
+  DeleteOutlined,
+  CheckOutlined,
 } from "@ant-design/icons";
 import {
   PanelContainer,
@@ -23,8 +24,7 @@ import {
   fetchTemplates,
   updateTemplate,
   deleteTemplate,
-  copyGlobalToBook,
-  deleteBookOverride,
+  copyAsCustom,
 } from "../../api/templates";
 import styles from "./index.module.css";
 
@@ -71,9 +71,7 @@ const PANEL_GROUPS: PanelGroup_[] = [
   {
     panelKey: "archive",
     label: "正文库",
-    functionKeys: [
-      { key: "book_synopsis_expand", label: "书籍简介扩写" },
-    ],
+    functionKeys: [{ key: "book_synopsis_expand", label: "书籍简介扩写" }],
   },
 ];
 
@@ -86,13 +84,10 @@ interface PromptLibraryProps {
 export default function PromptLibrary({ book }: PromptLibraryProps) {
   const [templates, setTemplates] = useState<PromptTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFunctionKey, setSelectedFunctionKey] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Scope: "global" | "book"
-  const [scope, setScope] = useState<"global" | "book">("global");
-
-  // Right panel edit state
+  // Edit state
   const [editTemplate, setEditTemplate] = useState("");
   const [dirty, setDirty] = useState(false);
 
@@ -101,10 +96,9 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     () => new Set(PANEL_GROUPS.map((g) => g.panelKey)),
   );
 
-  // Variable insertion
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load templates
+  // Load all templates (system defaults + book-specific)
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     const res = await fetchTemplates(book.id);
@@ -118,55 +112,49 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     void loadTemplates();
   }, [loadTemplates]);
 
-  // Build template maps: global and book-level
-  const { globalMap, bookMap } = useMemo(() => {
-    const g = new Map<string, PromptTemplate>();
-    const b = new Map<string, PromptTemplate>();
+  // Build index: for each functionKey, find system default and any custom copies
+  const templateIndex = useMemo(() => {
+    const map = new Map<string, { system: PromptTemplate | null; customs: PromptTemplate[] }>();
     for (const t of templates) {
-      if (t.bookId === null) {
-        g.set(t.functionKey, t);
+      const key = t.functionKey;
+      if (!map.has(key)) map.set(key, { system: null, customs: [] });
+      const entry = map.get(key)!;
+      if (t.isDefault && t.bookId === null) {
+        entry.system = t;
       } else {
-        b.set(t.functionKey, t);
+        entry.customs.push(t);
       }
     }
-    return { globalMap: g, bookMap: b };
+    return map;
   }, [templates]);
 
-  // Current template based on scope
-  const currentTemplate = useMemo(() => {
-    if (!selectedFunctionKey) return null;
-    return scope === "book"
-      ? bookMap.get(selectedFunctionKey) ?? null
-      : globalMap.get(selectedFunctionKey) ?? null;
-  }, [selectedFunctionKey, scope, globalMap, bookMap]);
+  // Current selected template
+  const selectedTemplate = useMemo(() => {
+    if (!selectedId) return null;
+    return templates.find((t) => t.id === selectedId) ?? null;
+  }, [selectedId, templates]);
 
-  // When selecting a template, default to book scope if book override exists
-  const handleSelectTemplate = useCallback((functionKey: string) => {
-    setSelectedFunctionKey(functionKey);
-    setDirty(false);
-    setScope(bookMap.has(functionKey) ? "book" : "global");
-  }, [bookMap]);
-
-  // Template split by "---": system-fixed (read-only) + user-editable
-  const [systemPart, userPart] = useMemo(() => {
-    if (!currentTemplate) return ["", ""];
-    const parts = currentTemplate.template.split("\n---\n");
+  // Template split by "---"
+  const [systemPart] = useMemo(() => {
+    if (!selectedTemplate) return ["", ""];
+    const parts = selectedTemplate.template.split("\n---\n");
     if (parts.length === 2) return [parts[0].trim(), parts[1].trim()];
-    return ["", currentTemplate.template];
-  }, [currentTemplate]);
+    return ["", selectedTemplate.template];
+  }, [selectedTemplate]);
 
   const hasSeparator = systemPart.length > 0;
+  const isSystemDefault = selectedTemplate?.isDefault === true && selectedTemplate?.bookId === null;
 
-  // Sync edit template when scope or template changes
+  // Sync edit template when selection changes
   useEffect(() => {
-    if (currentTemplate) {
-      const parts = currentTemplate.template.split("\n---\n");
-      setEditTemplate(parts.length === 2 ? parts[1].trim() : currentTemplate.template);
+    if (selectedTemplate) {
+      const parts = selectedTemplate.template.split("\n---\n");
+      setEditTemplate(parts.length === 2 ? parts[1].trim() : selectedTemplate.template);
       setDirty(false);
     }
-  }, [currentTemplate]);
+  }, [selectedTemplate]);
 
-  // Toggle group expand
+  // Toggle group
   const toggleGroup = (panelKey: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
@@ -176,14 +164,34 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     });
   };
 
-  // Save: rejoin system + user parts
+  // Select template
+  const handleSelect = (id: string) => {
+    if (dirty) void handleSave();
+    setSelectedId(id);
+  };
+
+  // Copy system default as custom
+  const handleCopyAsCustom = async (sourceId: string) => {
+    setSaving(true);
+    const res = await copyAsCustom(sourceId, book.id);
+    setSaving(false);
+    if (res.ok) {
+      showSuccess("已复制为自定义模板");
+      setSelectedId(res.data.id);
+      void loadTemplates();
+    } else {
+      showError(res.error);
+    }
+  };
+
+  // Save custom template
   const handleSave = async () => {
-    if (!currentTemplate || !dirty) return;
+    if (!selectedTemplate || !dirty || selectedTemplate.isDefault) return;
     setSaving(true);
     const fullTemplate = hasSeparator
       ? `${systemPart}\n---\n\n${editTemplate}`
       : editTemplate;
-    const res = await updateTemplate(currentTemplate.id, {
+    const res = await updateTemplate(selectedTemplate.id, {
       template: fullTemplate,
     });
     setSaving(false);
@@ -196,30 +204,15 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     }
   };
 
-  // Copy global to book (create book-level override)
-  const handleCopyToBook = async () => {
-    if (!selectedFunctionKey) return;
+  // Delete custom template
+  const handleDelete = async () => {
+    if (!selectedTemplate || selectedTemplate.isDefault) return;
     setSaving(true);
-    const res = await copyGlobalToBook(book.id, selectedFunctionKey);
+    const res = await deleteTemplate(selectedTemplate.id);
     setSaving(false);
     if (res.ok) {
-      showSuccess("已为本书创建定制模板");
-      setScope("book");
-      void loadTemplates();
-    } else {
-      showError(res.error);
-    }
-  };
-
-  // Delete book override (revert to global)
-  const handleRevertToGlobal = async () => {
-    if (!selectedFunctionKey) return;
-    setSaving(true);
-    const res = await deleteBookOverride(book.id, selectedFunctionKey);
-    setSaving(false);
-    if (res.ok) {
-      showSuccess("已恢复为全局模板");
-      setScope("global");
+      showSuccess("模板已删除");
+      setSelectedId(null);
       void loadTemplates();
     } else {
       showError(res.error);
@@ -228,29 +221,28 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
 
   // Activate template
   const handleActivate = async () => {
-    if (!currentTemplate) return;
+    if (!selectedTemplate) return;
     setSaving(true);
-    // Deactivate all other templates for this functionKey
+    // Deactivate all templates for this functionKey
     const allForFunction = templates.filter(
-      (t) => t.functionKey === currentTemplate.functionKey && t.isActive,
+      (t) => t.functionKey === selectedTemplate.functionKey && t.isActive,
     );
     for (const t of allForFunction) {
-      if (t.id !== currentTemplate.id) {
+      if (t.id !== selectedTemplate.id) {
         await updateTemplate(t.id, { isActive: false });
       }
     }
-    const res = await updateTemplate(currentTemplate.id, { isActive: true });
+    const res = await updateTemplate(selectedTemplate.id, { isActive: true });
     setSaving(false);
     if (res.ok) {
       showSuccess("模板已激活");
-      setDirty(false);
       void loadTemplates();
     } else {
       showError(res.error);
     }
   };
 
-  // Insert variable at cursor position
+  // Insert variable at cursor
   const handleInsertVariable = (varName: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -258,10 +250,8 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     const end = textarea.selectionEnd;
     const before = editTemplate.slice(0, start);
     const after = editTemplate.slice(end);
-    const newText = `${before}$${varName}${after}`;
-    setEditTemplate(newText);
+    setEditTemplate(`${before}$${varName}${after}`);
     setDirty(true);
-    // Restore cursor position after the inserted variable
     setTimeout(() => {
       textarea.focus();
       const pos = start + varName.length + 1;
@@ -269,26 +259,19 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     }, 0);
   };
 
-  const isActive = currentTemplate?.isActive ?? false;
-  const isBookScope = scope === "book" && bookMap.has(selectedFunctionKey ?? "");
-  const canEdit = currentTemplate && (currentTemplate.isDefault || isBookScope);
+  const isActive = selectedTemplate?.isActive ?? false;
 
   return (
     <>
       <PanelContainer>
         <PanelGroup direction="horizontal">
-          {/* Left: template list grouped by panel */}
+          {/* Left: template list */}
           <Panel
             title="提示词库"
             defaultSize={280}
             minSize={200}
             maxSize={500}
             collapsible
-            actions={
-              <span className={styles.listCount}>
-                {globalMap.size} 个模板
-              </span>
-            }
           >
             {loading ? (
               <div className={styles.loadingHint}>加载中...</div>
@@ -296,9 +279,6 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
               <div className={styles.templateList}>
                 {PANEL_GROUPS.map((group) => {
                   const isExpanded = expandedGroups.has(group.panelKey);
-                  const matchedCount = group.functionKeys.filter(
-                    (fk) => globalMap.has(fk.key),
-                  ).length;
                   return (
                     <div key={group.panelKey} className={styles.templateGroup}>
                       <button
@@ -309,35 +289,59 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
                           &#9656;
                         </span>
                         <span className={styles.groupLabel}>{group.label}</span>
-                        <span className={styles.groupCount}>{matchedCount}</span>
                       </button>
                       {isExpanded && (
                         <div className={styles.groupItems}>
                           {group.functionKeys.map((fk) => {
-                            const hasBook = bookMap.has(fk.key);
-                            const isSelected = selectedFunctionKey === fk.key;
+                            const entry = templateIndex.get(fk.key);
+                            if (!entry) return null;
                             return (
-                              <div
-                                key={fk.key}
-                                className={`${styles.templateItem} ${isSelected ? styles.templateItemActive : ""}`}
-                                onClick={() => handleSelectTemplate(fk.key)}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" || e.key === " ") {
-                                    e.preventDefault();
-                                    handleSelectTemplate(fk.key);
-                                  }
-                                }}
-                              >
-                                <span className={styles.templateItemName}>{fk.label}</span>
-                                <span className={styles.templateItemBadges}>
-                                  {hasBook && (
-                                    <Tooltip title="本书已定制">
-                                      <BookOutlined style={{ fontSize: 11, color: "var(--color-primary)" }} />
-                                    </Tooltip>
-                                  )}
-                                </span>
+                              <div key={fk.key}>
+                                {/* System default */}
+                                {entry.system && (
+                                  <div
+                                    className={`${styles.templateItem} ${selectedId === entry.system.id ? styles.templateItemActive : ""}`}
+                                    onClick={() => handleSelect(entry.system!.id)}
+                                    role="button"
+                                    tabIndex={0}
+                                  >
+                                    <span className={styles.templateItemName}>{fk.label}</span>
+                                    <span className={styles.templateItemBadges}>
+                                      {entry.system.isActive && (
+                                        <span className={styles.badgeActive}>激活</span>
+                                      )}
+                                      <Tooltip title="系统默认模板">
+                                        <GlobalOutlined style={{ fontSize: 11, color: "var(--text-tertiary)" }} />
+                                      </Tooltip>
+                                    </span>
+                                  </div>
+                                )}
+                                {/* Custom copies */}
+                                {entry.customs.map((c) => (
+                                  <div
+                                    key={c.id}
+                                    className={`${styles.templateItem} ${styles.templateItemCustom} ${selectedId === c.id ? styles.templateItemActive : ""}`}
+                                    onClick={() => handleSelect(c.id)}
+                                    role="button"
+                                    tabIndex={0}
+                                  >
+                                    <span className={styles.templateItemName}>
+                                      {c.displayName || fk.label}
+                                    </span>
+                                    <span className={styles.templateItemBadges}>
+                                      {c.isActive && (
+                                        <span className={styles.badgeActive}>激活</span>
+                                      )}
+                                      <Tooltip title={c.bookId ? "本书定制" : "自定义全局"}>
+                                        {c.bookId ? (
+                                          <BookOutlined style={{ fontSize: 11, color: "var(--color-primary)" }} />
+                                        ) : (
+                                          <EditOutlined style={{ fontSize: 11, color: "var(--color-primary)" }} />
+                                        )}
+                                      </Tooltip>
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
                             );
                           })}
@@ -352,83 +356,70 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
 
           <Divider />
 
-          {/* Right: template editor */}
+          {/* Right: template detail / editor */}
           <Panel
-            title={currentTemplate ? currentTemplate.displayName : "模板详情"}
+            title={selectedTemplate ? selectedTemplate.displayName : "模板详情"}
             defaultSize={600}
             minSize={400}
             actions={
-              currentTemplate ? (
+              selectedTemplate ? (
                 <span className={styles.headerBadges}>
-                  <Tag icon={scope === "global" ? <GlobalOutlined /> : <BookOutlined />} color={scope === "global" ? "default" : "blue"}>
-                    {scope === "global" ? "全局" : "本书定制"}
+                  <Tag
+                    icon={isSystemDefault ? <GlobalOutlined /> : selectedTemplate?.bookId ? <BookOutlined /> : <EditOutlined />}
+                    color={isSystemDefault ? "default" : "blue"}
+                  >
+                    {isSystemDefault ? "系统默认" : selectedTemplate?.bookId ? "本书定制" : "自定义全局"}
                   </Tag>
                   {isActive && <span className={styles.badgeActive}>激活</span>}
                 </span>
               ) : undefined
             }
           >
-            {currentTemplate ? (
+            {selectedTemplate ? (
               <div className={styles.editorBody}>
                 {/* Description */}
-                {currentTemplate.description && (
-                  <div className={styles.description}>{currentTemplate.description}</div>
+                {selectedTemplate.description && (
+                  <div className={styles.description}>{selectedTemplate.description}</div>
                 )}
 
-                {/* Scope switcher */}
-                <div className={styles.scopeBar}>
-                  <Button
-                    size="small"
-                    type={scope === "global" ? "primary" : "default"}
-                    icon={<GlobalOutlined />}
-                    onClick={() => setScope("global")}
-                  >
-                    全局模板
-                  </Button>
-                  <Button
-                    size="small"
-                    type={scope === "book" ? "primary" : "default"}
-                    icon={<BookOutlined />}
-                    disabled={!bookMap.has(selectedFunctionKey ?? "")}
-                    onClick={() => setScope("book")}
-                  >
-                    本书定制
-                  </Button>
-                  <span className={styles.scopeHint}>
-                    {scope === "global"
-                      ? "全局模板适用于所有书籍"
-                      : "当前使用本书专属模板"}
-                  </span>
-                </div>
-
-                {/* Scope actions */}
-                {scope === "global" && !bookMap.has(selectedFunctionKey ?? "") && (
-                  <Button
-                    size="small"
-                    icon={<CopyOutlined />}
-                    onClick={() => void handleCopyToBook()}
-                    loading={saving}
-                  >
-                    为本书定制
-                  </Button>
-                )}
-                {scope === "book" && (
-                  <Button
-                    size="small"
-                    icon={<UndoOutlined />}
-                    onClick={() => void handleRevertToGlobal()}
-                    loading={saving}
-                  >
-                    恢复为全局模板
-                  </Button>
+                {/* System default: read-only view + copy button */}
+                {isSystemDefault && (
+                  <div className={styles.systemDefaultActions}>
+                    <Button
+                      type="primary"
+                      icon={<CopyOutlined />}
+                      onClick={() => void handleCopyAsCustom(selectedTemplate.id)}
+                      loading={saving}
+                    >
+                      复制为自定义
+                    </Button>
+                    <Button
+                      type={isActive ? "default" : "primary"}
+                      icon={<ThunderboltOutlined />}
+                      onClick={() => void handleActivate()}
+                      disabled={isActive || saving}
+                      loading={saving}
+                    >
+                      {isActive ? "已激活" : "激活"}
+                    </Button>
+                  </div>
                 )}
 
-                {/* Variables */}
-                {currentTemplate.variables.length > 0 && (
+                {/* System-fixed part (read-only) */}
+                {hasSeparator && (
+                  <div className={styles.editorSection}>
+                    <div className={styles.sectionTitle}>系统指令（不可编辑）</div>
+                    <pre className={styles.systemPart}>{systemPart}</pre>
+                    <div className={styles.separatorHint}>— 以下内容可编辑 —</div>
+                  </div>
+                )}
+
+                {/* Variables (for custom templates) */}
+                {!isSystemDefault && selectedTemplate.variables.length > 0 && (
                   <div className={styles.editorSection}>
                     <div className={styles.sectionTitle}>可用变量（点击插入）</div>
                     <div className={styles.variableList}>
-                      {currentTemplate.variables.map((v) => (
+                      {selectedTemplate.variables.map((v) => (
                         <div
                           key={v.name}
                           className={styles.variableItem}
@@ -454,59 +445,74 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
                   </div>
                 )}
 
-                {/* Template content */}
-                <div className={styles.editorSection}>
-                  {hasSeparator && (
-                    <>
-                      <div className={styles.sectionTitle}>系统指令（只读）</div>
-                      <pre className={styles.systemPart}>{systemPart}</pre>
-                      <div className={styles.separatorHint}>— 以下内容可编辑 —</div>
-                    </>
-                  )}
-                  <div className={styles.sectionTitle}>{hasSeparator ? "自定义指令" : "模板内容"}</div>
-                  <textarea
-                    ref={textareaRef}
-                    className={styles.templateTextarea}
-                    value={editTemplate}
-                    onChange={(e) => {
-                      setEditTemplate(e.target.value);
-                      setDirty(true);
-                    }}
-                    spellCheck={false}
-                  />
-                </div>
-
-                {/* Footer */}
-                <div className={styles.editorFooter}>
-                  <div className={styles.footerLeft} />
-                  <div className={styles.footerRight}>
-                    <Button
-                      type="primary"
-                      icon={<ThunderboltOutlined />}
-                      onClick={() => void handleActivate()}
-                      disabled={isActive || saving}
-                      loading={saving}
-                    >
-                      激活
-                    </Button>
-                    <Button
-                      type="primary"
-                      icon={<EditOutlined />}
-                      onClick={() => void handleSave()}
-                      disabled={!dirty || saving}
-                      loading={saving}
-                    >
-                      保存
-                    </Button>
+                {/* Editable template content */}
+                {!isSystemDefault && (
+                  <div className={styles.editorSection}>
+                    <div className={styles.sectionTitle}>{hasSeparator ? "自定义指令" : "模板内容"}</div>
+                    <textarea
+                      ref={textareaRef}
+                      className={styles.templateTextarea}
+                      value={editTemplate}
+                      onChange={(e) => {
+                        setEditTemplate(e.target.value);
+                        setDirty(true);
+                      }}
+                      spellCheck={false}
+                    />
                   </div>
-                </div>
+                )}
+
+                {/* System default: show full template as read-only */}
+                {isSystemDefault && !hasSeparator && (
+                  <div className={styles.editorSection}>
+                    <div className={styles.sectionTitle}>完整模板（只读）</div>
+                    <pre className={styles.systemPart}>{selectedTemplate.template}</pre>
+                  </div>
+                )}
+
+                {/* Footer: custom template actions */}
+                {!isSystemDefault && (
+                  <div className={styles.editorFooter}>
+                    <div className={styles.footerLeft}>
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => void handleDelete()}
+                        disabled={saving}
+                        loading={saving}
+                      >
+                        删除
+                      </Button>
+                    </div>
+                    <div className={styles.footerRight}>
+                      <Button
+                        type="primary"
+                        icon={<ThunderboltOutlined />}
+                        onClick={() => void handleActivate()}
+                        disabled={isActive || saving}
+                        loading={saving}
+                      >
+                        激活
+                      </Button>
+                      <Button
+                        type="primary"
+                        icon={<CheckOutlined />}
+                        onClick={() => void handleSave()}
+                        disabled={!dirty || saving}
+                        loading={saving}
+                      >
+                        保存
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className={styles.emptyDetail}>
                 <EmptyState
                   icon={<EditOutlined />}
-                  title="选择一个模板进行编辑"
-                  description="从左侧列表中选择要查看或编辑的提示词模板"
+                  title="选择一个模板"
+                  description="从左侧列表中选择模板查看或编辑"
                 />
               </div>
             )}

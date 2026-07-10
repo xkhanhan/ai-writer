@@ -57,6 +57,18 @@ export async function deleteBookOverride(
   });
 }
 
+export async function copyAsCustom(
+  sourceTemplateId: string,
+  bookId?: string | null,
+): Promise<Result<PromptTemplate>> {
+  const res = await client.post<{ template: PromptTemplate }>(
+    "/api/ai/templates",
+    { action: "copyAsCustom", sourceTemplateId, bookId: bookId ?? null },
+  );
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.template };
+}
+
 export async function getTemplateScope(
   bookId: string,
   functionKey: string,

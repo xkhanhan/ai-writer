@@ -4,6 +4,7 @@ import {
   getPromptTemplatesByBook,
   createPromptTemplate,
   copyGlobalToBook,
+  copyAsCustom,
   deleteBookOverride,
 } from "@/server/storage/prompt-template-store";
 
@@ -83,6 +84,30 @@ export async function POST(request: Request) {
 
     const deleted = await deleteBookOverride(bookId, functionKey);
     return jsonSuccess({ deleted });
+  }
+
+  if (action === "copyAsCustom") {
+    const sourceTemplateId =
+      typeof payload.sourceTemplateId === "string" && payload.sourceTemplateId.trim() !== ""
+        ? payload.sourceTemplateId.trim()
+        : null;
+    const bookId =
+      typeof payload.bookId === "string" && payload.bookId.trim() !== ""
+        ? payload.bookId.trim()
+        : null;
+
+    if (!sourceTemplateId) {
+      return jsonError("sourceTemplateId is required for copyAsCustom.");
+    }
+
+    try {
+      const template = await copyAsCustom(bookId, sourceTemplateId);
+      return jsonSuccess({ template });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to copy template as custom.";
+      return jsonError(message);
+    }
   }
 
   // bookId is optional — null/absent means system-level template
