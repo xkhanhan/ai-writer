@@ -201,6 +201,8 @@ export function AiSceneModal({
       onCancel={handleClose}
       width={640}
       footer={footer}
+      closable
+      maskClosable
       destroyOnClose
     >
       <div className={styles.body}>
@@ -213,10 +215,10 @@ export function AiSceneModal({
             placeholder={scene.inputPlaceholder}
             rows={3}
             maxLength={500}
-            showCount
             disabled={loading}
           />
           <div className={styles.inputFooter}>
+            <span className={styles.charCount}>{concept.length}/500</span>
             <Button
               type="primary"
               icon={<ThunderboltOutlined />}

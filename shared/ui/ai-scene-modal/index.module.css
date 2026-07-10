@@ -9,10 +9,6 @@
   flex-direction: column;
 }
 
-.inputSection :global(.ant-input-textarea-show-count) {
-  padding-bottom: 22px;
-}
-
 .inputLabel {
   font-size: 13px;
   font-weight: 500;
@@ -23,8 +19,13 @@
 .inputFooter {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   margin-top: 8px;
+}
+
+.charCount {
+  font-size: 12px;
+  color: var(--text-tertiary);
 }
 
 .resultSection {

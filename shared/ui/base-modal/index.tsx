@@ -17,6 +17,8 @@ export interface BaseModalProps {
   width?: number;
   destroyOnClose?: boolean;
   footer?: React.ReactNode | null;
+  closable?: boolean;
+  maskClosable?: boolean;
   children: React.ReactNode;
 }
 
@@ -38,6 +40,8 @@ export default function BaseModal({
   width = 600,
   destroyOnClose = true,
   footer,
+  closable = false,
+  maskClosable = false,
   children,
 }: BaseModalProps) {
   const handleOk = useCallback(async () => {
@@ -66,9 +70,9 @@ export default function BaseModal({
       title={title}
       width={width}
       destroyOnClose={destroyOnClose}
-      closable={false}
-      maskClosable={false}
-      keyboard={false}
+      closable={closable}
+      maskClosable={maskClosable}
+      keyboard={closable}
       onCancel={onCancel}
       footer={footer === undefined ? defaultFooter : footer}
       classNames={{
