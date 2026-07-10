@@ -73,6 +73,7 @@ export async function getPromptTemplatesByBook(
   bookId: string,
   functionKey?: string,
 ): Promise<PromptTemplate[]> {
+  await ensureDefaultTemplates();
   const db = await getDb();
   if (functionKey) {
     const rows = db
