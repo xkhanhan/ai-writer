@@ -164,20 +164,33 @@ export default function WorldRules({
     rulesByCategory: Record<string, { name: string; content: string }[]>
   ) => {
     const cats: WorldRuleCategory[] = ["global", "writing", "setting"];
-    let savedCount = 0;
+    const tasks: Promise<{ ok: boolean }>[] = [];
     for (const cat of cats) {
       const catRules = rulesByCategory[cat];
       if (!Array.isArray(catRules)) continue;
       for (const rule of catRules) {
-        const result = await createWorldRule(book.id, {
-          category: cat,
-          name: rule.name,
-          content: rule.content,
-        });
-        if (result.ok) savedCount++;
+        tasks.push(
+          createWorldRule(book.id, {
+            category: cat,
+            name: rule.name,
+            content: rule.content,
+          })
+        );
       }
     }
-    if (savedCount === 0) throw new Error("未成功保存任何规则");
+    if (tasks.length === 0) throw new Error("未成功保存任何规则");
+
+    const results = await Promise.allSettled(tasks);
+    const succeeded = results.filter(
+      (r): r is PromiseFulfilledResult<{ ok: boolean }> =>
+        r.status === "fulfilled" && r.value.ok
+    ).length;
+    const failed = results.length - succeeded;
+
+    if (succeeded === 0) throw new Error("未成功保存任何规则");
+    if (failed > 0) {
+      showError(`成功保存 ${succeeded} 条规则，${failed} 条失败`);
+    }
   };
 
   // ============ 渲染 ============

@@ -80,3 +80,14 @@ export async function getTemplateScope(
   if (!res.ok) return res;
   return { ok: true, data: res.data.scope };
 }
+
+export async function activateTemplateById(
+  templateId: string,
+): Promise<Result<PromptTemplate>> {
+  const res = await client.post<{ template: PromptTemplate }>(
+    "/api/ai/templates/activate",
+    { templateId },
+  );
+  if (!res.ok) return res;
+  return { ok: true, data: res.data.template };
+}

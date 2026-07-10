@@ -304,6 +304,34 @@ export async function getAllFunctionKeys(): Promise<
   return rows;
 }
 
+/**
+ * Atomically activate a template: deactivate all templates for the same
+ * functionKey, then activate the target — all in a single transaction.
+ */
+export async function activateTemplate(id: string): Promise<PromptTemplate | null> {
+  const db = await getDb();
+
+  const target = db
+    .prepare("SELECT function_key FROM prompt_templates WHERE id = ?")
+    .get(id) as { function_key: string } | undefined;
+  if (!target) return null;
+
+  const deactivate = db.prepare(
+    "UPDATE prompt_templates SET is_active = 0, updated_at = datetime('now') WHERE function_key = ? AND is_active = 1"
+  );
+  const activate = db.prepare(
+    "UPDATE prompt_templates SET is_active = 1, updated_at = datetime('now') WHERE id = ?"
+  );
+
+  const swap = db.transaction(() => {
+    deactivate.run(target.function_key);
+    activate.run(id);
+  });
+  swap();
+
+  return getPromptTemplate(id);
+}
+
 export async function getActivePromptTemplate(
   bookId: string,
   functionKey: string,

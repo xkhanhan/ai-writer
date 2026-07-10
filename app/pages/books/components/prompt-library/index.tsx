@@ -25,6 +25,7 @@ import {
   updateTemplate,
   deleteTemplate,
   copyAsCustom,
+  activateTemplateById,
 } from "../../api/templates";
 import styles from "./index.module.css";
 
@@ -218,20 +219,11 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     }
   };
 
-  // Activate template
+  // Activate template (atomic: server deactivates all others in one transaction)
   const handleActivate = async () => {
     if (!selectedTemplate) return;
     setSaving(true);
-    // Deactivate all templates for this functionKey
-    const allForFunction = templates.filter(
-      (t) => t.functionKey === selectedTemplate.functionKey && t.isActive,
-    );
-    for (const t of allForFunction) {
-      if (t.id !== selectedTemplate.id) {
-        await updateTemplate(t.id, { isActive: false });
-      }
-    }
-    const res = await updateTemplate(selectedTemplate.id, { isActive: true });
+    const res = await activateTemplateById(selectedTemplate.id);
     setSaving(false);
     if (res.ok) {
       showSuccess("模板已激活");
