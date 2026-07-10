@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { AiTextTaskInput } from "@/shared/ai/contracts";
 import { generateAiText } from "@/server/ai/generate-ai-text";
+import { generateAiTextStream } from "@/server/ai/generate-ai-text-stream";
 import { buildContext, type AiFunctionKey } from "@/server/ai/context-builder";
 import { createGenerationSession } from "@/server/storage/ai-generation-store";
 
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
       "character_audit",
       "fact_consistency",
       "book_synopsis_expand",
+      "book_info_suggest",
     ];
 
     if (!allowedKeys.includes(functionKey as AiFunctionKey)) {
@@ -84,7 +86,7 @@ export async function POST(request: Request) {
       console.log(builtContext.userPrompt);
       console.log("========== END CONTEXT ==========\n");
 
-      // 3. Call AI with built context
+      // 3. Call AI — streaming or non-streaming
       const input: AiTextTaskInput = {
         prompt: builtContext.userPrompt,
         systemPrompt: builtContext.systemPrompt,
@@ -95,6 +97,65 @@ export async function POST(request: Request) {
         model: str(payload.model),
       };
 
+      const wantStream = payload.stream === true;
+
+      if (wantStream) {
+        // --- Streaming mode: pipe upstream SSE through to the client ---
+        const upstream = await generateAiTextStream(input);
+
+        const encoder = new TextEncoder();
+        const stream = new TransformStream({
+          transform(chunk: Uint8Array, controller) {
+            const text = new TextDecoder().decode(chunk, { stream: true });
+            const lines = text.split("\n");
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || !trimmed.startsWith("data: ")) continue;
+              const data = trimmed.slice(6);
+              if (data === "[DONE]") {
+                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                continue;
+              }
+              try {
+                const parsed = JSON.parse(data) as {
+                  choices?: Array<{
+                    delta?: { content?: string };
+                  }>;
+                };
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify({ content })}\n\n`),
+                  );
+                }
+              } catch {
+                // skip unparseable lines
+              }
+            }
+          },
+        });
+
+        // Fire-and-forget session recording
+        void createGenerationSession({
+          bookId,
+          functionKey,
+          chapterId: str(payload.chapterId),
+          inputContext: builtContext.userPrompt,
+          model: input.model ?? "",
+          userInput: builtContext.userPrompt,
+        }).catch(() => {});
+
+        return new Response(upstream.body?.pipeThrough(stream), {
+          status: 200,
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+          },
+        });
+      }
+
+      // --- Non-streaming mode ---
       const content = await generateAiText(input);
       const latencyMs = Date.now() - startTime;
 
@@ -122,6 +183,10 @@ export async function POST(request: Request) {
           latencyMs,
           bookTitle: builtContext.metadata.bookTitle,
           chapterTitle: builtContext.metadata.chapterTitle,
+        },
+        debug: {
+          systemPrompt: builtContext.systemPrompt,
+          userPrompt: builtContext.userPrompt,
         },
       });
     } catch (error) {

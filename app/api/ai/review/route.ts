@@ -51,6 +51,10 @@ interface ReviewSuccessResponse {
     tokensOutput: number;
     latencyMs: number;
   };
+  debug?: {
+    systemPrompt: string;
+    userPrompt: string;
+  };
 }
 
 interface ReviewFallbackResponse {
@@ -211,6 +215,10 @@ export async function POST(request: Request) {
           tokensInput: builtContext.estimatedTokens,
           tokensOutput: 0,
           latencyMs,
+        },
+        debug: {
+          systemPrompt: builtContext.systemPrompt,
+          userPrompt: builtContext.userPrompt,
         },
       };
 

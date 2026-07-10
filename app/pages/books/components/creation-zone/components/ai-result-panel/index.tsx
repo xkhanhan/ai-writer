@@ -36,6 +36,11 @@ interface GenerationMetadata {
   chapterTitle?: string;
 }
 
+interface DebugContext {
+  systemPrompt: string;
+  userPrompt: string;
+}
+
 const FUNCTION_LABELS: Record<AiFunctionKey, string> = {
   content_generate: "AI 生成内容",
   deslop: "去除AI味",
@@ -55,6 +60,8 @@ export function AiResultPanel({
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string>("");
   const [metadata, setMetadata] = useState<GenerationMetadata | null>(null);
+  const [debug, setDebug] = useState<DebugContext | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasAutoStarted = useRef(false);
 
@@ -63,6 +70,8 @@ export function AiResultPanel({
     setError(null);
     setResult("");
     setMetadata(null);
+    setDebug(null);
+    setShowDebug(false);
 
     try {
       const response = await fetch("/api/ai/chat", {
@@ -73,17 +82,59 @@ export function AiResultPanel({
           bookId,
           chapterId,
           selectedText: selectedText || undefined,
+          stream: true,
         }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok || data.success === false) {
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
         throw new Error(data.error || "AI 生成失败");
       }
 
-      setResult(data.content);
-      setMetadata(data.metadata ?? null);
+      const contentType = response.headers.get("content-type") || "";
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("无法读取响应流");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let accumulated = "";
+
+      if (contentType.includes("text/event-stream")) {
+        // Streaming mode
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith("data: ")) continue;
+            const data = trimmed.slice(6);
+            if (data === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(data) as { content?: string };
+              if (parsed.content) {
+                accumulated += parsed.content;
+                setResult(accumulated);
+              }
+            } catch {
+              // skip
+            }
+          }
+        }
+      } else {
+        // Fallback: non-streaming JSON response
+        reader.releaseLock();
+        const data = await response.json();
+        if (data.success === false) throw new Error(data.error || "AI 生成失败");
+        accumulated = data.content ?? "";
+        setResult(accumulated);
+        setMetadata(data.metadata ?? null);
+        setDebug(data.debug ?? null);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "AI 生成失败";
       setError(message);
@@ -124,7 +175,7 @@ export function AiResultPanel({
       </div>
 
       <div className={styles.panelBody}>
-        {loading && (
+        {loading && !result && (
           <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
             <Spin tip="正在生成中..." />
           </div>
@@ -140,8 +191,11 @@ export function AiResultPanel({
           </div>
         )}
 
-        {!loading && !error && result && (
-          <div className={styles.resultText}>{result}</div>
+        {!error && result && (
+          <div className={styles.resultText}>
+            {result}
+            {loading && <span className={styles.cursor} />}
+          </div>
         )}
       </div>
 
@@ -157,6 +211,29 @@ export function AiResultPanel({
               耗时: {(metadata.latencyMs / 1000).toFixed(1)}s
             </span>
           )}
+          {debug && (
+            <span
+              className={styles.debugToggle}
+              onClick={() => setShowDebug(!showDebug)}
+              role="button"
+              tabIndex={0}
+            >
+              {showDebug ? "收起 Prompt" : "查看 Prompt"}
+            </span>
+          )}
+        </div>
+      )}
+
+      {showDebug && debug && (
+        <div className={styles.debugSection}>
+          <div className={styles.debugBlock}>
+            <div className={styles.debugLabel}>System Prompt</div>
+            <pre className={styles.debugPre}>{debug.systemPrompt}</pre>
+          </div>
+          <div className={styles.debugBlock}>
+            <div className={styles.debugLabel}>User Prompt</div>
+            <pre className={styles.debugPre}>{debug.userPrompt}</pre>
+          </div>
         </div>
       )}
 

@@ -453,6 +453,96 @@
   min-width: 0;
 }
 
+/* AI 填写按钮 */
+.dashTopActions {
+  display: flex;
+  gap: 8px;
+}
+
+.dashAiBtn {
+  composes: dashEditBtn;
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary-border) !important;
+}
+
+.dashAiBtn:hover {
+  background: var(--color-primary-bg) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* AI 弹窗 */
+.aiModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aiModalInput {
+  display: flex;
+  flex-direction: column;
+}
+
+.aiModalInput :global(.ant-input-textarea-show-count) {
+  padding-bottom: 22px;
+}
+
+.aiModalInputFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.aiModalLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.aiModalResult {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aiModalResultLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.aiModalPre {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  padding: 12px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.aiModalPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aiModalError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--color-error);
+  font-size: 13px;
+}
+
 /* ===== 响应式 ===== */
 
 @media (max-width: 768px) {

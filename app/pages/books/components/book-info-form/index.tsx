@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Form, Input, InputNumber, Select, Button, Spin, Descriptions, Tag, Typography, Tooltip } from "antd";
 import BaseModal from "@/shared/ui/base-modal";
-import { EditOutlined } from "@ant-design/icons";
+import { EditOutlined, ThunderboltOutlined } from "@ant-design/icons";
 import { client } from "@/app/api-client";
 import { BOOK_GENRES, BOOK_PLATFORMS } from "@/app/constants";
 import { useBook } from "@/app/pages/books/hooks/use-book";
+import { showError, showSuccess } from "@/app/utils/error-handler";
 import type { BookOptions, GenreTreeNode, UpdateBookDTO, ArchivedChapter, VolumeOutline, ChapterOutline } from "@/app/types";
 import type { Book } from "@/app/types";
 import styles from "./index.module.css";
@@ -20,8 +21,9 @@ interface BookInfoDashboardProps {
 }
 
 export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboardProps) {
-  const { book, loading, update } = useBook(initialBook);
+  const { book, loading, update, refreshBook } = useBook(initialBook);
   const [editOpen, setEditOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [options, setOptions] = useState<BookOptions | null>(null);
 
   // 统计数据
@@ -129,14 +131,24 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
             {book.platform && <span className={styles.dashTag}>{book.platform}</span>}
             {book.targetAudience && <span className={styles.dashTag}>{book.targetAudience}</span>}
           </div>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            className={styles.dashEditBtn}
-            onClick={() => setEditOpen(true)}
-          >
-            编辑信息
-          </Button>
+          <div className={styles.dashTopActions}>
+            <Button
+              size="small"
+              icon={<ThunderboltOutlined />}
+              className={styles.dashAiBtn}
+              onClick={() => setAiOpen(true)}
+            >
+              AI 填写
+            </Button>
+            <Button
+              size="small"
+              icon={<EditOutlined />}
+              className={styles.dashEditBtn}
+              onClick={() => setEditOpen(true)}
+            >
+              编辑信息
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -155,7 +167,7 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
           {/* 书籍信息 */}
           <div className={styles.dashCard}>
             <div className={styles.dashCardTitle}>书籍信息</div>
-            <Descriptions column={{ xs: 1, sm: 2, md: 3 }} size="small" bordered>
+            <Descriptions column={{ xs: 1, sm: 2 }} size="small" bordered>
               <Descriptions.Item label="题材">
                 <InfoTruncate text={book.genre && book.subGenre ? `${book.genre} · ${book.subGenre}` : book.genre} />
               </Descriptions.Item>
@@ -169,20 +181,18 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
                 <InfoTruncate text={book.targetWordCount ? `${book.targetWordCount.toLocaleString()} 字` : undefined} />
               </Descriptions.Item>
               <Descriptions.Item label="目标总字数">
-                <InfoTruncate text={book.targetTotalWords ? `${book.targetTotalWords.toLocaleString()} 字` : undefined} />
-              </Descriptions.Item>
-              <Descriptions.Item label="核心卖点">
-                <Typography.Text type="success" strong>
-                  <InfoTruncate text={book.sellingPoint} />
-                </Typography.Text>
-              </Descriptions.Item>
-              <Descriptions.Item label="参考作品">
-                <InfoTruncate text={book.referenceWorks} />
+                <InfoTruncate text={book.targetTotalWords ? `${book.targetTotalWords.toLocaleString()} 万字` : undefined} />
               </Descriptions.Item>
               <Descriptions.Item label="受众">
                 <InfoTruncate text={book.targetAudience} />
               </Descriptions.Item>
-              <Descriptions.Item label="标签" span={tags.length > 0 ? { xs: 1, sm: 2, md: 3 } : 1}>
+              <Descriptions.Item label="核心卖点" span={2}>
+                <InfoTruncate text={book.sellingPoint} />
+              </Descriptions.Item>
+              <Descriptions.Item label="参考作品">
+                <InfoTruncate text={book.referenceWorks} />
+              </Descriptions.Item>
+              <Descriptions.Item label="标签">
                 {tags.length > 0 ? (
                   <div className={styles.infoTagsWrap}>
                     {tags.map((t) => (
@@ -194,7 +204,7 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
                 ) : <span style={{ color: "var(--text-light)" }}>—</span>}
               </Descriptions.Item>
               {book.description && (
-                <Descriptions.Item label="简介" span={{ xs: 1, sm: 2, md: 3 }}>
+                <Descriptions.Item label="简介" span={2}>
                   <Typography.Paragraph
                     ellipsis={{ rows: 2, tooltip: book.description }}
                     style={{ marginBottom: 0, fontSize: 12 }}
@@ -254,6 +264,17 @@ export default function BookInfoDashboard({ book: initialBook }: BookInfoDashboa
           } catch {
             // handled by hook
           }
+        }}
+      />
+
+      {/* AI 填写弹窗 */}
+      <AiSuggestModal
+        open={aiOpen}
+        book={book}
+        onClose={() => setAiOpen(false)}
+        onSaved={async () => {
+          setAiOpen(false);
+          await refreshBook();
         }}
       />
     </div>
@@ -640,6 +661,253 @@ function BookInfoEditModal({ open, book, options, loading, onClose, onSave }: Bo
           <Input.TextArea rows={4} maxLength={300} showCount placeholder="请输入书籍简介" />
         </Form.Item>
       </Form>
+    </BaseModal>
+  );
+}
+
+/* ===================================================================
+   AiSuggestModal — AI 智能填写书籍信息
+   =================================================================== */
+
+interface AiSuggestModalProps {
+  open: boolean;
+  book: Book;
+  onClose: () => void;
+  onSaved: () => void;
+}
+
+function AiSuggestModal({ open, book, onClose, onSaved }: AiSuggestModalProps) {
+  const [concept, setConcept] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [streaming, setStreaming] = useState(false);
+  const [result, setResult] = useState("");
+  const [suggestion, setSuggestion] = useState<Record<string, unknown> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGenerate = useCallback(async () => {
+    if (!concept.trim()) return;
+    setLoading(true);
+    setStreaming(true);
+    setError(null);
+    setResult("");
+    setSuggestion(null);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          functionKey: "book_info_suggest",
+          bookId: book.id,
+          selectedText: concept.trim(),
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "AI 建议生成失败");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("无法读取响应流");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let accumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data: ")) continue;
+          const data = trimmed.slice(6);
+          if (data === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(data) as { content?: string };
+            if (parsed.content) {
+              accumulated += parsed.content;
+              setResult(accumulated);
+            }
+          } catch { /* skip */ }
+        }
+      }
+
+      // Parse JSON
+      let parsed: Record<string, unknown>;
+      try {
+        parsed = JSON.parse(accumulated);
+      } catch {
+        const match = accumulated.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+        if (match?.[1]) {
+          parsed = JSON.parse(match[1]);
+        } else {
+          const start = accumulated.indexOf("{");
+          const end = accumulated.lastIndexOf("}");
+          if (start !== -1 && end > start) {
+            parsed = JSON.parse(accumulated.slice(start, end + 1));
+          } else {
+            throw new Error("AI 返回内容无法解析");
+          }
+        }
+      }
+
+      setSuggestion(parsed);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "AI 建议生成失败";
+      setError(msg);
+      showError(msg);
+    } finally {
+      setLoading(false);
+      setStreaming(false);
+    }
+  }, [concept, book.id]);
+
+  const handleSave = useCallback(async () => {
+    if (!suggestion) return;
+    try {
+      const tags = Array.isArray(suggestion.tags)
+        ? (suggestion.tags as string[]).join(",")
+        : typeof suggestion.tags === "string" ? suggestion.tags : "";
+
+      const result = await client.patch(`/api/books/${book.id}`, {
+        title: suggestion.title || book.title,
+        genre: suggestion.genre || book.genre,
+        subGenre: suggestion.subGenre || book.subGenre,
+        platform: suggestion.platform || book.platform,
+        targetAudience: suggestion.targetAudience || book.targetAudience,
+        tags,
+        writingStyle: suggestion.writingStyle || book.writingStyle,
+        targetWordCount: suggestion.targetWordCount || book.targetWordCount,
+        targetTotalWords: suggestion.targetTotalWords || book.targetTotalWords,
+        referenceWorks: suggestion.referenceWorks || book.referenceWorks,
+        sellingPoint: suggestion.sellingPoint || book.sellingPoint,
+        description: suggestion.description || book.description,
+      });
+
+      if (!result.ok) {
+        throw new Error(result.error || "保存失败");
+      }
+
+      showSuccess("书籍信息已更新");
+      onSaved();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "保存失败";
+      showError(msg);
+    }
+  }, [suggestion, book, onSaved]);
+
+  const resetAll = () => {
+    setConcept("");
+    setResult("");
+    setSuggestion(null);
+    setError(null);
+  };
+
+  const handleClose = () => {
+    resetAll();
+    onClose();
+  };
+
+  return (
+    <BaseModal
+      title="AI 智能填写书籍信息"
+      open={open}
+      onCancel={handleClose}
+      width={640}
+      footer={
+        suggestion
+          ? [
+              <Button key="cancel" onClick={handleClose}>放弃</Button>,
+              <Button key="regenerate" onClick={() => { resetAll(); void handleGenerate(); }} loading={loading}>重新生成</Button>,
+              <Button key="save" type="primary" onClick={() => void handleSave()}>保存到书籍</Button>,
+            ]
+          : null
+      }
+      destroyOnClose
+    >
+      <div className={styles.aiModalBody}>
+        {/* 输入区 — 始终显示 */}
+        <div className={styles.aiModalInput}>
+          <div className={styles.aiModalLabel}>描述你的书籍概念</div>
+          <Input.TextArea
+            value={concept}
+            onChange={(e) => setConcept(e.target.value)}
+            placeholder="例如：一个修仙少年从凡人成长为仙帝的故事，融合了系统流和传统修仙元素，主线是打怪升级、收集功法，最终渡劫飞升..."
+            rows={3}
+            maxLength={500}
+            showCount
+            disabled={loading}
+          />
+          <div className={styles.aiModalInputFooter}>
+            <Button
+              type="primary"
+              icon={<ThunderboltOutlined />}
+              loading={loading}
+              disabled={!concept.trim()}
+              onClick={() => void handleGenerate()}
+            >
+              {suggestion ? "重新生成" : "生成建议"}
+            </Button>
+          </div>
+        </div>
+
+        {/* 流式输出 */}
+        {loading && streaming && result && (
+          <div className={styles.aiModalResult}>
+            <div className={styles.aiModalResultLabel}>AI 生成中...</div>
+            <pre className={styles.aiModalPre}>{result}</pre>
+          </div>
+        )}
+
+        {loading && streaming && !result && (
+          <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+            <Spin tip="正在生成建议..." />
+          </div>
+        )}
+
+        {/* 预览表格 */}
+        {!loading && suggestion && (
+          <div className={styles.aiModalPreview}>
+            <div className={styles.aiModalResultLabel}>AI 建议预览</div>
+            <Descriptions column={2} size="small" bordered>
+              <Descriptions.Item label="书名">{String(suggestion.title || "")}</Descriptions.Item>
+              <Descriptions.Item label="题材">{String(suggestion.genre || "")} · {String(suggestion.subGenre || "")}</Descriptions.Item>
+              <Descriptions.Item label="平台">{String(suggestion.platform || "")}</Descriptions.Item>
+              <Descriptions.Item label="受众">{String(suggestion.targetAudience || "")}</Descriptions.Item>
+              <Descriptions.Item label="文风">{String(suggestion.writingStyle || "")}</Descriptions.Item>
+              <Descriptions.Item label="每章字数">{String(suggestion.targetWordCount || "")} 字</Descriptions.Item>
+              <Descriptions.Item label="总字数">{String(suggestion.targetTotalWords || "")} 万字</Descriptions.Item>
+              <Descriptions.Item label="标签">
+                {Array.isArray(suggestion.tags) && (suggestion.tags as string[]).map((t, i) => (
+                  <Tag key={i} color="green">{t}</Tag>
+                ))}
+              </Descriptions.Item>
+              <Descriptions.Item label="核心卖点" span={2}>
+                {String(suggestion.sellingPoint || "")}
+              </Descriptions.Item>
+              <Descriptions.Item label="参考作品" span={2}>{String(suggestion.referenceWorks || "")}</Descriptions.Item>
+              <Descriptions.Item label="简介" span={2}>
+                <Typography.Paragraph ellipsis={{ rows: 3, tooltip: String(suggestion.description || "") }} style={{ marginBottom: 0 }}>
+                  {String(suggestion.description || "")}
+                </Typography.Paragraph>
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
+        )}
+
+        {/* 错误 */}
+        {!loading && error && (
+          <div className={styles.aiModalError}>
+            <span>{error}</span>
+            <Button size="small" onClick={() => void handleGenerate()}>重试</Button>
+          </div>
+        )}
+      </div>
     </BaseModal>
   );
 }

@@ -61,6 +61,11 @@ interface ReviewMetadata {
   latencyMs: number;
 }
 
+interface DebugContext {
+  systemPrompt: string;
+  userPrompt: string;
+}
+
 export interface ReviewConfirmData {
   facts: Fact[];
   foreshadowChanges: ForeshadowChange[];
@@ -105,6 +110,8 @@ export function ReviewResultPanel({
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ReviewExtractedData | null>(null);
   const [metadata, setMetadata] = useState<ReviewMetadata | null>(null);
+  const [debug, setDebug] = useState<DebugContext | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
   const [rawOutput, setRawOutput] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -125,6 +132,8 @@ export function ReviewResultPanel({
     setRawOutput(null);
     setWarning(null);
     setMetadata(null);
+    setDebug(null);
+    setShowDebug(false);
 
     try {
       const response = await fetch("/api/ai/review", {
@@ -142,6 +151,7 @@ export function ReviewResultPanel({
       if (json.data) {
         setData(json.data);
         setMetadata(json.metadata ?? null);
+        setDebug(json.debug ?? null);
         const d = json.data as ReviewExtractedData;
         setSelectedFacts(d.facts.map(() => true));
         setSelectedForeshadows(d.foreshadowChanges.map(() => true));
@@ -466,6 +476,29 @@ export function ReviewResultPanel({
           {metadata.latencyMs > 0 && (
             <span>耗时: {(metadata.latencyMs / 1000).toFixed(1)}s</span>
           )}
+          {debug && (
+            <span
+              className={styles.debugToggle}
+              onClick={() => setShowDebug(!showDebug)}
+              role="button"
+              tabIndex={0}
+            >
+              {showDebug ? "收起 Prompt" : "查看 Prompt"}
+            </span>
+          )}
+        </div>
+      )}
+
+      {showDebug && debug && (
+        <div className={styles.debugSection}>
+          <div className={styles.debugBlock}>
+            <div className={styles.debugLabel}>System Prompt</div>
+            <pre className={styles.debugPre}>{debug.systemPrompt}</pre>
+          </div>
+          <div className={styles.debugBlock}>
+            <div className={styles.debugLabel}>User Prompt</div>
+            <pre className={styles.debugPre}>{debug.userPrompt}</pre>
+          </div>
         </div>
       )}
 

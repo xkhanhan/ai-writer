@@ -28,6 +28,8 @@ export async function generateAiText(input: AiTextTaskInput) {
   }
 
   const advanced = config.advanced;
+  const baseUrl = config.baseUrl || advanced.baseUrl;
+  const model = config.model || advanced.model;
   const temperature = input.temperature ?? advanced.temperature;
   const topP = advanced.topP;
 
@@ -36,11 +38,11 @@ export async function generateAiText(input: AiTextTaskInput) {
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30_000);
+  const timer = setTimeout(() => controller.abort(), 120_000);
   let response: Response;
   try {
     response = await fetch(
-      `${advanced.baseUrl.replace(/\/$/, "")}/chat/completions`,
+      `${baseUrl.replace(/\/$/, "")}/chat/completions`,
       {
         method: "POST",
         headers: {
@@ -49,7 +51,7 @@ export async function generateAiText(input: AiTextTaskInput) {
           ...advanced.headers
         },
         body: JSON.stringify({
-          model: input.model?.trim() || advanced.model,
+          model: input.model?.trim() || model,
           messages: [
             {
               role: "system",

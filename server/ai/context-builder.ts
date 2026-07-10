@@ -39,7 +39,8 @@ export type AiFunctionKey =
   | "expand"
   | "character_audit"
   | "fact_consistency"
-  | "book_synopsis_expand";
+  | "book_synopsis_expand"
+  | "book_info_suggest";
 
 export interface ContextInput {
   bookId: string;
@@ -247,6 +248,40 @@ $facts`,
 题材：$bookGenre
 原始简介：$originalDescription
 核心卖点：$sellingPoint`,
+
+  book_info_suggest: `你是一位资深网络小说策划。请根据用户提供的书籍概念，生成完整的书籍信息建议。
+
+## 要求
+- 以 JSON 格式返回，不要包含其他内容
+- 所有字段都必须填写
+- 标签 3-5 个，每标签不超过 4 个字
+- 简介控制在 150 字以内
+- 核心卖点控制在 50 字以内
+
+## 返回格式
+\`\`\`json
+{
+  "title": "建议书名",
+  "genre": "题材大类",
+  "subGenre": "子题材",
+  "platform": "推荐发布平台",
+  "targetAudience": "目标受众",
+  "tags": ["标签1", "标签2", "标签3"],
+  "writingStyle": "推荐文风",
+  "targetWordCount": 3000,
+  "targetTotalWords": 200,
+  "referenceWorks": "参考作品",
+  "sellingPoint": "核心卖点",
+  "description": "书籍简介"
+}
+\`\`\`
+
+## 用户概念
+$userConcept
+
+## 已有信息（如有）
+书名：$existingTitle
+题材：$existingGenre`,
 };
 
 // ============================================================================
@@ -817,6 +852,45 @@ async function buildFactConsistencyContext(
 // 5. Main Entry Point
 // ============================================================================
 
+// ---------- book_info_suggest ----------
+
+async function buildBookInfoSuggestContext(
+  input: ContextInput,
+): Promise<BuiltContext> {
+  const book = await requireBook(input.bookId);
+
+  const activeTemplate = await getActivePromptTemplate(
+    book.id,
+    input.functionKey,
+  );
+  const template =
+    activeTemplate?.template ?? DEFAULT_TEMPLATES[input.functionKey] ?? "";
+
+  const variables: Record<string, string> = {
+    userConcept: input.selectedText || "",
+    existingTitle: book.title || "",
+    existingGenre: book.genre || "",
+    ...input.extraVariables,
+  };
+
+  const userPrompt = renderTemplate(template, variables);
+  const systemPrompt =
+    "你是一位资深网络小说策划。请根据用户提供的概念，以 JSON 格式返回完整的书籍信息建议。只返回 JSON，不要包含其他内容。";
+
+  const fullText = systemPrompt + "\n\n" + userPrompt;
+  const estimatedTokens = estimateTokens(fullText);
+
+  return {
+    systemPrompt,
+    userPrompt,
+    functionKey: input.functionKey,
+    estimatedTokens,
+    metadata: {
+      bookTitle: book.title,
+    },
+  };
+}
+
 /**
  * Build the full AI context (system + user prompt) for a given function key.
  *
@@ -849,6 +923,9 @@ export async function buildContext(
 
     case "fact_consistency":
       return buildFactConsistencyContext(input);
+
+    case "book_info_suggest":
+      return buildBookInfoSuggestContext(input);
 
     default:
       throw new Error(
