@@ -1,7 +1,7 @@
 # Task Board
 
 > **多 Agent 协作任务看板** — 扫描报告产出，Agent 按规则认领执行。
-> 最后更新：2026-07-10
+> 最后更新：2026-07-10 (P1 全部完成)
 
 ---
 
@@ -60,7 +60,7 @@
 | ID | Type | 标题 | 描述 | 涉及文件 | 如何修复 | 如何验证 | Status | Owner | Depends |
 |----|------|------|------|----------|----------|----------|--------|-------|---------|
 | F-001 | 需求 | 伏笔库后端持久化 | 当前 foreshadow-library 纯客户端状态，刷新即丢失。需要新建 DB 表 + API + Store | `server/storage/foreshadow-store.ts`(新建), `app/api/books/[id]/foreshadows/`(新建), `app/pages/books/components/foreshadow-library/` | 1. 新建 `foreshadows` 表(id, book_id, content, chapter_id, status, created_at, updated_at) 2. 创建 foreshadow-store.ts (CRUD) 3. 创建 API routes 4. 前端对接 API 替换客户端状态 | tsc 通过; 手动测试：创建伏笔→刷新页面→数据仍在; 通过 API 直接验证 CRUD | done | claude-dev | — |
-| F-002 | 需求 | 过审落库 — 事实/伏笔/角色确认后写入 | review-result-panel 确认后只做了 UI 状态变更，未真正写入数据库 | `app/pages/books/components/review-result-panel/index.tsx`, `app/pages/books/components/creation-zone/components/content-editor/index.tsx`, `app/api/ai/review/route.ts`, `app/pages/books/components/fact-library/` | 1. content-editor 的 handleReviewConfirm 调用事实库/伏笔库 API 批量写入 2. review-result-panel 确认后触发对应 store 的 create 操作 3. 需要 F-001 完成后伏笔才能落库 | tsc 通过; 手动测试：过审→确认事实→事实库新增条目; 确认伏笔→伏笔库新增条目 | pending | none | F-001 |
+| F-002 | 需求 | 过审落库 — 事实/伏笔/角色确认后写入 | review-result-panel 确认后只做了 UI 状态变更，未真正写入数据库 | `app/pages/books/components/review-result-panel/index.tsx`, `app/pages/books/components/creation-zone/components/content-editor/index.tsx`, `app/api/ai/review/route.ts`, `app/pages/books/components/fact-library/` | 1. content-editor 的 handleReviewConfirm 调用事实库/伏笔库 API 批量写入 2. review-result-panel 确认后触发对应 store 的 create 操作 3. 需要 F-001 完成后伏笔才能落库 | tsc 通过; 手动测试：过审→确认事实→事实库新增条目; 确认伏笔→伏笔库新增条目 | pending | none | — |
 
 ---
 
@@ -70,12 +70,27 @@
 
 | ID | Type | 标题 | 描述 | 涉及文件 | 如何修复 | 如何验证 | Status | Owner | Depends |
 |----|------|------|------|----------|----------|----------|--------|-------|---------|
-| R-001 | 重构 | context-builder builder 独立性增强 | 已拆分为目录，但各 builder 内部仍直接调用 store 函数。应通过参数注入依赖以支持测试 | `server/ai/context-builder/builders/*.ts` | 将 store 函数作为参数传入 builder，而非直接 import。index.ts 负责注入依赖 | tsc 通过; 所有 builder 可独立单元测试 | pending | none | — |
-| R-002 | 重构 | API 路由 Response 布局统一 | 部分路由 GET 返回 `{ entity }`、`{ rule }`、`{ tag }` 等不同字段名，应统一为 `{ data }` 或保持当前模式但加文档 | `app/api/books/[id]/route.ts`, `app/api/setting-entities/[id]/route.ts`, `app/api/world-rules/[id]/route.ts`, `app/api/tags/[id]/route.ts` | 1. 确定统一格式(建议 `{ success: true, data: {...} }`) 2. 所有 GET 路由统一 3. 前端 API client 适配 | tsc 通过; grep 确认所有 route 使用统一格式; 前端页面功能正常 | pending | none | — |
-| R-003 | 重构 | shared/api 仅剩 tags.ts，评估是否合并到 app/api-client | `shared/api/tags.ts` 是 shared/api/ 下唯一消费者，`shared/api/client.ts` 已删除。tags.ts 应迁入 app/api-client | `shared/api/tags.ts`, `app/api-client/` | 将 tags.ts 的函数移入 app/api-client/tags.ts，更新所有导入，删除 shared/api/ | tsc 通过; grep 确认无残留导入 | pending | none | — |
-| R-004 | 重构 | creation-zone hooks 目录结构化 | `use-creation-zone.ts` 仍 288 行，可进一步拆分为数据层 + 操作层 | `app/pages/books/hooks/use-creation-zone.ts` | 拆为 use-creation-data.ts (查询/加载) + use-creation-actions.ts (CRUD)，主 hook 组合 | tsc 通过; 功能不变 | pending | none | — |
-| O-001 | 优化 | PanelGroup memoization | PanelGroup 每次渲染都重新计算子面板，应用 React.memo + useMemo 优化 | `shared/ui/panel-container/panel-group.tsx`, `shared/ui/panel-container/divider.tsx` | 1. PanelGroup 用 React.memo 包裹 2. 子面板列表用 useMemo 3. Divider 的 onDrag 用 useCallback | tsc 通过; React DevTools 确认不必要重渲染减少 | pending | none | — |
-| O-002 | 优化 | world-rules / prompt-library 批量操作错误恢复 | AI 批量创建规则/激活模板时逐条操作，一条失败则状态不一致 | `app/pages/books/components/world-rules/index.tsx`, `app/pages/books/components/prompt-library/index.tsx` | 1. world-rules: 用 Promise.allSettled + 部分成功提示 2. prompt-library: 服务端增加原子激活端点 | tsc 通过; 模拟单条失败场景，确认部分成功正确提示 | pending | none | — |
+| R-001 | 重构 | context-builder builder 独立性增强 | 已拆分为目录，但各 builder 内部仍直接调用 store 函数。应通过参数注入依赖以支持测试 | `server/ai/context-builder/builders/*.ts` | 将 store 函数作为参数传入 builder，而非直接 import。index.ts 负责注入依赖 | tsc 通过; 所有 builder 可独立单元测试 | done | claude-dev | — |
+| R-002 | 重构 | API 路由 Response 布局统一 | 部分路由 GET 返回 `{ entity }`、`{ rule }`、`{ tag }` 等不同字段名，应统一为 `{ data }` 或保持当前模式但加文档 | `app/api/books/[id]/route.ts`, `app/api/setting-entities/[id]/route.ts`, `app/api/world-rules/[id]/route.ts`, `app/api/tags/[id]/route.ts` | 1. 确定统一格式(建议 `{ success: true, data: {...} }`) 2. 所有 GET 路由统一 3. 前端 API client 适配 | tsc 通过; grep 确认所有 route 使用统一格式; 前端页面功能正常 | done | claude-dev | — |
+| R-003 | 重构 | shared/api 仅剩 tags.ts，评估是否合并到 app/api-client | `shared/api/tags.ts` 是 shared/api/ 下唯一消费者，`shared/api/client.ts` 已删除。tags.ts 应迁入 app/api-client | `shared/api/tags.ts`, `app/api-client/` | 将 tags.ts 的函数移入 app/api-client/tags.ts，更新所有导入，删除 shared/api/ | tsc 通过; grep 确认无残留导入 | done | claude-dev | — |
+| R-004 | 重构 | creation-zone hooks 目录结构化 | `use-creation-zone.ts` 仍 288 行，可进一步拆分为数据层 + 操作层 | `app/pages/books/hooks/use-creation-zone.ts` | 拆为 use-creation-data.ts (查询/加载) + use-creation-actions.ts (CRUD)，主 hook 组合 | tsc 通过; 功能不变 | done | claude-dev | — |
+| O-001 | 优化 | PanelGroup memoization | PanelGroup 每次渲染都重新计算子面板，应用 React.memo + useMemo 优化 | `shared/ui/panel-container/panel-group.tsx`, `shared/ui/panel-container/divider.tsx` | 1. PanelGroup 用 React.memo 包裹 2. 子面板列表用 useMemo 3. Divider 的 onDrag 用 useCallback | tsc 通过; React DevTools 确认不必要重渲染减少 | done | claude-dev | — |
+| O-002 | 优化 | world-rules / prompt-library 批量操作错误恢复 | AI 批量创建规则/激活模板时逐条操作，一条失败则状态不一致 | `app/pages/books/components/world-rules/index.tsx`, `app/pages/books/components/prompt-library/index.tsx` | 1. world-rules: 用 Promise.allSettled + 部分成功提示 2. prompt-library: 服务端增加原子激活端点 | tsc 通过; 模拟单条失败场景，确认部分成功正确提示 | done | claude-dev | — |
+
+---
+
+## P1.5 — 提示词库与设置页重做
+
+<!-- 用户体验重做：设置页活动栏 + 提示词库三栏布局 + 变量体系 + 测试预览 -->
+
+| ID | Type | 标题 | 描述 | 涉及文件 | 如何修复 | 如何验证 | Status | Owner | Depends |
+|----|------|------|------|----------|----------|----------|--------|-------|---------|
+| F-008 | 需求 | 设置页活动栏改造 | 当前设置页是两个 Tab（AI配置/提示词库）切换，改为 workspace 风格的活动栏 + 内容区布局。活动栏放左侧，内容区根据选中项切换。底部增加返回上一页按钮（不只有返回首页） | `app/pages/settings-ai/index.tsx`, `app/pages/settings-ai/layout.tsx`(新建) | 1. 外层活动栏组件：图标列表（AI配置、提示词库、未来扩展位） 2. 底部返回按钮（支持 history.back 或回到首页） 3. AI配置点击→内容区直接展示配置表单（无中间列） 4. 提示词库点击→展示三栏布局（见 F-009） 5. 视觉风格对齐 workspace 左侧活动栏 | tsc 通过; 从 workspace 点"设置"→进入设置页→活动栏切换→返回按钮回到 workspace | pending | none | — |
+| F-009 | 需求 | 提示词库三栏布局重做 | 当前为两栏（函数列表+编辑器），改为三栏：活动栏(外层F-008) → 函数分组列表(左侧) → 编辑器/预览(右侧)。去掉"为本书创建提示词"（per-book override），保留"复制为自定义"基础功能。激活逻辑：系统默认为兜底，用户激活自定义后走自定义 | `app/pages/books/components/prompt-library/index.tsx`, `app/pages/books/components/prompt-library/prompt-list.tsx`(新建), `app/pages/books/components/prompt-library/prompt-editor.tsx`(新建), `app/pages/books/components/prompt-library/prompt-preview.tsx`(新建) | 1. 拆分为三个子组件：列表/编辑器/预览 2. 左侧函数分组列表（6个workspace group，可折叠） 3. 右侧内容区 Tab 切换：编辑/预览 4. 删除 per-book 相关逻辑 5. 进入时自动选中第一个函数 6. 激活逻辑：一个 functionKey 只能激活一个模板，系统默认兜底 | tsc 通过; 进入→自动选中第一个→编辑→保存→刷新仍在; 复制为自定义→激活→切换书籍→仍走自定义 | pending | none | F-008 |
+| F-010 | 需求 | 提示词变量体系与校验 | 当前变量太少（仅 name/description/source）。暴露完整内置变量：书籍名称、题材类型、简介、核心卖点、字符数量、用户补充、输出格式要求等。不可用户配置，固定内置。保存时校验变量完整性，缺变量提醒 | `shared/types/prompt-template.ts`, `server/storage/prompt-template-store.ts`, `app/pages/books/components/prompt-library/prompt-editor.tsx` | 1. 定义内置变量枚举/常量（PROMPT_VARIABLES），含 name, description, source, required 2. 编辑器展示所有可用变量（只读信息+描述） 3. 输出格式要求字段：可查看不可编辑 4. 保存前校验：检测模板中使用的变量是否都在内置列表中，缺失则弹窗提醒 | tsc 通过; 编辑模板→看到完整变量列表→保存→缺变量时弹窗提醒; 输出格式要求显示为只读区 | pending | none | — |
+| F-011 | 需求 | 测试预览功能 | 用户在提示词库可预览完整提示词，不发给AI。右侧面板 Tab 切换：编辑/预览。预览模式选一本书作为数据源，实时渲染完整提示词（变量已替换）。只读不可编辑。编辑模板时预览自动同步 | `app/pages/books/components/prompt-library/prompt-preview.tsx`, `app/pages/books/components/prompt-library/prompt-editor.tsx`, `app/api/books/route.ts`(复用) | 1. 预览面板：顶部书选择器（下拉选书） 2. 选书后调用 API 获取书籍数据，渲染完整提示词 3. 编辑器修改模板时，预览自动同步更新 4. 预览内容只读（textarea disabled 或 div 渲染） 5. 无书时提示"请先选择一本书" | tsc 通过; 选书→预览渲染完整提示词→修改模板→预览同步更新; 切换书籍→预览内容变化 | pending | none | F-009, F-010 |
+| F-012 | 需求 | 移除 per-book 提示词覆盖 | 去掉"为本书创建提示词"功能（用户复制提示词→指定某本书→该书专用）。此功能收益低，全局+自定义已足够。清理相关 UI 入口和后端逻辑 | `app/pages/books/components/prompt-library/index.tsx`, `app/api/ai/templates/route.ts`, `server/storage/prompt-template-store.ts` | 1. 删除"为本书创建"按钮及相关 UI 2. 删除 API 中 bookId scope 逻辑（保留全局 bookId=null） 3. 删除 DB 中 book_scoped 相关字段/查询 4. 确保"复制为自定义"仍可用（无 bookId 参数） | tsc 通过; grep 确认无 per-book 覆盖残留; 复制为自定义→激活→全局生效 | pending | none | — |
+| F-013 | 需求 | 提示词交互优化 | 进入提示词库时自动选中第一个函数（当前空白不友好）；离开编辑页时若有未保存修改则弹窗提醒保存 | `app/pages/books/components/prompt-library/prompt-editor.tsx`, `app/pages/books/components/prompt-library/index.tsx` | 1. 组件 mount 时 useEffect 自动选中第一个 functionKey 2. 编辑器维护 dirty 状态（模板内容变更时标记） 3. 切换函数或离开页面时，dirty=true 则弹 confirm 对话框 4. 确认离开则丢弃修改，取消则留在当前 | tsc 通过; 进入→自动选第一个→编辑→不保存切换→弹窗提醒; 确认离开→丢弃; 取消→留下 | pending | none | F-009 |
 
 ---
 
@@ -117,6 +132,12 @@
 |----|---------|------------|---------|
 | ~~G-001~~ | API 响应格式统一 | `88a888e1` | 2026-07-10 |
 | ~~F-001~~ | 伏笔库后端持久化 | `6d3cb32d` | 2026-07-10 |
+| ~~R-001~~ | context-builder builder 独立性增强 | `288a3e2` | 2026-07-10 |
+| ~~R-002~~ | API 路由 Response 布局统一 | `ce3bfc9` | 2026-07-10 |
+| ~~R-003~~ | shared/api 合并到 app/api-client | `5d88e3e` | 2026-07-10 |
+| ~~R-004~~ | creation-zone hooks 目录结构化 | `7fc46f6` | 2026-07-10 |
+| ~~O-001~~ | PanelGroup memoization | `7ad9dd4` | 2026-07-10 |
+| ~~O-002~~ | 批量操作错误恢复 | `289cab9` | 2026-07-10 |
 | ~~G-002~~ | 验证逻辑下沉到 store | `88a888e1` | 2026-07-10 |
 | ~~G-004~~ | CSS 硬编码清理 | `88a888e1` + `068ca4f8` | 2026-07-10 |
 | ~~A-001~~ | /api/ai/chat 扩展上下文参数 | `3a4844df` | — |
@@ -124,6 +145,7 @@
 | ~~A-003~~ | 内嵌结果面板组件 | `c1e19e33` | — |
 | ~~A-004~~ | GenerationSession 记录 | `3bc74cbf` | — |
 | ~~B-001~~ | 提示词库 UI | `9d6be35f` + `8e7845a7` + `c9d31b39` | — |
+| ~~F-014~~ | 内容过滤架构（收口层） | 架构设计，暂不开发 | 2026-07-10 |
 | ~~B-002~~ | 变量检查能力 | `c2413d52` | — |
 | ~~B-003~~ | 测试能力 | `c9d31b39` | — |
 | ~~B-006~~ | 对话功能（流式响应） | `9950fe43` | — |
