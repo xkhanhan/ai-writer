@@ -32,8 +32,8 @@
 
 /* 弹出面板视口适配 */
 .popup {
-  border-radius: var(--radius-lg) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12) !important;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 
 /* 搜索输入框 */

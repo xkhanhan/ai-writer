@@ -80,7 +80,7 @@
 
 .volumeBar:hover .deleteBtn:hover,
 .chapterItem:hover .deleteBtn:hover {
-  color: var(--color-error, #ff4d4f);
+  color: var(--color-error, #ba1a1a);
 }
 
 .floatingBar {
@@ -107,16 +107,16 @@
   gap: 4px;
   font-size: 12px;
   padding: 4px 12px;
-  border: 1px solid var(--color-error, #ff4d4f);
+  border: 1px solid var(--color-error, #ba1a1a);
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-error, #ff4d4f);
+  color: var(--color-error, #ba1a1a);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .floatingDeleteBtn:hover {
-  background: var(--color-error, #ff4d4f);
+  background: var(--color-error, #ba1a1a);
   color: var(--text-inverse);
 }
 

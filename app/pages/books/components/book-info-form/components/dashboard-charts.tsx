@@ -133,9 +133,9 @@ export function Heatmap({ dailyWords, streak }: { dailyWords: Record<string, num
       <div className={styles.ghLegend}>
         <span>少</span>
         <div className={styles.ghLegendCell} style={{ background: "var(--border-light)" }} />
-        <div className={styles.ghLegendCell} style={{ background: "rgba(47,93,80,0.15)" }} />
-        <div className={styles.ghLegendCell} style={{ background: "rgba(47,93,80,0.35)" }} />
-        <div className={styles.ghLegendCell} style={{ background: "rgba(47,93,80,0.6)" }} />
+        <div className={styles.ghLegendCell} style={{ background: "var(--color-primary-15)" }} />
+        <div className={styles.ghLegendCell} style={{ background: "var(--color-primary-35)" }} />
+        <div className={styles.ghLegendCell} style={{ background: "var(--color-primary-60)" }} />
         <div className={styles.ghLegendCell} style={{ background: "var(--accent)" }} />
         <span>多</span>
       </div>

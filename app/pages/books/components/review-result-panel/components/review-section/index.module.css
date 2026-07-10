@@ -72,5 +72,5 @@
 .badgeResolve {
   background: var(--color-success-bg);
   color: var(--color-success);
-  border: 1px solid rgba(46, 139, 87, 0.2);
+  border: 1px solid var(--color-success-border);
 }

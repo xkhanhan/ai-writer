@@ -42,6 +42,10 @@
   --color-primary-bg: rgba(47, 93, 80, 0.05);
   --color-primary-bg-hover: rgba(47, 93, 80, 0.10);
   --color-primary-border: rgba(47, 93, 80, 0.20);
+  --color-primary-15: rgba(47, 93, 80, 0.15);
+  --color-primary-35: rgba(47, 93, 80, 0.35);
+  --color-primary-60: rgba(47, 93, 80, 0.6);
+  --color-success-border: rgba(46, 139, 87, 0.2);
   --color-danger: var(--color-error);
 
   /* 表面色 */
@@ -52,6 +56,7 @@
   --shadow: 0 1px 3px rgba(24, 28, 34, 0.08);
   --shadow-md: 0 4px 12px rgba(24, 28, 34, 0.12);
   --shadow-lg: 0 8px 24px rgba(24, 28, 34, 0.16);
+  --shadow-inset: inset 0 2px 4px rgba(24, 28, 34, 0.06);
 
   /* 滚动条 — 暖调 */
   --scrollbar-thumb: #c8c0b4;

@@ -246,7 +246,7 @@ export default function HomePage({
                     </div>
                     <div className={styles.bookBottom}>
                       <div className={styles.progressRow}>
-                        <Progress percent={0} size="small" strokeColor="#d9d9d9" />
+                        <Progress percent={0} size="small" strokeColor="var(--border)" />
                       </div>
                       <div className={styles.metaRow}>
                         <div className={styles.metaDate}>

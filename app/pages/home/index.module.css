@@ -140,7 +140,7 @@
   overflow: hidden;
   flex-shrink: 0;
   background: var(--surface-variant);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-inset);
   position: relative;
 }
 

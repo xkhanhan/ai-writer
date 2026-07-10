@@ -16,6 +16,6 @@
 }
 
 .required {
-  color: var(--color-error, #ff4d4f);
+  color: var(--color-error, #ba1a1a);
   margin-right: 2px;
 }
