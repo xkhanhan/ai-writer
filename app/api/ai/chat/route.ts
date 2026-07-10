@@ -70,7 +70,21 @@ export async function POST(request: Request) {
             : undefined,
       });
 
-      // 2. Call AI with built context
+      // 2. Log context for debugging
+      console.log("\n========== AI CONTEXT LOG ==========");
+      console.log(`[Function] ${builtContext.functionKey}`);
+      console.log(`[Book] ${builtContext.metadata.bookTitle}`);
+      if (builtContext.metadata.chapterTitle) {
+        console.log(`[Chapter] ${builtContext.metadata.chapterTitle}`);
+      }
+      console.log(`[Estimated Tokens] ${builtContext.estimatedTokens}`);
+      console.log("--- System Prompt ---");
+      console.log(builtContext.systemPrompt);
+      console.log("--- User Prompt ---");
+      console.log(builtContext.userPrompt);
+      console.log("========== END CONTEXT ==========\n");
+
+      // 3. Call AI with built context
       const input: AiTextTaskInput = {
         prompt: builtContext.userPrompt,
         systemPrompt: builtContext.systemPrompt,

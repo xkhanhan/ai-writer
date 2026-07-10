@@ -165,6 +165,18 @@ export async function POST(request: Request) {
       functionKey: "review_extract",
     });
 
+    // Log context for debugging
+    console.log("\n========== REVIEW CONTEXT LOG ==========");
+    console.log(`[Function] review_extract`);
+    console.log(`[Book] ${builtContext.metadata.bookTitle}`);
+    console.log(`[Chapter] ${builtContext.metadata.chapterTitle}`);
+    console.log(`[Estimated Tokens] ${builtContext.estimatedTokens}`);
+    console.log("--- System Prompt ---");
+    console.log(builtContext.systemPrompt);
+    console.log("--- User Prompt ---");
+    console.log(builtContext.userPrompt);
+    console.log("========== END REVIEW CONTEXT ==========\n");
+
     // 2. Call AI
     const content = await generateAiText({
       prompt: builtContext.userPrompt,
