@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Modal, Select, Button, Tooltip } from "antd";
 import {
+  MenuOutlined,
   ThunderboltOutlined,
   SaveOutlined,
   DeleteOutlined,
@@ -12,6 +13,7 @@ import { showError, showSuccess } from "@/app/utils/error-handler";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type { Book, PromptTemplate } from "@/app/types";
 import { validateTemplateVariables } from "@/app/types";
+import { PROMPT_VARIABLES } from "@/shared/types";
 import { getBooks } from "@/app/pages/home/api/books";
 import {
   fetchTemplates,
@@ -61,6 +63,9 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
 
   // Variable panel visibility
   const [showVariables, setShowVariables] = useState(false);
+
+  // Mobile list panel toggle
+  const [listOpen, setListOpen] = useState(false);
 
   // Book selector (for preview)
   const [allBooks, setAllBooks] = useState<Book[]>([]);
@@ -357,22 +362,52 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     setDirty(true);
   }, []);
 
+  // ===== Copy variable to clipboard =====
+  const handleCopyVariable = useCallback(
+    (varName: string) => {
+      void navigator.clipboard?.writeText(`\${${varName}}`);
+      showSuccess(`已复制 \${${varName}}`);
+    },
+    [],
+  );
+
   // ===== Render =====
   return (
     <div className={styles.layoutRoot}>
-      <PromptList
-        loading={loading}
-        selectedFunctionKey={selectedFunctionKey}
-        templateIndex={templateIndex}
-        expandedGroups={expandedGroups}
-        onSelect={handleSelect}
-        onToggleGroup={toggleGroup}
+      {/* Mobile backdrop */}
+      <div
+        className={`${styles.listBackdrop} ${listOpen ? styles.listBackdropVisible : ""}`}
+        onClick={() => setListOpen(false)}
       />
+
+      {/* Function List (sidebar / mobile overlay) */}
+      <div className={`${styles.listWrapper} ${listOpen ? styles.listWrapperOpen : ""}`}>
+        <PromptList
+          loading={loading}
+          selectedFunctionKey={selectedFunctionKey}
+          templateIndex={templateIndex}
+          expandedGroups={expandedGroups}
+          onSelect={(key) => {
+            handleSelect(key);
+            setListOpen(false);
+          }}
+          onToggleGroup={toggleGroup}
+          onClose={() => setListOpen(false)}
+        />
+      </div>
 
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* ===== Shared Toolbar ===== */}
         <div className={styles.sharedToolbar}>
           <div className={styles.sharedToolbarLeft}>
+            <Button
+              className={styles.hamburgerBtn}
+              type="text"
+              size="small"
+              icon={<MenuOutlined />}
+              onClick={() => setListOpen((v) => !v)}
+              aria-label="切换功能列表"
+            />
             <span className={styles.sharedToolbarTitle}>
               {selectedTemplate?.displayName ?? "提示词库"}
             </span>
@@ -462,6 +497,52 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
           </div>
         </div>
 
+        {/* ===== Variable Panel (full-width, collapsible) ===== */}
+        <div
+          className={`${styles.varPanel} ${showVariables ? styles.varPanelOpen : styles.varPanelClosed}`}
+        >
+          <div className={styles.varPanelInner}>
+            <div className={styles.varGrid}>
+              {PROMPT_VARIABLES.map((v) => (
+                <div
+                  key={v.name}
+                  className={`${styles.varItem} ${v.readOnly ? styles.varItemReadOnly : ""}`}
+                  title={
+                    v.readOnly
+                      ? `${v.displayName}（不可编辑）`
+                      : `${v.displayName} — 点击复制`
+                  }
+                  onClick={
+                    v.readOnly
+                      ? undefined
+                      : () => handleCopyVariable(v.name)
+                  }
+                  role={v.readOnly ? undefined : "button"}
+                  tabIndex={v.readOnly ? undefined : 0}
+                  onKeyDown={
+                    v.readOnly
+                      ? undefined
+                      : (e: React.KeyboardEvent) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleCopyVariable(v.name);
+                          }
+                        }
+                  }
+                >
+                  <span className={styles.varItemName}>
+                    {`${"${"}${v.name}${"}"}`}
+                  </span>
+                  <span className={styles.varItemDesc}>{v.description}</span>
+                  {!v.readOnly && (
+                    <span className={styles.varItemHint}>复制</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* ===== Split Area: Editor + Preview side-by-side ===== */}
         <div className={styles.splitArea}>
           <div className={styles.editorPane}>
@@ -469,7 +550,6 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
               template={selectedTemplate}
               isSystemDefault={isSystemDefault}
               editContent={editTemplate}
-              showVariables={showVariables}
               onEditChange={handleEditChange}
             />
           </div>

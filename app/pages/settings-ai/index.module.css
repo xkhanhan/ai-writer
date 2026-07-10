@@ -366,8 +366,8 @@
   flex-shrink: 0;
 }
 
-.detailStatus {
-  margin-inline-end: 0 !important;
+.detailHeaderRight .detailStatus {
+  margin-inline-end: 0;
 }
 
 /* ===== Detail Grid ===== */

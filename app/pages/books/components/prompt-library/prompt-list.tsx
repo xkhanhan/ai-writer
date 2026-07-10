@@ -90,6 +90,7 @@ interface PromptListProps {
   expandedGroups: Set<string>;
   onSelect: (functionKey: string) => void;
   onToggleGroup: (panelKey: string) => void;
+  onClose?: () => void;
 }
 
 // ============ Component ============
@@ -101,12 +102,22 @@ const PromptList = React.memo(function PromptList({
   expandedGroups,
   onSelect,
   onToggleGroup,
+  onClose,
 }: PromptListProps) {
   return (
     <div className={styles.listPanel}>
       <div className={styles.listHeader}>
         <div className={styles.listHeaderTitle}>AI 功能</div>
         <div className={styles.listHeaderSub}>选择功能编辑提示词</div>
+        {onClose && (
+          <button
+            className={styles.closeBtn}
+            onClick={onClose}
+            aria-label="关闭列表"
+          >
+            &times;
+          </button>
+        )}
       </div>
       {loading ? (
         <div className={styles.emptyState}>加载中...</div>
