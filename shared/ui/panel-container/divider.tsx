@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { Direction } from "./types";
 import { usePanelResize } from "./use-panel-resize";
 import styles from "./index.module.css";
@@ -13,7 +14,7 @@ interface DividerProps {
   onDoubleClick?: () => void;
 }
 
-export function Divider({
+export const Divider = memo(function Divider({
   direction = "horizontal",
   size = 280,
   minSize = 100,
@@ -36,4 +37,4 @@ export function Divider({
       onDoubleClick={onDoubleClick}
     />
   );
-}
+});

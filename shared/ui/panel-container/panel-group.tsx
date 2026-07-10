@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  memo,
+  useMemo,
   useState,
   useCallback,
   Children,
@@ -18,8 +20,14 @@ interface PanelGroupProps {
   children: ReactNode;
 }
 
-export function PanelGroup({ direction, children }: PanelGroupProps) {
-  const childArray = Children.toArray(children).filter(isValidElement);
+export const PanelGroup = memo(function PanelGroup({
+  direction,
+  children,
+}: PanelGroupProps) {
+  const childArray = useMemo(
+    () => Children.toArray(children).filter(isValidElement),
+    [children]
+  );
 
   // Initialize sizes from Panel defaultSize props
   const [sizes, setSizes] = useState<number[]>(() => {
@@ -38,60 +46,68 @@ export function PanelGroup({ direction, children }: PanelGroupProps) {
     });
   }, []);
 
-  // Build panel elements with sizes and dividers
-  const elements: ReactElement[] = [];
-  let panelIndex = 0;
-
   // Count total panels (non-Divider children)
-  const totalPanels = childArray.filter(
-    (c) => isValidElement(c) && c.type !== Divider
-  ).length;
+  const totalPanels = useMemo(
+    () =>
+      childArray.filter(
+        (c) => isValidElement(c) && c.type !== Divider
+      ).length,
+    [childArray]
+  );
 
-  childArray.forEach((child, i) => {
-    if (child.type === Divider) {
-      const prevPanelIdx = panelIndex - 1;
-      const prevPanel = childArray
-        .filter((c) => c !== child && isValidElement(c) && c.type !== Divider)
-        [prevPanelIdx];
-      const prevProps = prevPanel?.props as Record<string, unknown> | undefined;
-      const minSize = (prevProps?.minSize as number) ?? 100;
-      const maxSize = (prevProps?.maxSize as number) ?? 800;
+  // Build panel elements with sizes and dividers
+  const elements: ReactElement[] = useMemo(() => {
+    const result: ReactElement[] = [];
+    let panelIndex = 0;
 
-      elements.push(
-        <Divider
-          key={`divider-${i}`}
-          direction={direction}
-          size={sizes[prevPanelIdx] ?? 280}
-          minSize={minSize}
-          maxSize={maxSize}
-          onResize={(newSize) => handleResize(prevPanelIdx, newSize)}
-        />
-      );
-    } else {
-      const idx = panelIndex;
-      const panelSize = sizes[idx] ?? 280;
-      const isHorizontal = direction === "horizontal";
-      const isLastPanel = panelIndex === totalPanels - 1;
+    childArray.forEach((child, i) => {
+      if (child.type === Divider) {
+        const prevPanelIdx = panelIndex - 1;
+        const prevPanel = childArray
+          .filter((c) => c !== child && isValidElement(c) && c.type !== Divider)
+          [prevPanelIdx];
+        const prevProps = prevPanel?.props as Record<string, unknown> | undefined;
+        const minSize = (prevProps?.minSize as number) ?? 100;
+        const maxSize = (prevProps?.maxSize as number) ?? 800;
 
-      // Last panel in horizontal mode uses flex:1 to fill remaining space
-      const style = isHorizontal
-        ? isLastPanel
-          ? { flex: 1, minWidth: 0 }
-          : { width: panelSize, minWidth: panelSize, flexShrink: 0 }
-        : { height: panelSize, minHeight: panelSize };
+        result.push(
+          <Divider
+            key={`divider-${i}`}
+            direction={direction}
+            size={sizes[prevPanelIdx] ?? 280}
+            minSize={minSize}
+            maxSize={maxSize}
+            onResize={(newSize) => handleResize(prevPanelIdx, newSize)}
+          />
+        );
+      } else {
+        const idx = panelIndex;
+        const panelSize = sizes[idx] ?? 280;
+        const isHorizontal = direction === "horizontal";
+        const isLastPanel = panelIndex === totalPanels - 1;
 
-      elements.push(
-        <div key={`panel-${idx}`} className={styles.panelWrapper} style={style}>
-          {cloneElement(child as ReactElement<Record<string, unknown>>)}
-        </div>
-      );
-      panelIndex++;
-    }
-  });
+        // Last panel in horizontal mode uses flex:1 to fill remaining space
+        const style = isHorizontal
+          ? isLastPanel
+            ? { flex: 1, minWidth: 0 }
+            : { width: panelSize, minWidth: panelSize, flexShrink: 0 }
+          : { height: panelSize, minHeight: panelSize };
+
+        result.push(
+          <div key={`panel-${idx}`} className={styles.panelWrapper} style={style}>
+            {cloneElement(child as ReactElement<Record<string, unknown>>)}
+          </div>
+        );
+        panelIndex++;
+      }
+    });
+
+    return result;
+  }, [childArray, direction, sizes, totalPanels, handleResize]);
 
   return (
     <div className={`${styles.panelGroup} ${styles[direction]}`}>
       {elements}
     </div>
   );
-}
+});
