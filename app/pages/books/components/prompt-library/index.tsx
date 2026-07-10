@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import { showError, showSuccess } from "@/app/utils/error-handler";
 import type { Book, PromptTemplate } from "@/app/types";
+import { validateTemplateVariables } from "@/app/types";
 import { getBooks } from "@/app/pages/home/api/books";
 import {
   fetchTemplates,
@@ -68,10 +69,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   // ===== Load templates =====
   const loadTemplates = useCallback(async () => {
     setLoading(true);
-    const res = await fetchTemplates(book?.id ?? "");
+    const res = await fetchTemplates();
     if (res.ok) setTemplates(res.data);
     setLoading(false);
-  }, [book?.id]);
+  }, []);
 
   /* eslint-disable react-hooks/set-state-in-effect -- async load calls setState in async callback */
   useEffect(() => {
@@ -201,10 +202,43 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   // ===== Save helper =====
   const handleSave = useCallback(async (): Promise<boolean> => {
     if (!selectedTemplate || !dirty || isSystemDefault) return false;
-    setSaving(true);
+
     const fullTemplate = hasSeparator
       ? `${systemPart}\n---\n\n${editTemplate}`
       : editTemplate;
+
+    const undefinedVars = validateTemplateVariables(fullTemplate);
+    if (undefinedVars.length > 0) {
+      return new Promise<boolean>((resolve) => {
+        Modal.confirm({
+          title: "变量未定义",
+          content: `模板中存在未定义的变量: ${undefinedVars.map((v) => `\${${v}}`).join(", ")}。是否仍要保存？`,
+          okText: "继续保存",
+          cancelText: "取消",
+          onOk: async () => {
+            setSaving(true);
+            const res = await updateTemplate(selectedTemplate.id, {
+              template: fullTemplate,
+            });
+            setSaving(false);
+            if (res.ok) {
+              showSuccess("模板已保存");
+              setDirty(false);
+              void loadTemplates();
+              resolve(true);
+            } else {
+              showError(res.error);
+              resolve(false);
+            }
+          },
+          onCancel: () => {
+            resolve(false);
+          },
+        });
+      });
+    }
+
+    setSaving(true);
     const res = await updateTemplate(selectedTemplate.id, {
       template: fullTemplate,
     });
@@ -272,7 +306,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   const handleCopyAsCustom = useCallback(async () => {
     if (!selectedTemplate) return;
     setSaving(true);
-    const res = await copyAsCustom(selectedTemplate.id, book?.id);
+    const res = await copyAsCustom(selectedTemplate.id);
     setSaving(false);
     if (res.ok) {
       showSuccess("已复制为自定义模板");
@@ -281,7 +315,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     } else {
       showError(res.error);
     }
-  }, [selectedTemplate, book?.id, loadTemplates]);
+  }, [selectedTemplate, loadTemplates]);
 
   // ===== Delete custom template =====
   const handleDelete = useCallback(async () => {

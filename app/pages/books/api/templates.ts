@@ -6,11 +6,9 @@ import type {
 } from "@/app/types";
 
 export async function fetchTemplates(
-  bookId: string,
 ): Promise<Result<PromptTemplate[]>> {
   const res = await client.get<{ templates: PromptTemplate[] }>(
     "/api/ai/templates",
-    { bookId },
   );
   if (!res.ok) return res;
   return { ok: true, data: res.data.templates ?? [] };
@@ -36,11 +34,10 @@ export async function deleteTemplate(
 
 export async function copyAsCustom(
   sourceTemplateId: string,
-  bookId?: string | null,
 ): Promise<Result<PromptTemplate>> {
   const res = await client.post<{ template: PromptTemplate }>(
     "/api/ai/templates",
-    { action: "copyAsCustom", sourceTemplateId, bookId: bookId ?? null },
+    { action: "copyAsCustom", sourceTemplateId },
   );
   if (!res.ok) return res;
   return { ok: true, data: res.data.template };

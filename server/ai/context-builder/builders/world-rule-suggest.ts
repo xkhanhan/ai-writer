@@ -19,7 +19,6 @@ export async function buildWorldRuleSuggestContext(
       : "（暂无）";
 
   const activeTemplate = await deps.getActivePromptTemplate(
-    book.id,
     input.functionKey,
   );
   const template =

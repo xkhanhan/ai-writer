@@ -24,7 +24,6 @@ export async function buildFactConsistencyContext(
   );
 
   const activeTemplate = await deps.getActivePromptTemplate(
-    book.id,
     "fact_consistency",
   );
   const template =

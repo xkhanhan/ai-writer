@@ -37,7 +37,6 @@ export async function buildReviewContext(
   }
 
   const activeTemplate = await deps.getActivePromptTemplate(
-    book.id,
     "review_extract",
   );
   const template = activeTemplate?.template ?? "";

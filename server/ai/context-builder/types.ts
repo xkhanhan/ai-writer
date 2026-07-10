@@ -53,5 +53,5 @@ export interface StoreDeps {
   getWorldRulesByBookId: (bookId: string, category?: WorldRuleCategory) => Promise<WorldRule[]>;
   getSettingEntitiesByBookId: (bookId: string, category?: SettingCategory) => Promise<SettingEntity[]>;
   getStoryFactsByBookId: (bookId: string) => Promise<StoryFact[]>;
-  getActivePromptTemplate: (bookId: string, functionKey: string) => Promise<PromptTemplate | null>;
+  getActivePromptTemplate: (functionKey: string) => Promise<PromptTemplate | null>;
 }

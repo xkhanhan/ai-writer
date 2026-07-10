@@ -98,7 +98,6 @@ export async function buildContentGenerationContext(
   }
 
   const activeTemplate = await deps.getActivePromptTemplate(
-    book.id,
     "content_generate",
   );
   const template = activeTemplate?.template ?? "";

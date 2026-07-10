@@ -48,7 +48,6 @@ export async function buildCharacterAuditContext(
   }
 
   const activeTemplate = await deps.getActivePromptTemplate(
-    book.id,
     "character_audit",
   );
   const template =

@@ -11,7 +11,6 @@ export async function buildBookInfoSuggestContext(
   }
 
   const activeTemplate = await deps.getActivePromptTemplate(
-    book.id,
     input.functionKey,
   );
   const template =

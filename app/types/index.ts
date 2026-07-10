@@ -54,10 +54,10 @@ export type {
   PromptTemplate,
   PromptVariable,
   PromptVariableUsage,
-  PROMPT_VARIABLES,
-  validateTemplateVariables,
   UpdatePromptTemplateDTO,
 } from "@/shared/types";
+
+export { PROMPT_VARIABLES, validateTemplateVariables } from "@/shared/types";
 
 // Re-export the GenreTreeNode that now lives in shared (used by BookOptions)
 export type { GenreTreeNode } from "@/shared/types";

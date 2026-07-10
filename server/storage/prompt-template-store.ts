@@ -73,7 +73,6 @@ function mapRow(row: PromptTemplateRow): PromptTemplate {
 }
 
 export async function getPromptTemplatesByBook(
-  bookId: string,
   functionKey?: string,
 ): Promise<PromptTemplate[]> {
   await ensureDefaultTemplates();
@@ -174,7 +173,6 @@ export async function deletePromptTemplate(id: string): Promise<boolean> {
 }
 
 export async function copyAsCustom(
-  bookId: string | null,
   sourceTemplateId: string,
 ): Promise<PromptTemplate> {
   const db = await getDb();
@@ -190,10 +188,9 @@ export async function copyAsCustom(
   const newId = randomUUID();
   db.prepare(
     `INSERT INTO prompt_templates (id, book_id, function_key, display_name, description, template, variables, is_default, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)`,
+     VALUES (?, NULL, ?, ?, ?, ?, ?, 0, 0)`,
   ).run(
     newId,
-    bookId,
     sourceRow.function_key,
     sourceRow.display_name,
     sourceRow.description,
@@ -252,7 +249,6 @@ export async function activateTemplate(id: string): Promise<PromptTemplate | nul
 }
 
 export async function getActivePromptTemplate(
-  bookId: string,
   functionKey: string,
 ): Promise<PromptTemplate | null> {
   // Lazy-seed: ensure system defaults exist on first call
@@ -260,18 +256,7 @@ export async function getActivePromptTemplate(
 
   const db = await getDb();
 
-  // Priority 1: book-specific active template
-  const active = db
-    .prepare(
-      `SELECT * FROM prompt_templates
-       WHERE book_id = ? AND function_key = ? AND is_active = 1
-       LIMIT 1`,
-    )
-    .get(bookId, functionKey) as PromptTemplateRow | undefined;
-
-  if (active) return mapRow(active);
-
-  // Priority 2: user global custom active template (not a system default)
+  // Priority 1: user global custom active template (not a system default)
   const globalCustom = db
     .prepare(
       `SELECT * FROM prompt_templates
@@ -282,7 +267,7 @@ export async function getActivePromptTemplate(
 
   if (globalCustom) return mapRow(globalCustom);
 
-  // Priority 3: system-level default template
+  // Priority 2: system-level default template
   const systemDefault = db
     .prepare(
       `SELECT * FROM prompt_templates

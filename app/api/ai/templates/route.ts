@@ -7,15 +7,10 @@ import {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const bookId = searchParams.get("bookId");
+  const bookId = searchParams.get("bookId") ?? undefined;
   const functionKey = searchParams.get("functionKey") ?? undefined;
 
-  // bookId is required for template creation context (copyAsCustom)
-  if (!bookId) {
-    return jsonError("bookId is required.");
-  }
-
-  const templates = await getPromptTemplatesByBook(bookId, functionKey);
+  const templates = await getPromptTemplatesByBook(functionKey);
   return jsonSuccess({ templates });
 }
 
@@ -40,17 +35,13 @@ export async function POST(request: Request) {
       typeof payload.sourceTemplateId === "string" && payload.sourceTemplateId.trim() !== ""
         ? payload.sourceTemplateId.trim()
         : null;
-    const bookId =
-      typeof payload.bookId === "string" && payload.bookId.trim() !== ""
-        ? payload.bookId.trim()
-        : null;
 
     if (!sourceTemplateId) {
       return jsonError("sourceTemplateId is required for copyAsCustom.");
     }
 
     try {
-      const template = await copyAsCustom(bookId, sourceTemplateId);
+      const template = await copyAsCustom(sourceTemplateId);
       return jsonSuccess({ template });
     } catch (err) {
       const message =
