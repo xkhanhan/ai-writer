@@ -36,6 +36,8 @@ import {
 import BaseModal from "@/shared/ui/base-modal";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import { TagSelector } from "@/shared/ui/tag-selector";
+import { AiSceneModal } from "@/shared/ui/ai-scene-modal";
+import { getSettingsLibraryScenes } from "../../config/ai-scenes";
 import type {
   Book,
   SettingEntity,
@@ -147,6 +149,9 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
   const [modalCat, setModalCat] = useState<SettingCategory>("character");
   const [editing, setEditing] = useState<SettingEntity | null>(null);
   const [form] = Form.useForm();
+
+  // AI 场景弹窗
+  const [aiOpen, setAiOpen] = useState(false);
 
   const activeEntity = entities.find((e) => e.id === activeId) ?? null;
 
@@ -368,6 +373,17 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
         </div>
       ) : (
         <div className={styles.entityList}>
+          <div className={styles.listToolbar}>
+            <span className={styles.entityCount}>{entities.length} 条</span>
+            <Button
+              type="primary"
+              size="small"
+              icon={<ThunderboltOutlined />}
+              onClick={() => setAiOpen(true)}
+            >
+              AI 检查
+            </Button>
+          </div>
           {CAT_ORDER.map((cat) => {
             const items = grouped[cat];
             const meta = CAT_META[cat];
@@ -721,6 +737,16 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
       >
         {modalContent}
       </BaseModal>
+
+      {/* AI 检查弹窗 */}
+      <AiSceneModal
+        open={aiOpen}
+        scene={getSettingsLibraryScenes()}
+        bookId={book.id}
+        onClose={() => setAiOpen(false)}
+        onSaved={() => setAiOpen(false)}
+        onSave={async () => { /* text-only result, no DB save needed */ }}
+      />
     </>
   );
 }

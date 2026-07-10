@@ -7,6 +7,7 @@ import {
   EditOutlined,
   SearchOutlined,
   AuditOutlined,
+  ThunderboltOutlined,
 } from "@ant-design/icons";
 import {
   PanelContainer,
@@ -15,6 +16,8 @@ import {
   Divider,
 } from "@/shared/ui/panel-container";
 import BaseModal from "@/shared/ui/base-modal";
+import { AiSceneModal } from "@/shared/ui/ai-scene-modal";
+import { getFactLibraryScenes } from "../../config/ai-scenes";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type { Book, StoryFact } from "@/app/types";
@@ -54,6 +57,9 @@ export default function FactLibrary({ book }: FactLibraryProps) {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingFact, setEditingFact] = useState<StoryFact | null>(null);
   const [form] = Form.useForm();
+
+  // AI 检查弹窗
+  const [aiOpen, setAiOpen] = useState(false);
 
   // 加载数据
   const loadFacts = useCallback(async () => {
@@ -203,6 +209,19 @@ export default function FactLibrary({ book }: FactLibraryProps) {
               </span>
             }
           >
+            <div className={styles.listToolbar}>
+              <span className={styles.listCount}>
+                {filteredFacts.length} 条
+              </span>
+              <Button
+                type="primary"
+                size="small"
+                icon={<ThunderboltOutlined />}
+                onClick={() => setAiOpen(true)}
+              >
+                AI 检查
+              </Button>
+            </div>
             <div className={styles.filterBar}>
               {FILTER_OPTIONS.map((f) => (
                 <button
@@ -345,6 +364,16 @@ export default function FactLibrary({ book }: FactLibraryProps) {
           </Panel>
         </PanelGroup>
       </PanelContainer>
+
+      {/* AI 事实一致性检查弹窗 */}
+      <AiSceneModal
+        open={aiOpen}
+        scene={getFactLibraryScenes()}
+        bookId={book.id}
+        onClose={() => setAiOpen(false)}
+        onSaved={() => setAiOpen(false)}
+        onSave={async () => {}}
+      />
 
       <BaseModal
         title={editingFact ? "编辑事实" : "新建事实"}

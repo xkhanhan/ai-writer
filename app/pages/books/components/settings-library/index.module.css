@@ -4,6 +4,14 @@
   color: var(--text-secondary);
 }
 
+.listToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+  flex-shrink: 0;
+}
+
 .entityList {
   flex: 1;
   overflow-y: auto;

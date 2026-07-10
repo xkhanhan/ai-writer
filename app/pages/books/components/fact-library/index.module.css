@@ -5,6 +5,15 @@
   padding: var(--space-2) var(--space-3);
 }
 
+.listToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
 .listCount {
   font-weight: 600;
   font-size: 13px;
