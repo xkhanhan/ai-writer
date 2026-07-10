@@ -148,6 +148,24 @@
   gap: var(--space-4);
 }
 
+.description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.scopeBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.scopeHint {
+  font-size: 12px;
+  color: var(--ink-light);
+  margin-left: var(--space-2);
+}
+
 .editorSection {
   display: flex;
   flex-direction: column;
