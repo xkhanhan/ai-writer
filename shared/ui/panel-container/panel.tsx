@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import styles from "./index.module.css";
 
 interface PanelProps {
+  /** Optional identifier for the panel (used by PanelGroup for state tracking) */
+  id?: string;
   title?: ReactNode;
   defaultSize?: number;
   minSize?: number;
