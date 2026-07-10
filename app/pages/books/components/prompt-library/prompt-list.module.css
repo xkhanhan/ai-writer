@@ -1,0 +1,162 @@
+/* ===== Function List Panel (232px) ===== */
+.listPanel {
+  width: 232px;
+  min-width: 232px;
+  background: var(--panel);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===== Header ===== */
+.listHeader {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.listHeaderTitle {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.listHeaderSub {
+  font-size: 11px;
+  color: var(--ink-tertiary);
+}
+
+/* ===== Scrollable Body ===== */
+.listBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+/* ===== Group ===== */
+.group {
+  margin-bottom: 2px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  padding: 7px 18px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-tertiary);
+  gap: 6px;
+  user-select: none;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: color 0.15s ease;
+}
+
+.groupHeader:hover {
+  color: var(--text-secondary);
+}
+
+.groupArrow {
+  font-size: 9px;
+  transition: transform 0.15s ease;
+}
+
+.groupArrowCollapsed {
+  transform: rotate(-90deg);
+}
+
+/* ===== Function Items ===== */
+.functionItem {
+  padding: 8px 18px 8px 30px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 2px solid transparent;
+  transition: all 0.12s ease;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-body);
+}
+
+.functionItem:hover {
+  background: rgba(47, 93, 80, 0.04);
+  color: var(--text-secondary);
+}
+
+.functionItemActive {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 500;
+  border-left-color: var(--accent);
+}
+
+.functionDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  flex-shrink: 0;
+}
+
+.functionItemActive .functionDot {
+  background: var(--accent);
+}
+
+/* ===== Tags ===== */
+.tagDefault {
+  font-size: 9px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: auto;
+  flex-shrink: 0;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.tagCustom {
+  font-size: 9px;
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: auto;
+  flex-shrink: 0;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* ===== Empty State ===== */
+.emptyState {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-tertiary);
+  font-size: 13px;
+}
+
+.loadingHint {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-tertiary);
+}
