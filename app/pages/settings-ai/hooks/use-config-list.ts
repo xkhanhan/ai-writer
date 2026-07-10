@@ -1,116 +1,91 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import {
+  getAiConfigList,
+  createAiConfigRecord,
+  updateAiConfigRecord,
+  deleteAiConfigRecord,
+  type AiConfigRecord,
+} from "../api/ai-config";
 
-export interface StoredConfig {
-  id: string;
-  name: string;
-  provider: string;
-  providerName: string;
-  apiFormat: string;
-  baseUrl: string;
-  apiKey: string;
-  model: string;
-  contextSize: number;
-  temperature: number;
-  status: "idle" | "connected" | "error";
-}
-
-interface StoredConfigRecord {
-  configs: StoredConfig[];
-  selectedId: string | null;
-}
-
-const STORAGE_KEY = "ai-config-list";
-
-function generateId(): string {
-  return `cfg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function loadFromStorage(): StoredConfigRecord {
-  if (typeof window === "undefined") return { configs: [], selectedId: null };
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { configs: [], selectedId: null };
-    return JSON.parse(raw) as StoredConfigRecord;
-  } catch {
-    return { configs: [], selectedId: null };
-  }
-}
-
-function saveToStorage(data: StoredConfigRecord): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+export type StoredConfig = AiConfigRecord;
 
 export function useConfigList() {
-  const [state, setState] = useState<StoredConfigRecord>(() => loadFromStorage());
-  const loaded = true;
+  const [configs, setConfigs] = useState<StoredConfig[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const persist = useCallback((next: StoredConfigRecord) => {
-    setState(next);
-    saveToStorage(next);
+  const selectedConfig = configs.find((c) => c.id === selectedId) ?? null;
+
+  // Load configs from backend on mount
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const res = await getAiConfigList();
+      if (!cancelled && res.ok) {
+        setConfigs(res.data);
+        // Auto-select first if none selected
+        if (res.data.length > 0) {
+          setSelectedId((prev) => prev ?? res.data[0].id);
+        }
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
-  const selectedConfig = state.configs.find((c) => c.id === state.selectedId) ?? null;
-
-  const selectConfig = useCallback(
-    (id: string | null) => {
-      persist({ ...state, selectedId: id });
-    },
-    [state, persist],
-  );
+  const selectConfig = useCallback((id: string | null) => {
+    setSelectedId(id);
+  }, []);
 
   const addConfig = useCallback(
-    (config: Omit<StoredConfig, "id" | "status">) => {
-      const newConfig: StoredConfig = {
-        ...config,
-        id: generateId(),
-        status: "idle",
-      };
-      const next: StoredConfigRecord = {
-        configs: [...state.configs, newConfig],
-        selectedId: newConfig.id,
-      };
-      persist(next);
-      return newConfig.id;
+    async (data: Omit<StoredConfig, "id" | "updatedAt" | "status">) => {
+      const res = await createAiConfigRecord(data);
+      if (res.ok) {
+        setConfigs((prev) => [...prev, res.data]);
+        setSelectedId(res.data.id);
+        return res.data.id;
+      }
+      return null;
     },
-    [state, persist],
+    []
   );
 
   const updateConfig = useCallback(
-    (id: string, updates: Partial<Omit<StoredConfig, "id">>) => {
-      const next: StoredConfigRecord = {
-        ...state,
-        configs: state.configs.map((c) =>
-          c.id === id ? { ...c, ...updates } : c,
-        ),
-      };
-      persist(next);
+    async (id: string, updates: Partial<Omit<StoredConfig, "id" | "updatedAt">>) => {
+      const res = await updateAiConfigRecord(id, updates);
+      if (res.ok) {
+        setConfigs((prev) =>
+          prev.map((c) => (c.id === id ? res.data : c))
+        );
+      }
+      return res.ok;
     },
-    [state, persist],
+    []
   );
 
   const deleteConfig = useCallback(
-    (id: string) => {
-      const remaining = state.configs.filter((c) => c.id !== id);
-      const next: StoredConfigRecord = {
-        configs: remaining,
-        selectedId:
-          state.selectedId === id
-            ? remaining[0]?.id ?? null
-            : state.selectedId,
-      };
-      persist(next);
+    async (id: string) => {
+      const res = await deleteAiConfigRecord(id);
+      if (res.ok) {
+        setConfigs((prev) => {
+          const remaining = prev.filter((c) => c.id !== id);
+          if (selectedId === id) {
+            setSelectedId(remaining[0]?.id ?? null);
+          }
+          return remaining;
+        });
+      }
     },
-    [state, persist],
+    [selectedId]
   );
 
   return {
-    configs: state.configs,
-    selectedId: state.selectedId,
+    configs,
+    selectedId,
     selectedConfig,
-    loaded,
+    loading,
     selectConfig,
     addConfig,
     updateConfig,

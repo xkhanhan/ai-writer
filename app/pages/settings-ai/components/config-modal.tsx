@@ -30,7 +30,7 @@ const PROVIDER_MAP = new Map(
   ]),
 );
 
-const FORM_INITIAL: Omit<StoredConfig, "id" | "status"> = {
+const FORM_INITIAL: Omit<StoredConfig, "id" | "status" | "updatedAt"> = {
   name: "",
   provider: "openai",
   providerName: "OpenAI",

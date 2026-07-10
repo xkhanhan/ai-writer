@@ -47,7 +47,7 @@ export default function AiConfigForm({
     configs,
     selectedId,
     selectedConfig,
-    loaded,
+    loading,
     selectConfig,
     addConfig,
     updateConfig,
@@ -65,11 +65,11 @@ export default function AiConfigForm({
   }, []);
 
   const handleSave = useCallback(
-    (config: Omit<StoredConfig, "id" | "status">) => {
+    async (config: Omit<StoredConfig, "id" | "status">) => {
       if (editingConfig) {
-        updateConfig(editingConfig.id, config);
+        await updateConfig(editingConfig.id, config);
       } else {
-        addConfig(config);
+        await addConfig(config);
       }
     },
     [editingConfig, addConfig, updateConfig],
@@ -148,7 +148,7 @@ export default function AiConfigForm({
               </div>
 
               <div className={styles.configListBody}>
-                {loaded && configs.length === 0 ? (
+                {!loading && configs.length === 0 ? (
                   <div className={styles.configListEmpty}>
                     <ApiOutlined className={styles.configListEmptyIcon} />
                     <span>暂无配置</span>
