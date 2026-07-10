@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonSuccess, jsonError } from "@/app/api/utils";
 import {
   getStoryFactsByBookId,
   createStoryFact,
@@ -12,10 +12,10 @@ export async function GET(request: Request, { params }: FactsRouteParams) {
   try {
     const { id } = await params;
     const facts = await getStoryFactsByBookId(id);
-    return NextResponse.json({ facts });
+    return jsonSuccess({ facts });
   } catch (error) {
     console.error("获取事实列表失败:", error);
-    return NextResponse.json({ error: "获取事实列表失败" }, { status: 500 });
+    return jsonError("获取事实列表失败", 500);
   }
 }
 
@@ -26,7 +26,7 @@ export async function POST(request: Request, { params }: FactsRouteParams) {
     const { content, chapterNumber, chapterId, relatedCharacterIds } = body;
 
     if (!content?.trim()) {
-      return NextResponse.json({ error: "事实内容不能为空" }, { status: 400 });
+      return jsonError("事实内容不能为空");
     }
 
     const fact = await createStoryFact(id, {
@@ -35,9 +35,9 @@ export async function POST(request: Request, { params }: FactsRouteParams) {
       chapterId,
       relatedCharacterIds,
     });
-    return NextResponse.json({ fact }, { status: 201 });
+    return jsonSuccess({ fact }, 201);
   } catch (error) {
     console.error("创建事实失败:", error);
-    return NextResponse.json({ error: "创建事实失败" }, { status: 500 });
+    return jsonError("创建事实失败", 500);
   }
 }

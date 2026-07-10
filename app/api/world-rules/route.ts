@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonSuccess, jsonError } from "@/app/api/utils";
 import {
   getWorldRulesByBookId,
   createWorldRule,
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const category = searchParams.get("category");
 
     if (!bookId) {
-      return NextResponse.json({ error: "缺少 bookId" }, { status: 400 });
+      return jsonError("缺少 bookId");
     }
 
     // 确保固定全局规则存在
@@ -22,10 +22,10 @@ export async function GET(request: Request) {
       bookId,
       (category as "global" | "writing" | "setting") || undefined
     );
-    return NextResponse.json({ rules });
+    return jsonSuccess({ rules });
   } catch (error) {
     console.error("获取世界规则失败:", error);
-    return NextResponse.json({ error: "获取世界规则失败" }, { status: 500 });
+    return jsonError("获取世界规则失败", 500);
   }
 }
 
@@ -35,16 +35,16 @@ export async function POST(request: Request) {
     const { bookId, ...data } = body;
 
     if (!bookId) {
-      return NextResponse.json({ error: "缺少 bookId" }, { status: 400 });
+      return jsonError("缺少 bookId");
     }
     if (!data.name?.trim()) {
-      return NextResponse.json({ error: "规则名称不能为空" }, { status: 400 });
+      return jsonError("规则名称不能为空");
     }
 
     const rule = await createWorldRule(bookId, data);
-    return NextResponse.json({ rule }, { status: 201 });
+    return jsonSuccess({ rule }, 201);
   } catch (error) {
     console.error("创建世界规则失败:", error);
-    return NextResponse.json({ error: "创建世界规则失败" }, { status: 500 });
+    return jsonError("创建世界规则失败", 500);
   }
 }

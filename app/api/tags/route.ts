@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonSuccess, jsonError } from "@/app/api/utils";
 import {
   getTagTreeByBookId,
   createTagCategory,
@@ -10,14 +10,14 @@ export async function GET(request: Request) {
     const bookId = searchParams.get("bookId");
 
     if (!bookId) {
-      return NextResponse.json({ error: "缺少 bookId" }, { status: 400 });
+      return jsonError("缺少 bookId");
     }
 
     const tags = await getTagTreeByBookId(bookId);
-    return NextResponse.json({ tags });
+    return jsonSuccess({ tags });
   } catch (error) {
     console.error("获取标签树失败:", error);
-    return NextResponse.json({ error: "获取标签树失败" }, { status: 500 });
+    return jsonError("获取标签树失败", 500);
   }
 }
 
@@ -27,16 +27,16 @@ export async function POST(request: Request) {
     const { bookId, ...data } = body;
 
     if (!bookId) {
-      return NextResponse.json({ error: "缺少 bookId" }, { status: 400 });
+      return jsonError("缺少 bookId");
     }
     if (!data.name?.trim()) {
-      return NextResponse.json({ error: "标签名称不能为空" }, { status: 400 });
+      return jsonError("标签名称不能为空");
     }
 
     const tag = await createTagCategory(bookId, data);
-    return NextResponse.json({ tag }, { status: 201 });
+    return jsonSuccess({ tag }, 201);
   } catch (error) {
     console.error("创建标签失败:", error);
-    return NextResponse.json({ error: "创建标签失败" }, { status: 500 });
+    return jsonError("创建标签失败", 500);
   }
 }

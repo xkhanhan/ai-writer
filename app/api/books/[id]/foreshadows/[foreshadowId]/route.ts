@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonSuccess, jsonError } from "@/app/api/utils";
 import {
   getForeshadowById,
   updateForeshadow,
@@ -17,12 +17,12 @@ export async function GET(
     const { foreshadowId } = await params;
     const foreshadow = await getForeshadowById(foreshadowId);
     if (!foreshadow) {
-      return NextResponse.json({ error: "伏笔不存在" }, { status: 404 });
+      return jsonError("伏笔不存在", 404);
     }
-    return NextResponse.json({ foreshadow });
+    return jsonSuccess({ foreshadow });
   } catch (error) {
     console.error("获取伏笔详情失败:", error);
-    return NextResponse.json({ error: "获取伏笔详情失败" }, { status: 500 });
+    return jsonError("获取伏笔详情失败", 500);
   }
 }
 
@@ -35,12 +35,12 @@ export async function PATCH(
     const body = await request.json();
     const foreshadow = await updateForeshadow(foreshadowId, body);
     if (!foreshadow) {
-      return NextResponse.json({ error: "伏笔不存在" }, { status: 404 });
+      return jsonError("伏笔不存在", 404);
     }
-    return NextResponse.json({ foreshadow });
+    return jsonSuccess({ foreshadow });
   } catch (error) {
     console.error("更新伏笔失败:", error);
-    return NextResponse.json({ error: "更新伏笔失败" }, { status: 500 });
+    return jsonError("更新伏笔失败", 500);
   }
 }
 
@@ -52,11 +52,11 @@ export async function DELETE(
     const { foreshadowId } = await params;
     const deleted = await deleteForeshadow(foreshadowId);
     if (!deleted) {
-      return NextResponse.json({ error: "伏笔不存在" }, { status: 404 });
+      return jsonError("伏笔不存在", 404);
     }
-    return NextResponse.json({ success: true });
+    return jsonSuccess({ success: true });
   } catch (error) {
     console.error("删除伏笔失败:", error);
-    return NextResponse.json({ error: "删除伏笔失败" }, { status: 500 });
+    return jsonError("删除伏笔失败", 500);
   }
 }

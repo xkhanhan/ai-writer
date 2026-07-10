@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonSuccess, jsonError } from "@/app/api/utils";
 import {
   getStoryFactById,
   updateStoryFact,
@@ -14,12 +14,12 @@ export async function GET(_request: Request, { params }: FactRouteParams) {
     const { factId } = await params;
     const fact = await getStoryFactById(factId);
     if (!fact) {
-      return NextResponse.json({ error: "事实不存在" }, { status: 404 });
+      return jsonError("事实不存在", 404);
     }
-    return NextResponse.json({ fact });
+    return jsonSuccess({ fact });
   } catch (error) {
     console.error("获取事实详情失败:", error);
-    return NextResponse.json({ error: "获取事实详情失败" }, { status: 500 });
+    return jsonError("获取事实详情失败", 500);
   }
 }
 
@@ -29,12 +29,12 @@ export async function PATCH(request: Request, { params }: FactRouteParams) {
     const body = await request.json();
     const fact = await updateStoryFact(factId, body);
     if (!fact) {
-      return NextResponse.json({ error: "事实不存在" }, { status: 404 });
+      return jsonError("事实不存在", 404);
     }
-    return NextResponse.json({ fact });
+    return jsonSuccess({ fact });
   } catch (error) {
     console.error("更新事实失败:", error);
-    return NextResponse.json({ error: "更新事实失败" }, { status: 500 });
+    return jsonError("更新事实失败", 500);
   }
 }
 
@@ -43,11 +43,11 @@ export async function DELETE(_request: Request, { params }: FactRouteParams) {
     const { factId } = await params;
     const deleted = await deleteStoryFact(factId);
     if (!deleted) {
-      return NextResponse.json({ error: "事实不存在" }, { status: 404 });
+      return jsonError("事实不存在", 404);
     }
-    return NextResponse.json({ success: true });
+    return jsonSuccess({ success: true });
   } catch (error) {
     console.error("删除事实失败:", error);
-    return NextResponse.json({ error: "删除事实失败" }, { status: 500 });
+    return jsonError("删除事实失败", 500);
   }
 }
