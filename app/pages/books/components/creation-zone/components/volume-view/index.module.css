@@ -1,0 +1,86 @@
+.container {
+  padding: var(--space-6);
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* ---- Header ---- */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.headerLeft {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.volumeTitle {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+/* ---- Section card (reused for multiple sections) ---- */
+
+.sectionCard {
+  background: var(--panel-soft);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.sectionCardTitle {
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: var(--space-2);
+}
+
+.sectionBody {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+/* ---- Arc steps ---- */
+
+.arcSteps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.arcStepItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.arcArrow {
+  color: var(--accent);
+}
+
+/* ---- Key point items ---- */
+
+.keyPointItem {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.keyPointDot {
+  color: var(--jade);
+}
+
+/* ---- Highlights tag list ---- */
+
+.tagList {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}

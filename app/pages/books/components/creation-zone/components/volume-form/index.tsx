@@ -6,6 +6,7 @@ import { showError, showSuccess, showWarning } from "@/app/utils/error-handler";
 import { DeleteOutlined, MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { SaveButton } from "@/shared/ui/save-button";
 import type { VolumeOutline } from "@/app/types";
+import styles from "./index.module.css";
 
 const { TextArea } = Input;
 
@@ -53,10 +54,10 @@ export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {
   };
 
   return (
-    <div style={{ padding: 24, maxWidth: 700, height: "100%", overflowY: "auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h3 style={{ fontFamily: "var(--font-display)", color: "var(--text)", margin: 0 }}>{volume ? "编辑卷纲" : "新建卷纲"}</h3>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h3 className={styles.title}>{volume ? "编辑卷纲" : "新建卷纲"}</h3>
+        <div className={styles.headerRight}>
           {volume?.id && onDelete && (
             <Button danger icon={<DeleteOutlined />} loading={deleting} onClick={handleDelete}>删除</Button>
           )}
@@ -64,20 +65,20 @@ export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {
         </div>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>卷标题</label>
+      <div className={styles.formSection}>
+        <label className={styles.formLabel}>卷标题</label>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：第一卷 风起" maxLength={60} showCount />
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>核心冲突</label>
+      <div className={styles.formSection}>
+        <label className={styles.formLabel}>核心冲突</label>
         <TextArea value={coreConflict} onChange={(e) => setCoreConflict(e.target.value)} rows={3} placeholder="本卷的核心矛盾" maxLength={2000} showCount />
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>阶段划分</label>
+      <div className={styles.formSection}>
+        <label className={styles.formLabel}>阶段划分</label>
         {stages.map((stage, i) => (
-          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <div key={i} className={styles.stageRow}>
             <Input value={stage} placeholder={`阶段 ${i + 1}`} maxLength={200} showCount onChange={(e) => {
               const next = [...stages]; next[i] = e.target.value; setStages(next);
             }} />
@@ -87,8 +88,8 @@ export function VolumeForm({ volume, onSave, onCancel, onDelete }: Props) {
         <Button type="dashed" icon={<PlusOutlined />} onClick={() => setStages([...stages, ""])}>添加阶段</Button>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontWeight: 600, fontSize: 12, color: "var(--ink-secondary)", marginBottom: 6 }}>预计看点</label>
+      <div className={styles.formSection}>
+        <label className={styles.formLabel}>预计看点</label>
         <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} placeholder="用逗号分隔多个看点" maxLength={200} showCount />
       </div>
 

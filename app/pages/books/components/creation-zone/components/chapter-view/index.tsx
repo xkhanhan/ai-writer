@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Button, Tag, Empty } from "antd";
 import { EditOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { CreationZoneState } from "@/app/pages/books/hooks/use-creation-zone";
+import styles from "./index.module.css";
 
 interface Props {
   volumeId: string;
@@ -22,13 +23,13 @@ export function ChapterView({ volumeId, chapterId, zone }: Props) {
     { color: "default", text: "已规划" };
 
   return (
-    <div style={{ padding: 24, height: "100%", overflowY: "auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 14, color: "var(--text)" }}>第{chapter.sortOrder + 1}章 {chapter.title}</span>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <span className={styles.chapterTitle}>第{chapter.sortOrder + 1}章 {chapter.title}</span>
           <Tag color={statusTag.color}>{statusTag.text}</Tag>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className={styles.headerRight}>
           <Button icon={<EditOutlined />} onClick={() => zone.setView({ type: "chapter-form", volumeId, chapterId })}>编辑章纲</Button>
           <Button type="primary" icon={<FileTextOutlined />} onClick={() => zone.setView({ type: "content-editor", volumeId, chapterId })}>写正文</Button>
         </div>
@@ -55,8 +56,8 @@ export function ChapterView({ volumeId, chapterId, zone }: Props) {
       {chapter.keyEvents.length > 0 && (
         <Card title="重大事件" color="accent">
           {chapter.keyEvents.map((ev, i) => (
-            <div key={i} style={{ fontSize: 13, color: "var(--text)", marginBottom: 4 }}>
-              <span style={{ color: "var(--accent)" }}>●</span> {ev}
+            <div key={i} className={styles.listItem}>
+              <span className={styles.listItemDot}>●</span> {ev}
             </div>
           ))}
         </Card>
@@ -65,8 +66,8 @@ export function ChapterView({ volumeId, chapterId, zone }: Props) {
       {chapter.foreshadowings.length > 0 && (
         <Card title="伏笔铺设" color="gold">
           {chapter.foreshadowings.map((f, i) => (
-            <div key={i} style={{ fontSize: 13, color: "var(--text)", marginBottom: 4 }}>
-              <span style={{ color: "var(--gold)" }}>◆</span> {f}
+            <div key={i} className={styles.listItem}>
+              <span className={styles.listItemDiamond}>◆</span> {f}
             </div>
           ))}
         </Card>
@@ -74,20 +75,20 @@ export function ChapterView({ volumeId, chapterId, zone }: Props) {
 
       {chapter.highlights && (
         <Card title="预计看点" color="jade">
-          <div style={{ fontSize: 13, lineHeight: 1.8, color: "var(--text)" }}>{chapter.highlights}</div>
+          <div className={styles.highlightsText}>{chapter.highlights}</div>
         </Card>
       )}
 
-      <div style={{ display: "flex", gap: 24, marginTop: 8 }}>
-        <div style={{ fontSize: 12, color: "var(--ink-tertiary)" }}>预计字数：<span style={{ color: "var(--text)" }}>{chapter.expectedWords}</span></div>
+      <div className={styles.footerMeta}>
+        <div className={styles.metaLabel}>预计字数：<span className={styles.metaValue}>{chapter.expectedWords}</span></div>
         {chapter.note && (
-          <div style={{ fontSize: 12, color: "var(--ink-tertiary)" }}>备注：<span style={{ color: "var(--text)" }}>{chapter.note}</span></div>
+          <div className={styles.metaLabel}>备注：<span className={styles.metaValue}>{chapter.note}</span></div>
         )}
       </div>
 
       {chapter.content && (
         <Card title="已写正文" color="ink">
-          <pre style={{ whiteSpace: "pre-wrap", fontFamily: "var(--font-body)", fontSize: 13, color: "var(--ink-secondary)", maxHeight: 200, overflow: "auto", margin: 0 }}>
+          <pre className={styles.contentPre}>
             {chapter.content}
           </pre>
         </Card>
@@ -99,8 +100,8 @@ export function ChapterView({ volumeId, chapterId, zone }: Props) {
 function Card({ title, color, children }: { title: string; color: "accent" | "jade" | "gold" | "ink"; children: ReactNode }) {
   const colorVar = `var(--${color === "ink" ? "ink-secondary" : color})`;
   return (
-    <div style={{ background: "var(--panel-soft)", padding: 16, borderRadius: "var(--radius-md)", marginBottom: 16, borderLeft: `3px solid ${colorVar}` }}>
-      <div style={{ fontWeight: 600, fontSize: 12, color: colorVar, marginBottom: 8 }}>{title}</div>
+    <div className={styles.card} style={{ borderLeft: `3px solid ${colorVar}` }}>
+      <div className={styles.cardTitle} style={{ color: colorVar }}>{title}</div>
       {children}
     </div>
   );
@@ -108,7 +109,7 @@ function Card({ title, color, children }: { title: string; color: "accent" | "ja
 
 function TagList({ items, color }: { items: string[]; color: string }) {
   return (
-    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+    <div className={styles.tagList}>
       {items.map((it, i) => <Tag key={i} color={color}>{it}</Tag>)}
     </div>
   );
