@@ -2,8 +2,10 @@
 
 import { useCallback, useState } from "react";
 import type { ActivePanel } from "@/app/types";
+import { workspacePanels } from "../config/workspace-panels";
 
 const STORAGE_PREFIX = "nw-ws-";
+const VALID_PANELS = new Set(workspacePanels.map((p) => p.key));
 
 interface WorkspaceState {
   activePanel: ActivePanel;
@@ -19,8 +21,9 @@ function load(bookId: string): WorkspaceState | null {
     const raw = localStorage.getItem(storageKey(bookId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<WorkspaceState>;
+    const panel = parsed.activePanel ?? "info";
     return {
-      activePanel: parsed.activePanel ?? "info",
+      activePanel: VALID_PANELS.has(panel as ActivePanel) ? (panel as ActivePanel) : "info",
       panelSelections: parsed.panelSelections ?? {},
     };
   } catch {
