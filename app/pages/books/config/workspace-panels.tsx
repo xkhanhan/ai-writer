@@ -40,7 +40,7 @@ export const workspacePanels: WorkspacePanelConfig[] = [
     title: "书籍信息",
     icon: <ReadOutlined />,
     component: ({ book }) => (
-      <WorkspacePanel key={book.id}>
+      <WorkspacePanel key={book.id} mode="content">
         <BookInfoDashboard book={book} />
       </WorkspacePanel>
     ),
@@ -85,7 +85,7 @@ export const workspacePanels: WorkspacePanelConfig[] = [
     icon: <EditOutlined />,
     category: "creation",
     component: ({ book }) => (
-      <WorkspacePanel key={book.id}>
+      <WorkspacePanel key={book.id} mode="content">
         <CreationZone bookId={book.id} />
       </WorkspacePanel>
     ),
@@ -95,7 +95,7 @@ export const workspacePanels: WorkspacePanelConfig[] = [
     title: "伏笔库",
     icon: <PushpinOutlined />,
     component: ({ book }) => (
-      <WorkspacePanel key={book.id}>
+      <WorkspacePanel key={book.id} mode="content">
         <ForeshadowLibrary book={book} />
       </WorkspacePanel>
     ),
@@ -106,7 +106,7 @@ export const workspacePanels: WorkspacePanelConfig[] = [
     icon: <BookOutlined />,
     category: "archive",
     component: ({ book }) => (
-      <WorkspacePanel key={book.id}>
+      <WorkspacePanel key={book.id} mode="content">
         <ContentLibrary book={book} />
       </WorkspacePanel>
     ),

@@ -10,13 +10,15 @@ import {
 } from "@/shared/ui/panel-container";
 
 interface WorkspacePanelProps {
-  /** Single content mode: render children in a full-width panel */
-  children: ReactNode;
-  /** Split mode: left panel content */
+  /** Layout mode */
+  mode?: "split" | "content" | "panel";
+
+  // ---- Split mode ----
+  /** Left panel content */
   left?: ReactNode;
-  /** Split mode: right panel content */
+  /** Right panel content */
   right?: ReactNode;
-  /** Split mode: right panel header */
+  /** Right panel header */
   rightHeader?: ReactNode;
   /** Left panel title */
   leftTitle?: string;
@@ -24,40 +26,51 @@ interface WorkspacePanelProps {
   leftActions?: ReactNode;
   /** Left panel default width */
   leftWidth?: number;
-  /** Show left panel (split mode only) */
-  showLeft?: boolean;
+
+  // ---- Content/Panel mode ----
+  /** Children content (content mode: full-width; panel mode: inside Panel) */
+  children?: ReactNode;
+
+  // ---- Common ----
   /** Loading state */
   loading?: boolean;
-  /** Optional className for the outermost container */
+  /** Panel title (panel mode only) */
+  title?: string;
+  /** Panel actions (panel mode only) */
+  actions?: ReactNode;
+  /** Panel is collapsible (panel mode only) */
+  collapsible?: boolean;
+  /** Optional className */
   className?: string;
 }
 
 /**
- * WorkspacePanel provides a consistent layout wrapper for workspace panels.
+ * WorkspacePanel — unified layout wrapper for all workspace panels.
  *
- * Supports two modes:
- * - **Single content mode** (default): renders `children` in a full-width PanelContainer.
- * - **Split mode**: renders a collapsible left panel + a right panel, separated by a draggable Divider.
- *
- * Panels that already use PanelContainer internally (fact-library, world-rules,
- * tag-library, settings-library) should NOT be wrapped with this component to
- * avoid double-nesting.
+ * Three modes:
+ * - **split**: Left list + right detail with draggable divider (fact-library, world-rules, etc.)
+ * - **content**: Full-width container with no Panel chrome (book-info, creation-zone, etc.)
+ * - **panel**: Single Panel with header/body (when you want Panel UI but no split)
  */
 export function WorkspacePanel({
-  children,
+  mode = "content",
   left,
   right,
   rightHeader,
   leftTitle,
   leftActions,
   leftWidth = 280,
+  children,
   loading = false,
+  title,
+  actions,
+  collapsible = false,
   className,
 }: WorkspacePanelProps) {
   const [leftCollapsed, setLeftCollapsed] = useState(false);
 
   // Split mode: left + right panels
-  if (left !== undefined && right !== undefined) {
+  if (mode === "split" && left !== undefined && right !== undefined) {
     return (
       <PanelContainer className={className}>
         <PanelGroup direction="horizontal">
@@ -82,12 +95,31 @@ export function WorkspacePanel({
     );
   }
 
-  // Single content mode: full-width panel
+  // Panel mode: single Panel with header
+  if (mode === "panel") {
+    return (
+      <PanelContainer className={className}>
+        <PanelGroup direction="horizontal">
+          <Panel
+            id="workspace-panel"
+            title={title}
+            actions={actions}
+            collapsible={collapsible}
+          >
+            {loading ? null : children}
+          </Panel>
+        </PanelGroup>
+      </PanelContainer>
+    );
+  }
+
+  // Content mode: plain container, no Panel chrome
   return (
-    <PanelContainer className={className}>
-      <PanelGroup direction="horizontal">
-        <Panel id="workspace-content">{loading ? null : children}</Panel>
-      </PanelGroup>
-    </PanelContainer>
+    <div
+      className={`workspace-panel-content ${className ?? ""}`}
+      style={{ height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}
+    >
+      {loading ? null : children}
+    </div>
   );
 }
