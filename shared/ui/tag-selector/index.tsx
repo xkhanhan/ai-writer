@@ -5,7 +5,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import { TreeSelect, Spin } from "antd";
+import { TreeSelect, Spin, ConfigProvider } from "antd";
 import type { TreeSelectProps } from "antd";
 import { TagOutlined } from "@ant-design/icons";
 import { useTagTree } from "@/shared/hooks/use-tag-tree";
@@ -173,46 +173,57 @@ export function TagSelector({
 
   return (
     <div className={styles.selectorWrap}>
-      <TreeSelect
-        value={value}
-        onChange={onChange}
-        treeData={treeData}
-        placeholder={placeholder}
-        disabled={disabled}
-        multiple
-        treeCheckable
-        showCheckedStrategy={TreeSelect.SHOW_CHILD}
-        treeDefaultExpandAll={false}
-        treeExpandedKeys={searchExpandedKeys}
-        onTreeExpand={setExpandedKeys}
-        // 虚拟滚动（大数据量性能保障）
-        virtual
-        treeLine={{ showLeafIcon: false }}
-        // 搜索
-        showSearch
-        searchValue={searchValue}
-        onSearch={handleSearch}
-        filterTreeNode={filterTreeNode}
-        treeNodeFilterProp="title"
-        // 视口适配
-        getPopupContainer={getPopupContainer}
-        dropdownMatchSelectWidth
-        listHeight={280}
-        // Tag 显示
-        maxTagCount={maxTagCount}
-        maxTagPlaceholder={(omittedValues) =>
-          `+${omittedValues.length} 项…`
-        }
-        // 图标
-        suffixIcon={<TagOutlined />}
-        notFoundContent={
-          <div className={styles.emptyState}>
-            {loading ? "加载中…" : "暂无标签，请先在标签库中创建"}
-          </div>
-        }
-        className={styles.treeSelect}
-        popupClassName={styles.popup}
-      />
+      <ConfigProvider
+        theme={{
+          components: {
+            TreeSelect: {
+              fontSize: 13,
+              titleHeight: 28,
+            },
+          },
+        }}
+      >
+        <TreeSelect
+          value={value}
+          onChange={onChange}
+          treeData={treeData}
+          placeholder={placeholder}
+          disabled={disabled}
+          multiple
+          treeCheckable
+          showCheckedStrategy={TreeSelect.SHOW_CHILD}
+          treeDefaultExpandAll={false}
+          treeExpandedKeys={searchExpandedKeys}
+          onTreeExpand={setExpandedKeys}
+          // 虚拟滚动（大数据量性能保障）
+          virtual
+          treeLine={{ showLeafIcon: false }}
+          // 搜索
+          showSearch
+          searchValue={searchValue}
+          onSearch={handleSearch}
+          filterTreeNode={filterTreeNode}
+          treeNodeFilterProp="title"
+          // 视口适配
+          getPopupContainer={getPopupContainer}
+          dropdownMatchSelectWidth
+          listHeight={280}
+          // Tag 显示
+          maxTagCount={maxTagCount}
+          maxTagPlaceholder={(omittedValues) =>
+            `+${omittedValues.length} 项…`
+          }
+          // 图标
+          suffixIcon={<TagOutlined />}
+          notFoundContent={
+            <div className={styles.emptyState}>
+              {loading ? "加载中…" : "暂无标签，请先在标签库中创建"}
+            </div>
+          }
+          className={styles.treeSelect}
+          popupClassName={styles.popup}
+        />
+      </ConfigProvider>
     </div>
   );
 }
