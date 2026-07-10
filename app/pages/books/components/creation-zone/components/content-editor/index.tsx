@@ -1,26 +1,33 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Button, Input, Tag, message } from "antd";
+import { useState, useMemo, useCallback } from "react";
+import { Button, Input, Tag } from "antd";
 import { showError, showSuccess } from "@/app/utils/error-handler";
 import { CheckCircleOutlined } from "@ant-design/icons";
 import { SaveButton } from "@/shared/ui/save-button";
 import { AiDropdown } from "@/shared/ui/ai-dropdown";
+import { AiResultPanel, type AiFunctionKey } from "../ai-result-panel";
 import type { CreationZoneState } from "@/app/pages/books/hooks/use-creation-zone";
 
 const { TextArea } = Input;
 
 interface Props {
+  bookId: string;
   volumeId: string;
   chapterId: string;
   zone: CreationZoneState;
 }
 
-export function ContentEditor({ volumeId, chapterId, zone }: Props) {
+export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
   const chapter = zone.chaptersMap[volumeId]?.find((c) => c.id === chapterId);
   const [content, setContent] = useState(chapter?.content ?? "");
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+
+  // AI result panel state
+  const [aiPanelVisible, setAiPanelVisible] = useState(false);
+  const [aiFunctionKey, setAiFunctionKey] = useState<AiFunctionKey>("content_generate");
+  const [aiSelectedText, setAiSelectedText] = useState<string | undefined>(undefined);
 
   const wordCount = useMemo(() => content.replace(/\s/g, "").length, [content]);
 
@@ -50,13 +57,53 @@ export function ContentEditor({ volumeId, chapterId, zone }: Props) {
     }
   };
 
+  const getSelectedText = useCallback((): string | undefined => {
+    const el = document.querySelector<HTMLTextAreaElement>("[data-ai-editor] textarea");
+    if (!el) return undefined;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    if (start === end || start == null || end == null) return undefined;
+    return content.slice(start, end);
+  }, [content]);
+
+  const openAiPanel = useCallback((key: AiFunctionKey) => {
+    setAiFunctionKey(key);
+    setAiSelectedText(key === "content_generate" ? undefined : getSelectedText() || content);
+    setAiPanelVisible(true);
+  }, [getSelectedText, content]);
+
+  const handleAiAdopt = useCallback((generated: string) => {
+    if (aiFunctionKey === "content_generate") {
+      setContent(generated);
+    } else {
+      // For deslop/polish/expand: replace the selected text or replace all
+      const el = document.querySelector<HTMLTextAreaElement>("[data-ai-editor] textarea");
+      if (el) {
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        if (start != null && end != null && start !== end) {
+          const newContent = content.slice(0, start) + generated + content.slice(end);
+          setContent(newContent);
+          setDirty(true);
+        } else {
+          setContent(generated);
+          setDirty(true);
+        }
+      } else {
+        setContent(generated);
+        setDirty(true);
+      }
+    }
+    setAiPanelVisible(false);
+  }, [aiFunctionKey, content]);
+
   if (!chapter) return <div style={{ padding: 24 }}>未找到章节</div>;
 
   const aiItems = [
-    { key: "generate", label: "生成内容", onClick: () => message.info("AI 生成内容（待接入）") },
-    { key: "deslop", label: "去除AI味", onClick: () => message.info("去除AI味（待接入）") },
-    { key: "polish", label: "润色", onClick: () => message.info("润色（待接入）") },
-    { key: "expand", label: "扩写", onClick: () => message.info("扩写（待接入）") },
+    { key: "generate", label: "生成内容", onClick: () => openAiPanel("content_generate") },
+    { key: "deslop", label: "去除AI味", onClick: () => openAiPanel("deslop") },
+    { key: "polish", label: "润色", onClick: () => openAiPanel("polish") },
+    { key: "expand", label: "扩写", onClick: () => openAiPanel("expand") },
   ];
 
   return (
@@ -82,12 +129,23 @@ export function ContentEditor({ volumeId, chapterId, zone }: Props) {
 
       <div style={{ flex: 1, padding: 24, overflow: "hidden" }}>
         <TextArea
+          data-ai-editor="true"
           value={content}
           onChange={(e) => { setContent(e.target.value); setDirty(true); }}
           style={{ height: "100%", resize: "none", fontFamily: "var(--font-body)", fontSize: 14, lineHeight: 1.8 }}
           placeholder="在此撰写正文..."
         />
       </div>
+
+      <AiResultPanel
+        visible={aiPanelVisible}
+        functionKey={aiFunctionKey}
+        bookId={bookId}
+        chapterId={chapterId}
+        selectedText={aiSelectedText}
+        onAdopt={handleAiAdopt}
+        onCancel={() => setAiPanelVisible(false)}
+      />
 
       <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 24px", borderTop: "1px solid var(--line)", fontSize: 12, color: "var(--ink-tertiary)" }}>
         <span>字数：{wordCount} / 预计 {chapter.expectedWords}</span>

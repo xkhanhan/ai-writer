@@ -23,12 +23,12 @@ export function CreationZone({ bookId }: CreationZoneProps) {
       <div className={styles.navigation}>
         <NavigationTree zone={zone} />
       </div>
-      <div className={styles.content}>{renderView(zone)}</div>
+      <div className={styles.content}>{renderView(bookId, zone)}</div>
     </div>
   );
 }
 
-function renderView(zone: CreationZoneState): ReactNode {
+function renderView(bookId: string, zone: CreationZoneState): ReactNode {
   const { view } = zone;
   switch (view.type) {
     case "empty":
@@ -61,7 +61,7 @@ function renderView(zone: CreationZoneState): ReactNode {
         />
       );
     case "content-editor":
-      return <ContentEditor key={view.chapterId} volumeId={view.volumeId} chapterId={view.chapterId} zone={zone} />;
+      return <ContentEditor key={view.chapterId} bookId={bookId} volumeId={view.volumeId} chapterId={view.chapterId} zone={zone} />;
     default:
       return <EmptyState zone={zone} />;
   }
