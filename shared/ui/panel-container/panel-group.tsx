@@ -42,6 +42,11 @@ export function PanelGroup({ direction, children }: PanelGroupProps) {
   const elements: ReactElement[] = [];
   let panelIndex = 0;
 
+  // Count total panels (non-Divider children)
+  const totalPanels = childArray.filter(
+    (c) => isValidElement(c) && c.type !== Divider
+  ).length;
+
   childArray.forEach((child, i) => {
     if (child.type === Divider) {
       const prevPanelIdx = panelIndex - 1;
@@ -66,8 +71,13 @@ export function PanelGroup({ direction, children }: PanelGroupProps) {
       const idx = panelIndex;
       const panelSize = sizes[idx] ?? 280;
       const isHorizontal = direction === "horizontal";
+      const isLastPanel = panelIndex === totalPanels - 1;
+
+      // Last panel in horizontal mode uses flex:1 to fill remaining space
       const style = isHorizontal
-        ? { width: panelSize, minWidth: panelSize }
+        ? isLastPanel
+          ? { flex: 1, minWidth: 0 }
+          : { width: panelSize, minWidth: panelSize, flexShrink: 0 }
         : { height: panelSize, minHeight: panelSize };
 
       elements.push(
