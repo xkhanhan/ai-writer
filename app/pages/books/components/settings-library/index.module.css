@@ -25,6 +25,7 @@
   transition: background 0.15s;
   user-select: none;
   position: relative;
+  font-family: var(--font-display);
 }
 
 .catHeader:hover {
@@ -63,6 +64,7 @@
   font-weight: 600;
   font-size: 13px;
   color: var(--text-primary);
+  font-family: var(--font-display);
 }
 
 .catCount {
@@ -79,9 +81,8 @@
   padding: 6px 10px;
   border-radius: var(--radius-md);
   margin-bottom: 2px;
-  border-left: 3px solid transparent;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.15s;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -94,7 +95,6 @@
 
 .entityItemActive {
   background: var(--color-primary-bg);
-  border-left-color: var(--color-primary);
 }
 
 .entityItemDeprecated {
@@ -130,16 +130,74 @@
 .detailBody {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-5) var(--space-6);
 }
 
-/* Info section cards */
-.infoSection {
-  margin-bottom: 12px;
-  background: var(--bg-muted);
-  border: 1px solid var(--border);
+/* Info grid */
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.infoCard {
+  background: var(--bg-elevated);
+  border: none;
   border-radius: var(--radius-lg);
   overflow: hidden;
+  min-height: 80px;
+  box-shadow: var(--shadow);
+}
+
+.infoCardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-muted);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+}
+
+.infoCardIcon {
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary);
+}
+
+.infoCardBody {
+  padding: var(--space-3);
+}
+
+.infoCardText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.infoCardEmpty {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Info section (for tags, category, status) */
+.infoSection {
+  margin-bottom: 12px;
+  background: var(--bg-elevated);
+  border: none;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
 }
 
 .infoSectionHeader {
@@ -147,7 +205,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
   background: var(--bg-muted);
 }
 
@@ -162,24 +219,6 @@
 
 .infoSectionBody {
   padding: 12px;
-}
-
-.infoSectionBodyCollapsed {
-  display: none;
-}
-
-.descText {
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--text-primary);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.descEmpty {
-  font-size: 13px;
-  color: var(--text-secondary);
-  font-style: italic;
 }
 
 /* Tags display */
@@ -287,4 +326,25 @@
   margin: 8px 0;
   border: none;
   border-top: 1px solid var(--border);
+}
+
+/* ---- 右侧面板空状态 ---- */
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 768px) {
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
 }

@@ -38,6 +38,7 @@
   cursor: pointer;
   user-select: none;
   transition: background 0.15s ease;
+  font-family: var(--font-display);
 }
 
 .categoryHeader:hover {
@@ -57,8 +58,10 @@
 .categoryLabel {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--text-secondary);
   flex: 1;
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
 }
 
 .categoryCount {
@@ -84,9 +87,8 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   margin-bottom: 2px;
-  border-left: 3px solid transparent;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease;
 }
 
 .ruleItem:hover {
@@ -95,7 +97,6 @@
 
 .ruleItemActive {
   background: var(--color-primary-bg);
-  border-left-color: var(--color-primary);
 }
 
 .ruleItemMeta {
@@ -114,6 +115,7 @@
   white-space: nowrap;
   flex: 1;
   min-width: 0;
+  font-family: var(--font-display);
 }
 
 /* ===== 右侧详情面板 ===== */
@@ -129,16 +131,19 @@
 .detailBody {
   flex: 1;
   overflow-y: auto;
+  padding: var(--space-5) var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 /* ===== 内容卡片 ===== */
 .contentCard {
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: none;
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow);
 }
 
 .contentCardHeader {
@@ -146,8 +151,7 @@
   align-items: center;
   gap: 8px;
   padding: var(--space-3) var(--space-4);
-  background: var(--panel-soft);
-  border-bottom: 1px solid var(--line);
+  background: var(--bg-muted);
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
@@ -160,6 +164,7 @@
 
 .contentCardBody {
   padding: var(--space-4);
+  min-height: 60px;
 }
 
 .detailText {
@@ -233,6 +238,20 @@
 .required {
   color: var(--color-error, #ff4d4f);
   margin-right: 2px;
+}
+
+/* ===== 右侧面板空状态 ===== */
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-family: var(--font-body);
 }
 
 /* ===== 响应式 ===== */
