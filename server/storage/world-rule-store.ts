@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
 import { parseJsonArray } from "@/server/utils/json";
+import { buildUpdateSet } from "@/server/utils/store-helpers";
 import type { WorldRule, CreateWorldRuleDTO, UpdateWorldRuleDTO } from "@/shared/types";
 
 // ============ Row 类型 ============
@@ -85,15 +86,10 @@ export async function createWorldRule(
   const db = await getDb();
   const id = randomUUID();
 
-  // 获取同分类下最大排序值
-  const maxOrder = db
-    .prepare("SELECT MAX(sort_order) as max_order FROM world_rules WHERE book_id = ? AND category = ?")
-    .get(bookId, data.category) as { max_order: number | null } | undefined;
-  const sortOrder = (maxOrder?.max_order ?? -1) + 1;
-
+  // 获取同分类下最大排序值（使用子查询保证原子性）
   db.prepare(
     `INSERT INTO world_rules (id, book_id, category, name, content, is_fixed, setting_type, select_options, number_min, number_max, number_unit, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM world_rules WHERE book_id = ? AND category = ?))`
   ).run(
     id,
     bookId,
@@ -106,7 +102,8 @@ export async function createWorldRule(
     data.numberMin ?? null,
     data.numberMax ?? null,
     data.numberUnit ?? "",
-    sortOrder
+    bookId,
+    data.category
   );
 
   return (await getWorldRuleById(id))!;
@@ -119,52 +116,22 @@ export async function updateWorldRule(
   data: UpdateWorldRuleDTO
 ): Promise<WorldRule | null> {
   const db = await getDb();
-  const fields: string[] = [];
-  const values: Array<string | number> = [];
+  const fieldMap = {
+    name: data.name,
+    content: data.content,
+    is_fixed: data.isFixed !== undefined ? (data.isFixed ? 1 : 0) : undefined,
+    setting_type: data.settingType,
+    select_options: data.selectOptions !== undefined ? JSON.stringify(data.selectOptions) : undefined,
+    number_min: data.numberMin,
+    number_max: data.numberMax,
+    number_unit: data.numberUnit,
+    sort_order: data.sortOrder,
+  };
 
-  if (data.name !== undefined) {
-    fields.push("name = ?");
-    values.push(data.name);
-  }
-  if (data.content !== undefined) {
-    fields.push("content = ?");
-    values.push(data.content);
-  }
-  if (data.isFixed !== undefined) {
-    fields.push("is_fixed = ?");
-    values.push(data.isFixed ? 1 : 0);
-  }
-  if (data.settingType !== undefined) {
-    fields.push("setting_type = ?");
-    values.push(data.settingType);
-  }
-  if (data.selectOptions !== undefined) {
-    fields.push("select_options = ?");
-    values.push(JSON.stringify(data.selectOptions));
-  }
-  if (data.numberMin !== undefined) {
-    fields.push("number_min = ?");
-    values.push(data.numberMin);
-  }
-  if (data.numberMax !== undefined) {
-    fields.push("number_max = ?");
-    values.push(data.numberMax);
-  }
-  if (data.numberUnit !== undefined) {
-    fields.push("number_unit = ?");
-    values.push(data.numberUnit);
-  }
-  if (data.sortOrder !== undefined) {
-    fields.push("sort_order = ?");
-    values.push(data.sortOrder);
-  }
+  const update = buildUpdateSet("world_rules", fieldMap, ["updated_at = datetime('now')"]);
+  if (!update) return getWorldRuleById(id);
 
-  if (fields.length === 0) return getWorldRuleById(id);
-
-  fields.push("updated_at = datetime('now')");
-  values.push(id);
-
-  db.prepare(`UPDATE world_rules SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  db.prepare(update.sql).run(...update.values, id);
   return getWorldRuleById(id);
 }
 
@@ -210,13 +177,16 @@ export async function ensureFixedGlobalRules(bookId: string): Promise<void> {
     .get(bookId) as { id: string } | undefined;
 
   if (!existing) {
-    for (let i = 0; i < FIXED_GLOBAL_RULES.length; i++) {
-      const rule = FIXED_GLOBAL_RULES[i];
-      const id = randomUUID();
-      db.prepare(
-        `INSERT INTO world_rules (id, book_id, category, name, content, is_fixed, sort_order)
-         VALUES (?, ?, 'global', ?, ?, 1, ?)`
-      ).run(id, bookId, rule.name, rule.content, i);
-    }
+    const tx = db.transaction(() => {
+      for (let i = 0; i < FIXED_GLOBAL_RULES.length; i++) {
+        const rule = FIXED_GLOBAL_RULES[i];
+        const id = randomUUID();
+        db.prepare(
+          `INSERT INTO world_rules (id, book_id, category, name, content, is_fixed, sort_order)
+           VALUES (?, ?, 'global', ?, ?, 1, ?)`
+        ).run(id, bookId, rule.name, rule.content, i);
+      }
+    });
+    tx();
   }
 }

@@ -1,14 +1,10 @@
-import { NextResponse } from "next/server";
+import { jsonError, jsonSuccess } from "@/app/api/utils";
 import { createBook, listBooks } from "@/server/storage/book-store";
-
-function jsonError(error: string, status = 400) {
-  return NextResponse.json({ success: false, error }, { status });
-}
 
 export async function GET() {
   try {
     const books = await listBooks();
-    return NextResponse.json({ success: true, books });
+    return jsonSuccess({ success: true, books });
   } catch {
     return jsonError("书籍数据读取失败。", 500);
   }
@@ -36,7 +32,7 @@ export async function POST(request: Request) {
 
   try {
     const book = await createBook({ title, description, genre, platform });
-    return NextResponse.json({ success: true, book }, { status: 201 });
+    return jsonSuccess({ success: true, book }, 201);
   } catch (error) {
     if (error instanceof Error) {
       return jsonError(error.message);

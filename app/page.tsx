@@ -1,5 +1,5 @@
 import { loadPublicAiConfig } from "@/server/ai/ai-config-store";
-import { getBookOptions } from "@/server/storage/book-options-store";
+import { getBookOptions, ensureBookOptions } from "@/server/storage/book-options-store";
 import { listBooks } from "@/server/storage/book-store";
 import AppShell from "@/app/components/app-shell";
 
@@ -16,6 +16,7 @@ export default async function Page({ searchParams }: PageProps) {
     params.view === "workspace" || params.view === "settings" ? params.view : "home";
   const selectedBookId = params.bookId ?? null;
 
+  await ensureBookOptions();
   const [books, bookOptions] = await Promise.all([
     listBooks(),
     getBookOptions(),

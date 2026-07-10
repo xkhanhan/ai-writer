@@ -1,0 +1,147 @@
+.loadingWrap {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.entityList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px 12px;
+}
+
+.listToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+  flex-shrink: 0;
+}
+
+.entityCount {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Category groups */
+.catGroup {
+  margin-bottom: 4px;
+}
+
+.catHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+  position: relative;
+  font-family: var(--font-display);
+}
+
+.catHeader:hover {
+  background: var(--bg-muted);
+}
+
+.addBtn {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.catHeader:hover .addBtn {
+  opacity: 1;
+}
+
+.catHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.catArrow {
+  font-size: 10px;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.catArrowClosed {
+  transform: rotate(-90deg);
+}
+
+.catIcon {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.catName {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+
+.catCount {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.catItems {
+  padding-left: 12px;
+}
+
+.catEmpty {
+  padding: 6px 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Entity list items */
+.entityItem {
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.entityItem:hover {
+  background: var(--bg-muted);
+}
+
+.entityItemActive {
+  background: var(--color-primary-bg);
+}
+
+.entityItemDeprecated {
+  opacity: 0.5;
+}
+
+.entityItemBody {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.entityName {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}

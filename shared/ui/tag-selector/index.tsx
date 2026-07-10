@@ -1,16 +1,15 @@
 "use client";
 
-import React, {
+import {
   useState,
-  useEffect,
   useMemo,
   useCallback,
-  useRef,
 } from "react";
 import { TreeSelect, Spin } from "antd";
 import type { TreeSelectProps } from "antd";
 import { TagOutlined } from "@ant-design/icons";
 import { useTagTree } from "@/shared/hooks/use-tag-tree";
+import { useDebounce } from "@/shared/hooks/use-debounce";
 import type { TagCategory } from "@/shared/types";
 import styles from "./index.module.css";
 
@@ -94,19 +93,6 @@ function searchMatch(
   return matched;
 }
 
-// ============ 防抖 Hook ============
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return debounced;
-}
-
 // ============ 组件 ============
 
 export function TagSelector({
@@ -120,8 +106,6 @@ export function TagSelector({
   const { tags, loading } = useTagTree(bookId);
   const [searchValue, setSearchValue] = useState("");
   const [expandedKeys, setExpandedKeys] = useState<(string | number)[]>([]);
-
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 防抖搜索值（300ms）
   const debouncedSearch = useDebounce(searchValue, 300);
@@ -154,7 +138,6 @@ export function TagSelector({
 
   const handleSearch = useCallback(
     (val: string) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
       setSearchValue(val);
     },
     []

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button, Input, Breadcrumb } from "antd";
 import { PushpinOutlined, DeleteOutlined } from "@ant-design/icons";
 import { EmptyState } from "@/shared/ui/empty-state";

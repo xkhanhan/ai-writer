@@ -1,0 +1,106 @@
+/* ===== 统计条 ===== */
+
+.statCell {
+  background: var(--panel);
+  padding: 16px 20px;
+  text-align: center;
+}
+
+.statCell:first-child { border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+.statCell:last-child { border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
+
+.statNum {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.statUnit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-light);
+  margin-left: 2px;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 3px;
+}
+
+/* ===== 书籍信息 - 截断 ===== */
+
+.emptyDash {
+  color: var(--text-light);
+}
+
+.infoTruncate {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== 书籍信息 ===== */
+
+.infoTagsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.infoTagItem {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.descText {
+  margin-bottom: 0;
+  font-size: 12px;
+}
+
+/* ===== 进度条 ===== */
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.progressLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--text-light);
+  transition: width 0.3s ease;
+}
+
+.progressFillAccent {
+  background: var(--accent);
+}
+
+.progressCount {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}

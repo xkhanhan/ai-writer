@@ -9,6 +9,7 @@ import { AiDropdown } from "@/shared/ui/ai-dropdown";
 import { AiResultPanel, type AiFunctionKey } from "../ai-result-panel";
 import { ReviewResultPanel, type ReviewConfirmData } from "@/app/pages/books/components/review-result-panel";
 import type { CreationZoneState } from "@/app/pages/books/hooks/use-creation-zone";
+import styles from "./index.module.css";
 
 const { TextArea } = Input;
 
@@ -101,13 +102,12 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
     setAiPanelVisible(false);
   }, [aiFunctionKey, content]);
 
-  const handleReviewConfirm = useCallback((confirmData: ReviewConfirmData) => {
-    // Log adopted data for now; future: write to fact/foreshadow/character stores
-    console.log("Review adopted data:", confirmData);
+  const handleReviewConfirm = useCallback((_confirmData: ReviewConfirmData) => {
+    // TODO: write confirmed data to fact/foreshadow/character stores
     setReviewPanelVisible(false);
   }, []);
 
-  if (!chapter) return <div style={{ padding: 24 }}>未找到章节</div>;
+  if (!chapter) return <div className={styles.notFound}>未找到章节</div>;
 
   const aiItems = [
     { key: "generate", label: "生成内容", onClick: () => openAiPanel("content_generate") },
@@ -117,14 +117,14 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--line)" }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 14, color: "var(--text)" }}>第{chapter.sortOrder + 1}章 {chapter.title}</span>
+    <div className={styles.container}>
+      <div className={styles.toolbar}>
+        <div className={styles.toolbarLeft}>
+          <span className={styles.chapterLabel}>第{chapter.sortOrder + 1}章 {chapter.title}</span>
           <Tag color="red">正文</Tag>
           {dirty && <Tag color="gold">未保存</Tag>}
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div className={styles.toolbarRight}>
           <AiDropdown items={aiItems} />
           <Button size="small" onClick={() => setReviewPanelVisible(true)}>
             AI过审
@@ -135,17 +135,17 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
       </div>
 
       {chapter.summary && (
-        <div style={{ padding: "8px 24px", background: "var(--panel-soft)", fontSize: 12, color: "var(--ink-tertiary)", borderLeft: "3px solid var(--accent)" }}>
+        <div className={styles.summaryBar}>
           情节概要：{chapter.summary}
         </div>
       )}
 
-      <div style={{ flex: 1, padding: 24, overflow: "hidden" }}>
+      <div className={styles.editorArea}>
         <TextArea
           data-ai-editor="true"
           value={content}
           onChange={(e) => { setContent(e.target.value); setDirty(true); }}
-          style={{ height: "100%", resize: "none", fontFamily: "var(--font-body)", fontSize: 14, lineHeight: 1.8 }}
+          className={styles.textArea}
           placeholder="在此撰写正文..."
         />
       </div>
@@ -168,7 +168,7 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
         onCancel={() => setReviewPanelVisible(false)}
       />
 
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 24px", borderTop: "1px solid var(--line)", fontSize: 12, color: "var(--ink-tertiary)" }}>
+      <div className={styles.statusBar}>
         <span>字数：{wordCount} / 预计 {chapter.expectedWords}</span>
         <span>目标完成度：{chapter.expectedWords > 0 ? Math.min(100, Math.round((wordCount / chapter.expectedWords) * 100)) : 0}%</span>
       </div>

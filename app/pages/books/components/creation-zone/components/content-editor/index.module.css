@@ -1,0 +1,76 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ---- Not found ---- */
+
+.notFound {
+  padding: var(--space-6);
+}
+
+/* ---- Top toolbar ---- */
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--line);
+}
+
+.toolbarLeft {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.chapterLabel {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.toolbarRight {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+/* ---- Summary bar ---- */
+
+.summaryBar {
+  padding: var(--space-2) var(--space-6);
+  background: var(--panel-soft);
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  border-left: 3px solid var(--accent);
+}
+
+/* ---- Editor area ---- */
+
+.editorArea {
+  flex: 1;
+  padding: var(--space-6);
+  overflow: hidden;
+}
+
+.editorArea .textArea {
+  height: 100%;
+  resize: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* ---- Status bar ---- */
+
+.statusBar {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-6);
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-tertiary);
+}

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
 import { parseJsonSafe, parseJsonArray } from "@/server/utils/json";
+import { buildUpdateSet } from "@/server/utils/store-helpers";
 import type {
   BookOutline,
   VolumeOutline,
@@ -150,16 +151,15 @@ export async function upsertBookOutline(
   data: { direction: string; stages: string; sellingPoints: string }
 ): Promise<BookOutline> {
   const db = await getDb();
-  const exists = await getBookOutline(bookId);
-  if (exists) {
-    db.prepare(
-      `UPDATE book_outlines SET direction = ?, stages = ?, selling_points = ?, updated_at = datetime('now') WHERE book_id = ?`
-    ).run(data.direction, data.stages, data.sellingPoints, bookId);
-  } else {
-    db.prepare(
-      `INSERT INTO book_outlines (book_id, direction, stages, selling_points) VALUES (?, ?, ?, ?)`
-    ).run(bookId, data.direction, data.stages, data.sellingPoints);
-  }
+  db.prepare(
+    `INSERT INTO book_outlines (book_id, direction, stages, selling_points)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(book_id) DO UPDATE SET
+       direction = excluded.direction,
+       stages = excluded.stages,
+       selling_points = excluded.selling_points,
+       updated_at = datetime('now')`
+  ).run(bookId, data.direction, data.stages, data.sellingPoints);
   return (await getBookOutline(bookId))!;
 }
 
@@ -224,19 +224,20 @@ export async function updateVolume(
   }>
 ): Promise<VolumeOutline | null> {
   const db = await getDb();
-  const fields: string[] = [];
-  const values: Array<string | number> = [];
-  if (data.title !== undefined) { fields.push("title = ?"); values.push(data.title); }
-  if (data.coreConflict !== undefined) { fields.push("core_conflict = ?"); values.push(data.coreConflict); }
-  if (data.stages !== undefined) { fields.push("stages = ?"); values.push(JSON.stringify(data.stages)); }
-  if (data.developmentArc !== undefined) { fields.push("development_arc = ?"); values.push(data.developmentArc); }
-  if (data.keyPoints !== undefined) { fields.push("key_points = ?"); values.push(JSON.stringify(data.keyPoints)); }
-  if (data.highlights !== undefined) { fields.push("highlights = ?"); values.push(data.highlights); }
-  if (data.sortOrder !== undefined) { fields.push("sort_order = ?"); values.push(data.sortOrder); }
-  if (fields.length === 0) return getVolumeById(id);
-  fields.push("updated_at = datetime('now')");
-  values.push(id);
-  db.prepare(`UPDATE volumes SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  const fieldMap = {
+    title: data.title,
+    core_conflict: data.coreConflict,
+    stages: data.stages !== undefined ? JSON.stringify(data.stages) : undefined,
+    development_arc: data.developmentArc,
+    key_points: data.keyPoints !== undefined ? JSON.stringify(data.keyPoints) : undefined,
+    highlights: data.highlights,
+    sort_order: data.sortOrder,
+  };
+
+  const update = buildUpdateSet("volumes", fieldMap, ["updated_at = datetime('now')"]);
+  if (!update) return getVolumeById(id);
+
+  db.prepare(update.sql).run(...update.values, id);
   return getVolumeById(id);
 }
 
@@ -329,37 +330,29 @@ export async function updateChapter(
   }>
 ): Promise<ChapterOutline | null> {
   const db = await getDb();
-  const fields: string[] = [];
-  const values: Array<string | number> = [];
-  const map: Record<string, [string, boolean]> = {
-    title: ["title", false],
-    summary: ["summary", false],
-    prevChapterLink: ["prev_chapter_link", false],
-    nextChapterSuspense: ["next_chapter_suspense", false],
-    scenes: ["scenes", true],
-    time: ["time", false],
-    moodTone: ["mood_tone", false],
-    characters: ["characters", true],
-    keyEvents: ["key_events", true],
-    foreshadowings: ["foreshadowings", true],
-    highlights: ["highlights", false],
-    expectedWords: ["expected_words", false],
-    note: ["note", false],
-    content: ["content", false],
-    sortOrder: ["sort_order", false],
-    status: ["status", false]
+  const fieldMap = {
+    title: data.title,
+    summary: data.summary,
+    prev_chapter_link: data.prevChapterLink,
+    next_chapter_suspense: data.nextChapterSuspense,
+    scenes: data.scenes !== undefined ? JSON.stringify(data.scenes) : undefined,
+    time: data.time,
+    mood_tone: data.moodTone,
+    characters: data.characters !== undefined ? JSON.stringify(data.characters) : undefined,
+    key_events: data.keyEvents !== undefined ? JSON.stringify(data.keyEvents) : undefined,
+    foreshadowings: data.foreshadowings !== undefined ? JSON.stringify(data.foreshadowings) : undefined,
+    highlights: data.highlights,
+    expected_words: data.expectedWords,
+    note: data.note,
+    content: data.content,
+    sort_order: data.sortOrder,
+    status: data.status,
   };
-  for (const [key, [col, isArray]] of Object.entries(map)) {
-    const val = data[key as keyof typeof data];
-    if (val !== undefined) {
-      fields.push(`${col} = ?`);
-      values.push(isArray ? JSON.stringify(val) : (val as string | number));
-    }
-  }
-  if (fields.length === 0) return getChapterById(id);
-  fields.push("updated_at = datetime('now')");
-  values.push(id);
-  db.prepare(`UPDATE chapters SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+
+  const update = buildUpdateSet("chapters", fieldMap, ["updated_at = datetime('now')"]);
+  if (!update) return getChapterById(id);
+
+  db.prepare(update.sql).run(...update.values, id);
   return getChapterById(id);
 }
 

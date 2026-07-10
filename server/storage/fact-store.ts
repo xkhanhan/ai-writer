@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
 import { parseJsonSafe } from "@/server/utils/json";
+import { buildUpdateSet } from "@/server/utils/store-helpers";
 import type {
   StoryFact,
   CreateStoryFactDTO,
@@ -104,34 +105,19 @@ export async function updateStoryFact(
   data: UpdateStoryFactDTO
 ): Promise<StoryFact | null> {
   const db = await getDb();
-  const fields: string[] = [];
-  const values: Array<string | number> = [];
+  const fieldMap = {
+    chapter_id: data.chapterId,
+    chapter_number: data.chapterNumber,
+    content: data.content,
+    related_character_ids: data.relatedCharacterIds !== undefined
+      ? JSON.stringify(data.relatedCharacterIds)
+      : undefined,
+  };
 
-  if (data.chapterId !== undefined) {
-    fields.push("chapter_id = ?");
-    values.push(data.chapterId);
-  }
-  if (data.chapterNumber !== undefined) {
-    fields.push("chapter_number = ?");
-    values.push(data.chapterNumber);
-  }
-  if (data.content !== undefined) {
-    fields.push("content = ?");
-    values.push(data.content);
-  }
-  if (data.relatedCharacterIds !== undefined) {
-    fields.push("related_character_ids = ?");
-    values.push(JSON.stringify(data.relatedCharacterIds));
-  }
+  const update = buildUpdateSet("story_facts", fieldMap, ["updated_at = datetime('now')"]);
+  if (!update) return getStoryFactById(id);
 
-  if (fields.length === 0) return getStoryFactById(id);
-
-  fields.push("updated_at = datetime('now')");
-  values.push(id);
-
-  db.prepare(
-    `UPDATE story_facts SET ${fields.join(", ")} WHERE id = ?`
-  ).run(...values);
+  db.prepare(update.sql).run(...update.values, id);
   return getStoryFactById(id);
 }
 

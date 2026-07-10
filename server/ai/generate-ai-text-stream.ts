@@ -1,8 +1,8 @@
-import { loadInternalConfig } from "@/server/ai/ai-config-store";
 import {
   defaultAiSystemPrompt,
   type AiTextTaskInput,
 } from "@/shared/ai/contracts";
+import { resolveAiConfig } from "@/server/ai/ai-config-helpers";
 
 /**
  * Call an OpenAI-compatible API and return a raw streaming Response.
@@ -11,36 +11,21 @@ import {
 export async function generateAiTextStream(
   input: AiTextTaskInput,
 ): Promise<Response> {
+  const cfg = await resolveAiConfig(input);
+
   const prompt = input.prompt.trim();
-  if (!prompt) {
-    throw new Error("prompt 不能为空。");
-  }
-
-  const config = await loadInternalConfig();
-  if (!config.apiKey) {
-    throw new Error("请先配置 AI_API_KEY。");
-  }
-
-  const advanced = config.advanced;
-  const baseUrl = config.baseUrl || advanced.baseUrl;
-  const model = config.model || advanced.model;
-  const temperature = input.temperature ?? advanced.temperature;
-
-  if (temperature < 0 || temperature > 2) {
-    throw new Error("temperature 必须在 0 到 2 之间。");
-  }
 
   const response = await fetch(
-    `${baseUrl.replace(/\/$/, "")}/chat/completions`,
+    `${cfg.baseUrl.replace(/\/$/, "")}/chat/completions`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${config.apiKey}`,
+        Authorization: `Bearer ${cfg.apiKey}`,
         "Content-Type": "application/json",
-        ...advanced.headers,
+        ...cfg.headers,
       },
       body: JSON.stringify({
-        model: input.model?.trim() || model,
+        model: input.model?.trim() || cfg.model,
         messages: [
           {
             role: "system",
@@ -48,13 +33,13 @@ export async function generateAiTextStream(
           },
           { role: "user", content: prompt },
         ],
-        temperature,
-        top_p: advanced.topP,
+        temperature: cfg.temperature,
+        top_p: cfg.topP,
         stream: true,
-        ...(advanced.maxTokens !== null
-          ? { max_tokens: advanced.maxTokens }
+        ...(cfg.maxTokens !== null
+          ? { max_tokens: cfg.maxTokens }
           : {}),
-        ...advanced.extraBody,
+        ...cfg.extraBody,
       }),
     },
   );

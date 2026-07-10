@@ -1,0 +1,21 @@
+.modalForm {
+  padding-top: 12px;
+}
+
+.formField {
+  margin-bottom: 16px;
+}
+
+.formLabel {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  color: var(--text);
+}
+
+.required {
+  color: var(--color-error, #ff4d4f);
+  margin-right: 2px;
+}

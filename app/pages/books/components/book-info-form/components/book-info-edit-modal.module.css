@@ -1,0 +1,24 @@
+.formWrap {
+  margin-top: 16px;
+}
+
+.formRow {
+  display: flex;
+  gap: 16px;
+}
+
+.halfWidth {
+  flex: 1;
+  min-width: 0;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .formRow {
+    flex-direction: column;
+    gap: 0;
+  }
+}

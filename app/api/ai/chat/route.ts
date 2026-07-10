@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
+import { jsonError } from "@/app/api/utils";
 import type { AiTextTaskInput } from "@/shared/ai/contracts";
 import { generateAiText } from "@/server/ai/generate-ai-text";
 import { generateAiTextStream } from "@/server/ai/generate-ai-text-stream";
 import { buildContext, type AiFunctionKey } from "@/server/ai/context-builder";
 import { createGenerationSession } from "@/server/storage/ai-generation-store";
-
-function jsonError(error: string, status = 400) {
-  return NextResponse.json({ success: false, error }, { status });
-}
 
 /** Helper to extract a string from the parsed body. */
 function str(value: unknown): string | undefined {
@@ -73,21 +70,7 @@ export async function POST(request: Request) {
             : undefined,
       });
 
-      // 2. Log context for debugging
-      console.log("\n========== AI CONTEXT LOG ==========");
-      console.log(`[Function] ${builtContext.functionKey}`);
-      console.log(`[Book] ${builtContext.metadata.bookTitle}`);
-      if (builtContext.metadata.chapterTitle) {
-        console.log(`[Chapter] ${builtContext.metadata.chapterTitle}`);
-      }
-      console.log(`[Estimated Tokens] ${builtContext.estimatedTokens}`);
-      console.log("--- System Prompt ---");
-      console.log(builtContext.systemPrompt);
-      console.log("--- User Prompt ---");
-      console.log(builtContext.userPrompt);
-      console.log("========== END CONTEXT ==========\n");
-
-      // 3. Call AI — streaming or non-streaming
+      // 2. Call AI — streaming or non-streaming
       const input: AiTextTaskInput = {
         prompt: builtContext.userPrompt,
         systemPrompt: builtContext.systemPrompt,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Breadcrumb } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 import { AiDropdown } from "@/shared/ui/ai-dropdown";

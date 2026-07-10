@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Button, Spin, Checkbox } from "antd";
+import { Button, Spin } from "antd";
 import {
   CloseOutlined,
   CheckOutlined,
@@ -13,65 +13,16 @@ import {
   SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import { showError, showSuccess } from "@/app/utils/error-handler";
+import type {
+  ReviewExtractedData,
+  ReviewMetadata,
+  ReviewDebugContext,
+  ReviewConfirmData,
+} from "@/app/types/review";
 import styles from "./index.module.css";
+import { ReviewSection } from "./components/review-section";
 
-// ============================================================================
-// Types
-// ============================================================================
-
-interface Fact {
-  content: string;
-  chapterNumber: number;
-  relatedCharacters: string[];
-}
-
-interface ForeshadowChange {
-  action: "plant" | "resolve";
-  name: string;
-  description: string;
-}
-
-interface CharacterState {
-  name: string;
-  changes: {
-    location?: string;
-    knownInfo?: string[];
-    relationship?: string;
-  };
-}
-
-interface ItemState {
-  name: string;
-  changes: {
-    status: string;
-  };
-}
-
-interface ReviewExtractedData {
-  facts: Fact[];
-  foreshadowChanges: ForeshadowChange[];
-  characterStates: CharacterState[];
-  itemStates: ItemState[];
-}
-
-interface ReviewMetadata {
-  model: string;
-  tokensInput: number;
-  tokensOutput: number;
-  latencyMs: number;
-}
-
-interface DebugContext {
-  systemPrompt: string;
-  userPrompt: string;
-}
-
-export interface ReviewConfirmData {
-  facts: Fact[];
-  foreshadowChanges: ForeshadowChange[];
-  characterStates: CharacterState[];
-  itemStates: ItemState[];
-}
+export type { ReviewConfirmData } from "@/app/types/review";
 
 interface ReviewResultPanelProps {
   visible: boolean;
@@ -110,7 +61,7 @@ export function ReviewResultPanel({
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ReviewExtractedData | null>(null);
   const [metadata, setMetadata] = useState<ReviewMetadata | null>(null);
-  const [debug, setDebug] = useState<DebugContext | null>(null);
+  const [debug, setDebug] = useState<ReviewDebugContext | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [rawOutput, setRawOutput] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -183,8 +134,6 @@ export function ReviewResultPanel({
   }, [visible, callApi]);
 
   // --- Selection handlers ---
-  const allChecked = data && data.facts.length > 0;
-
   const allFactsSelected = selectedFacts.length > 0 && selectedFacts.every(Boolean);
   const allForeshadowsSelected =
     selectedForeshadows.length > 0 && selectedForeshadows.every(Boolean);
@@ -319,143 +268,62 @@ export function ReviewResultPanel({
         {!loading && !error && hasData && (
           <>
             {/* Facts section */}
-            {data.facts.length > 0 && (
-              <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <FileTextOutlined />
-                  <span>提取的事实 ({data.facts.length}条)</span>
-                </div>
-                {data.facts.map((fact, idx) => (
-                  <label
-                    key={idx}
-                    className={styles.checkItem}
-                    role="checkbox"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === " " || e.key === "Enter") {
-                        e.preventDefault();
-                        toggleFact(idx);
-                      }
-                    }}
-                  >
-                    <Checkbox
-                      checked={selectedFacts[idx]}
-                      onChange={() => toggleFact(idx)}
-                    />
-                    <span className={styles.checkLabel}>
-                      {fact.content}
-                      {fact.relatedCharacters.length > 0 && (
-                        <span className={styles.muted}>
-                          {" "}
-                          ({fact.relatedCharacters.join(", ")})
-                        </span>
-                      )}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
+            <ReviewSection
+              title="提取的事实"
+              icon={<FileTextOutlined />}
+              items={data.facts}
+              selected={selectedFacts}
+              onToggle={toggleFact}
+              renderItem={(fact) => (
+                <>
+                  {fact.content}
+                  {fact.relatedCharacters.length > 0 && (
+                    <span className={styles.muted}> ({fact.relatedCharacters.join(", ")})</span>
+                  )}
+                </>
+              )}
+            />
 
             {/* Foreshadow changes section */}
-            {data.foreshadowChanges.length > 0 && (
-              <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <TagsOutlined />
-                  <span>伏笔变更 ({data.foreshadowChanges.length}条)</span>
-                </div>
-                {data.foreshadowChanges.map((fs, idx) => (
-                  <label
-                    key={idx}
-                    className={styles.checkItem}
-                    role="checkbox"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === " " || e.key === "Enter") {
-                        e.preventDefault();
-                        toggleForeshadow(idx);
-                      }
-                    }}
-                  >
-                    <Checkbox
-                      checked={selectedForeshadows[idx]}
-                      onChange={() => toggleForeshadow(idx)}
-                    />
-                    <span
-                      className={`${styles.badge} ${fs.action === "plant" ? styles.badgePlant : styles.badgeResolve}`}
-                    >
-                      {fs.action === "plant" ? "埋入" : "收回"}
-                    </span>
-                    <span className={styles.checkLabel}>
-                      {fs.name}: {fs.description}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
+            <ReviewSection
+              title="伏笔变更"
+              icon={<TagsOutlined />}
+              items={data.foreshadowChanges}
+              selected={selectedForeshadows}
+              onToggle={toggleForeshadow}
+              renderItem={(fs) => (
+                <>
+                  <span className={`${styles.badge} ${fs.action === "plant" ? styles.badgePlant : styles.badgeResolve}`}>
+                    {fs.action === "plant" ? "埋入" : "收回"}
+                  </span>
+                  {fs.name}: {fs.description}
+                </>
+              )}
+            />
 
             {/* Character states section */}
-            {data.characterStates.length > 0 && (
-              <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <UserOutlined />
-                  <span>角色状态 ({data.characterStates.length}条)</span>
-                </div>
-                {data.characterStates.map((char, idx) => (
-                  <label
-                    key={idx}
-                    className={styles.checkItem}
-                    role="checkbox"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === " " || e.key === "Enter") {
-                        e.preventDefault();
-                        toggleCharacter(idx);
-                      }
-                    }}
-                  >
-                    <Checkbox
-                      checked={selectedCharacters[idx]}
-                      onChange={() => toggleCharacter(idx)}
-                    />
-                    <span className={styles.checkLabel}>
-                      <strong>{char.name}</strong>: {formatChanges(char.changes)}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
+            <ReviewSection
+              title="角色状态"
+              icon={<UserOutlined />}
+              items={data.characterStates}
+              selected={selectedCharacters}
+              onToggle={toggleCharacter}
+              renderItem={(char) => (
+                <><strong>{char.name}</strong>: {formatChanges(char.changes)}</>
+              )}
+            />
 
             {/* Item states section */}
-            {data.itemStates.length > 0 && (
-              <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <SafetyCertificateOutlined />
-                  <span>物品状态 ({data.itemStates.length}条)</span>
-                </div>
-                {data.itemStates.map((item, idx) => (
-                  <label
-                    key={idx}
-                    className={styles.checkItem}
-                    role="checkbox"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === " " || e.key === "Enter") {
-                        e.preventDefault();
-                        toggleItem(idx);
-                      }
-                    }}
-                  >
-                    <Checkbox
-                      checked={selectedItems[idx]}
-                      onChange={() => toggleItem(idx)}
-                    />
-                    <span className={styles.checkLabel}>
-                      <strong>{item.name}</strong>: 状态→{item.changes.status}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
+            <ReviewSection
+              title="物品状态"
+              icon={<SafetyCertificateOutlined />}
+              items={data.itemStates}
+              selected={selectedItems}
+              onToggle={toggleItem}
+              renderItem={(item) => (
+                <><strong>{item.name}</strong>: 状态→{item.changes.status}</>
+              )}
+            />
 
             {/* Empty state */}
             {data.facts.length === 0 &&

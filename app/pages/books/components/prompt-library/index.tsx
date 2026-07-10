@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Button, Tag, Tooltip, Select } from "antd";
 import {
   EditOutlined,
@@ -102,15 +102,12 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     const res = await fetchTemplates(book.id);
-    if (res.ok) {
-      setTemplates(res.data);
-    }
+    if (res.ok) setTemplates(res.data);
     setLoading(false);
   }, [book.id]);
 
-  useEffect(() => {
-    void loadTemplates();
-  }, [loadTemplates]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- async load is safe
+  useEffect(() => { void loadTemplates(); }, [loadTemplates]);
 
   // Build index: for each functionKey, find system default and any custom copies
   const templateIndex = useMemo(() => {
@@ -146,6 +143,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   const isSystemDefault = selectedTemplate?.isDefault === true && selectedTemplate?.bookId === null;
 
   // Sync edit template when selection changes
+  /* eslint-disable react-hooks/set-state-in-effect -- resetting local edit state on selection change */
   useEffect(() => {
     if (selectedTemplate) {
       const parts = selectedTemplate.template.split("\n---\n");
@@ -153,6 +151,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
       setDirty(false);
     }
   }, [selectedTemplate]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Toggle group
   const toggleGroup = (panelKey: string) => {

@@ -1,0 +1,28 @@
+/* Form sections */
+.formSection {
+  margin-bottom: 8px;
+}
+
+.formSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.formSectionHint {
+  font-weight: 400;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.formDivider {
+  margin: 8px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}

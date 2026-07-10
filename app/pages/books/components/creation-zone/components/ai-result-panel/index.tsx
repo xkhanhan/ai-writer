@@ -121,7 +121,7 @@ export function AiResultPanel({
                 setResult(accumulated);
               }
             } catch {
-              // skip
+              // skip malformed SSE chunk
             }
           }
         }

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
+import { parseJsonSafe } from "@/server/utils/json";
 import type {
   TagCategory,
   CreateTagCategoryDTO,
@@ -152,36 +153,22 @@ export async function createTagCategory(
   const db = await getDb();
   const id = randomUUID();
 
-  // 计算 sort_order：同级下最大的 + 1
-  let maxOrder = 0;
-  if (data.parentId) {
-    const siblings = db
-      .prepare("SELECT sort_order FROM tag_categories WHERE parent_id = ? ORDER BY sort_order DESC LIMIT 1")
-      .get(data.parentId) as { sort_order: number } | undefined;
-    if (siblings) maxOrder = siblings.sort_order + 1;
-  } else {
-    const siblings = db
-      .prepare("SELECT sort_order FROM tag_categories WHERE book_id = ? AND parent_id IS NULL ORDER BY sort_order DESC LIMIT 1")
-      .get(bookId) as { sort_order: number } | undefined;
-    if (siblings) maxOrder = siblings.sort_order + 1;
-  }
-
   // 系统自动生成编码（忽略用户输入）
   const baseCode = generateCode(data.name);
   const code = uniqueCode(db, bookId, data.parentId ?? null, baseCode);
 
-  db.prepare(
-    `INSERT INTO tag_categories (id, book_id, parent_id, name, code, description, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(
-    id,
-    bookId,
-    data.parentId ?? null,
-    data.name,
-    code,
-    data.description ?? "",
-    maxOrder
-  );
+  // 计算 sort_order：同级下最大的 + 1（使用子查询保证原子性）
+  if (data.parentId) {
+    db.prepare(
+      `INSERT INTO tag_categories (id, book_id, parent_id, name, code, description, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM tag_categories WHERE parent_id = ? AND book_id = ?))`
+    ).run(id, bookId, data.parentId, data.name, code, data.description ?? "", data.parentId, bookId);
+  } else {
+    db.prepare(
+      `INSERT INTO tag_categories (id, book_id, parent_id, name, code, description, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM tag_categories WHERE parent_id IS NULL AND book_id = ?))`
+    ).run(id, bookId, data.parentId ?? null, data.name, code, data.description ?? "", bookId);
+  }
 
   return (await getTagCategoryById(id))!;
 }
@@ -246,7 +233,7 @@ export async function countTagRefs(
 
   let count = 0;
   for (const row of rows) {
-    const ids: string[] = JSON.parse(row.tag_ids || "[]");
+    const ids: string[] = parseJsonSafe<string[]>(row.tag_ids, []);
     if (ids.includes(tagId)) count++;
   }
   return count;
@@ -268,7 +255,7 @@ async function cleanOrphanRefs(
   const deletedSet = new Set(deletedIds);
 
   for (const row of rows) {
-    const ids: string[] = JSON.parse(row.tag_ids || "[]");
+    const ids: string[] = parseJsonSafe<string[]>(row.tag_ids, []);
     const filtered = ids.filter((id) => !deletedSet.has(id));
     if (filtered.length !== ids.length) {
       db.prepare("UPDATE setting_entities SET tag_ids = ?, updated_at = datetime('now') WHERE id = ?")

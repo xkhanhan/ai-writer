@@ -2,7 +2,7 @@ import {
   defaultAiSystemPrompt,
   type AiTextTaskInput
 } from "@/shared/ai/contracts";
-import { loadInternalConfig } from "@/server/ai/ai-config-store";
+import { resolveAiConfig } from "@/server/ai/ai-config-helpers";
 
 type OpenAiCompatibleResponse = {
   choices?: Array<{
@@ -16,42 +16,25 @@ type OpenAiCompatibleResponse = {
 };
 
 export async function generateAiText(input: AiTextTaskInput) {
+  const cfg = await resolveAiConfig(input);
+
   const prompt = input.prompt.trim();
-  if (!prompt) {
-    throw new Error("prompt 不能为空。");
-  }
-
-  const config = await loadInternalConfig();
-
-  if (!config.apiKey) {
-    throw new Error("请先配置 AI_API_KEY。");
-  }
-
-  const advanced = config.advanced;
-  const baseUrl = config.baseUrl || advanced.baseUrl;
-  const model = config.model || advanced.model;
-  const temperature = input.temperature ?? advanced.temperature;
-  const topP = advanced.topP;
-
-  if (temperature < 0 || temperature > 2) {
-    throw new Error("temperature 必须在 0 到 2 之间。");
-  }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 120_000);
   let response: Response;
   try {
     response = await fetch(
-      `${baseUrl.replace(/\/$/, "")}/chat/completions`,
+      `${cfg.baseUrl.replace(/\/$/, "")}/chat/completions`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${config.apiKey}`,
+          Authorization: `Bearer ${cfg.apiKey}`,
           "Content-Type": "application/json",
-          ...advanced.headers
+          ...cfg.headers
         },
         body: JSON.stringify({
-          model: input.model?.trim() || model,
+          model: input.model?.trim() || cfg.model,
           messages: [
             {
               role: "system",
@@ -62,10 +45,10 @@ export async function generateAiText(input: AiTextTaskInput) {
               content: prompt
             }
           ],
-          temperature,
-          top_p: topP,
-          ...(advanced.maxTokens !== null ? { max_tokens: advanced.maxTokens } : {}),
-          ...advanced.extraBody
+          temperature: cfg.temperature,
+          top_p: cfg.topP,
+          ...(cfg.maxTokens !== null ? { max_tokens: cfg.maxTokens } : {}),
+          ...cfg.extraBody
         }),
         signal: controller.signal
       }

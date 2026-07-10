@@ -1,14 +1,11 @@
-import { NextResponse } from "next/server";
-import { getBookOptions } from "@/server/storage/book-options-store";
-
-function jsonError(error: string, status = 400) {
-  return NextResponse.json({ success: false, error }, { status });
-}
+import { jsonError, jsonSuccess } from "@/app/api/utils";
+import { getBookOptions, ensureBookOptions } from "@/server/storage/book-options-store";
 
 export async function GET() {
   try {
+    await ensureBookOptions();
     const options = await getBookOptions();
-    return NextResponse.json({ success: true, options });
+    return jsonSuccess({ success: true, options });
   } catch {
     return jsonError("书籍选项读取失败。", 500);
   }

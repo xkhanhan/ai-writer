@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
 import { parseJsonSafe } from "@/server/utils/json";
+import { buildUpdateSet } from "@/server/utils/store-helpers";
 import type {
   SettingEntity,
   SettingCategory,
@@ -133,66 +134,25 @@ export async function updateSettingEntity(
   data: UpdateSettingEntityDTO
 ): Promise<SettingEntity | null> {
   const db = await getDb();
-  const fields: string[] = [];
-  const values: Array<string | number> = [];
+  const fieldMap = {
+    name: data.name,
+    level: data.level,
+    description: data.description,
+    appearance: data.appearance,
+    traits: data.traits,
+    background: data.background,
+    abilities: data.abilities,
+    weaknesses: data.weaknesses,
+    tag_ids: data.tagIds !== undefined ? JSON.stringify(data.tagIds) : undefined,
+    category_fields: data.categoryFields !== undefined ? JSON.stringify(data.categoryFields) : undefined,
+    status_fields: data.statusFields !== undefined ? JSON.stringify(data.statusFields) : undefined,
+    deprecated: data.deprecated !== undefined ? (data.deprecated ? 1 : 0) : undefined,
+  };
 
-  if (data.name !== undefined) {
-    fields.push("name = ?");
-    values.push(data.name);
-  }
-  if (data.level !== undefined) {
-    fields.push("level = ?");
-    values.push(data.level);
-  }
-  if (data.description !== undefined) {
-    fields.push("description = ?");
-    values.push(data.description);
-  }
-  if (data.appearance !== undefined) {
-    fields.push("appearance = ?");
-    values.push(data.appearance);
-  }
-  if (data.traits !== undefined) {
-    fields.push("traits = ?");
-    values.push(data.traits);
-  }
-  if (data.background !== undefined) {
-    fields.push("background = ?");
-    values.push(data.background);
-  }
-  if (data.abilities !== undefined) {
-    fields.push("abilities = ?");
-    values.push(data.abilities);
-  }
-  if (data.weaknesses !== undefined) {
-    fields.push("weaknesses = ?");
-    values.push(data.weaknesses);
-  }
-  if (data.tagIds !== undefined) {
-    fields.push("tag_ids = ?");
-    values.push(JSON.stringify(data.tagIds));
-  }
-  if (data.categoryFields !== undefined) {
-    fields.push("category_fields = ?");
-    values.push(JSON.stringify(data.categoryFields));
-  }
-  if (data.statusFields !== undefined) {
-    fields.push("status_fields = ?");
-    values.push(JSON.stringify(data.statusFields));
-  }
-  if (data.deprecated !== undefined) {
-    fields.push("deprecated = ?");
-    values.push(data.deprecated ? 1 : 0);
-  }
+  const update = buildUpdateSet("setting_entities", fieldMap, ["updated_at = datetime('now')"]);
+  if (!update) return getSettingEntityById(id);
 
-  if (fields.length === 0) return getSettingEntityById(id);
-
-  fields.push("updated_at = datetime('now')");
-  values.push(id);
-
-  db.prepare(
-    `UPDATE setting_entities SET ${fields.join(", ")} WHERE id = ?`
-  ).run(...values);
+  db.prepare(update.sql).run(...update.values, id);
   return getSettingEntityById(id);
 }
 

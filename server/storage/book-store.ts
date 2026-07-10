@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
 import { getBookOptions } from "@/server/storage/book-options-store";
+import { buildUpdateSet } from "@/server/utils/store-helpers";
 
 export type Book = {
   id: string;
@@ -127,26 +128,7 @@ export async function createBook(input: {
     VALUES (?, ?, ?, ?, ?)
   `).run(id, title, description, genre, platform);
 
-  const now = new Date().toISOString();
-  return {
-    id,
-    title,
-    description,
-    genre,
-    platform,
-    subGenre: "",
-    tags: "",
-    writingStyle: "",
-    narrativePov: "",
-    targetAudience: "",
-    targetWordCount: 0,
-    targetTotalWords: 0,
-    endingType: "",
-    referenceWorks: "",
-    sellingPoint: "",
-    createdAt: now,
-    updatedAt: now
-  };
+  return (await getBookById(id))!;
 }
 
 export async function updateBook(
@@ -168,80 +150,69 @@ export async function updateBook(
     sellingPoint?: string;
   }
 ): Promise<boolean> {
-  const db = await getDb();
-  const fields: string[] = [];
-  const values: Array<string | number> = [];
-
+  // Validate provided fields using same rules as createBook
   if (input.title !== undefined) {
-    fields.push("title = ?");
-    values.push(input.title.trim() || "未命名");
+    const title = input.title.trim() || "未命名";
+    if (title.length > 60) {
+      throw new Error("书名长度不能超过 60 个字符。");
+    }
   }
   if (input.description !== undefined) {
-    fields.push("description = ?");
-    values.push(input.description.trim());
-  }
-  if (input.genre !== undefined) {
-    fields.push("genre = ?");
-    values.push(input.genre.trim());
-  }
-  if (input.platform !== undefined) {
-    fields.push("platform = ?");
-    values.push(input.platform.trim());
-  }
-  if (input.subGenre !== undefined) {
-    fields.push("sub_genre = ?");
-    values.push(input.subGenre.trim());
-  }
-  if (input.tags !== undefined) {
-    fields.push("tags = ?");
-    values.push(input.tags.trim());
-  }
-  if (input.writingStyle !== undefined) {
-    fields.push("writing_style = ?");
-    values.push(input.writingStyle.trim());
-  }
-  if (input.narrativePov !== undefined) {
-    fields.push("narrative_pov = ?");
-    values.push(input.narrativePov.trim());
-  }
-  if (input.targetAudience !== undefined) {
-    fields.push("target_audience = ?");
-    values.push(input.targetAudience.trim());
-  }
-  if (input.targetWordCount !== undefined) {
-    const count = Number(input.targetWordCount);
-    fields.push("target_word_count = ?");
-    values.push(Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0);
-  }
-  if (input.targetTotalWords !== undefined) {
-    const count = Number(input.targetTotalWords);
-    fields.push("target_total_words = ?");
-    values.push(Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0);
-  }
-  if (input.endingType !== undefined) {
-    fields.push("ending_type = ?");
-    values.push(input.endingType.trim());
-  }
-  if (input.referenceWorks !== undefined) {
-    fields.push("reference_works = ?");
-    values.push(input.referenceWorks.trim());
-  }
-  if (input.sellingPoint !== undefined) {
-    fields.push("selling_point = ?");
-    values.push(input.sellingPoint.trim());
+    const description = input.description.trim();
+    if (description.length > 300) {
+      throw new Error("简介长度不能超过 300 个字符。");
+    }
   }
 
-  if (fields.length === 0) {
-    return false;
+  if (input.genre !== undefined || input.platform !== undefined) {
+    const options = await getBookOptions();
+    if (input.genre !== undefined) {
+      const genre = input.genre.trim();
+      if (!genre) {
+        throw new Error("题材不能为空。");
+      }
+      if (!options.genres.includes(genre)) {
+        throw new Error("题材不在允许范围内。");
+      }
+    }
+    if (input.platform !== undefined) {
+      const platform = input.platform.trim();
+      if (!platform) {
+        throw new Error("平台不能为空。");
+      }
+      if (!options.platforms.includes(platform)) {
+        throw new Error("平台不在允许范围内。");
+      }
+    }
   }
 
-  fields.push("updated_at = datetime('now')");
-  values.push(id);
+  const db = await getDb();
 
-  const result = db.prepare(`
-    UPDATE books SET ${fields.join(", ")} WHERE id = ?
-  `).run(...values);
+  const fieldMap = {
+    title: input.title !== undefined ? (input.title.trim() || "未命名") : undefined,
+    description: input.description !== undefined ? input.description.trim() : undefined,
+    genre: input.genre !== undefined ? input.genre.trim() : undefined,
+    platform: input.platform !== undefined ? input.platform.trim() : undefined,
+    sub_genre: input.subGenre !== undefined ? input.subGenre.trim() : undefined,
+    tags: input.tags !== undefined ? input.tags.trim() : undefined,
+    writing_style: input.writingStyle !== undefined ? input.writingStyle.trim() : undefined,
+    narrative_pov: input.narrativePov !== undefined ? input.narrativePov.trim() : undefined,
+    target_audience: input.targetAudience !== undefined ? input.targetAudience.trim() : undefined,
+    target_word_count: input.targetWordCount !== undefined
+      ? (() => { const c = Number(input.targetWordCount); return Number.isFinite(c) && c >= 0 ? Math.floor(c) : 0; })()
+      : undefined,
+    target_total_words: input.targetTotalWords !== undefined
+      ? (() => { const c = Number(input.targetTotalWords); return Number.isFinite(c) && c >= 0 ? Math.floor(c) : 0; })()
+      : undefined,
+    ending_type: input.endingType !== undefined ? input.endingType.trim() : undefined,
+    reference_works: input.referenceWorks !== undefined ? input.referenceWorks.trim() : undefined,
+    selling_point: input.sellingPoint !== undefined ? input.sellingPoint.trim() : undefined,
+  };
 
+  const update = buildUpdateSet("books", fieldMap, ["updated_at = datetime('now')"]);
+  if (!update) return false;
+
+  const result = db.prepare(update.sql).run(...update.values, id);
   return result.changes > 0;
 }
 

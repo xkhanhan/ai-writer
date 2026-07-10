@@ -1,5 +1,5 @@
-import { client } from "./client";
-import type { Result } from "./client";
+import { client } from "@/app/api-client/client";
+import type { Result } from "@/app/api-client/client";
 import type { TagCategory } from "@/shared/types";
 
 /** 获取标签树（级联结构） */

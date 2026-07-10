@@ -12,6 +12,7 @@ import { Button, Input, Spin, Descriptions, Tag, Typography, Checkbox } from "an
 import { ThunderboltOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import BaseModal from "@/shared/ui/base-modal";
 import { showError, showSuccess } from "@/app/utils/error-handler";
+import { parseAiJson } from "@/shared/utils/parse-ai-json";
 import styles from "./index.module.css";
 
 // ============================================================================
@@ -145,7 +146,12 @@ export function AiSceneModal({
       if (scene.resultMode.type === "text") {
         setParsedResult(accumulated);
       } else {
-        setParsedResult(parseJsonFromText(accumulated));
+        const result = parseAiJson(accumulated);
+        if (result.ok) {
+          setParsedResult(result.data);
+        } else {
+          setError(result.warning);
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "AI 生成失败";
@@ -273,19 +279,6 @@ export function AiSceneModal({
 // ============================================================================
 // Helpers
 // ============================================================================
-
-function parseJsonFromText(text: string): Record<string, unknown> {
-  try {
-    return JSON.parse(text);
-  } catch {
-    const match = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
-    if (match?.[1]) return JSON.parse(match[1]);
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
-    if (start !== -1 && end > start) return JSON.parse(text.slice(start, end + 1));
-    throw new Error("AI 返回内容无法解析为 JSON");
-  }
-}
 
 function DefaultJsonPreview({ fields, data }: { fields: AiPreviewField[]; data: Record<string, unknown> }) {
   return (

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { jsonError } from "@/app/api/utils";
 import { buildContext } from "@/server/ai/context-builder";
 import { generateAiText } from "@/server/ai/generate-ai-text";
 import {
   createGenerationSession,
   updateGenerationSession,
 } from "@/server/storage/ai-generation-store";
+import { parseAiJson } from "@/shared/utils/parse-ai-json";
 
 // ============================================================================
 // Types
@@ -65,65 +67,8 @@ interface ReviewFallbackResponse {
 }
 
 // ============================================================================
-// JSON Parsing Helpers
-// ============================================================================
-
-/**
- * Attempt to parse the AI response as JSON.
- *
- * Strategy:
- *   1. Try direct JSON.parse()
- *   2. Try extracting JSON from markdown code blocks (```json ... ```)
- *   3. Fall back with a warning
- */
-function parseAiJsonResponse(
-  raw: string,
-): { ok: true; data: ReviewExtractedData } | { ok: false; warning: string } {
-  // Attempt 1: Direct parse
-  try {
-    const parsed = JSON.parse(raw) as ReviewExtractedData;
-    return { ok: true, data: parsed };
-  } catch {
-    // continue to attempt 2
-  }
-
-  // Attempt 2: Extract from markdown code blocks
-  const codeBlockMatch = raw.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
-  if (codeBlockMatch?.[1]) {
-    try {
-      const parsed = JSON.parse(codeBlockMatch[1]) as ReviewExtractedData;
-      return { ok: true, data: parsed };
-    } catch {
-      // continue to fallback
-    }
-  }
-
-  // Attempt 3: Try to find a JSON object anywhere in the response
-  const jsonStart = raw.indexOf("{");
-  const jsonEnd = raw.lastIndexOf("}");
-  if (jsonStart !== -1 && jsonEnd > jsonStart) {
-    try {
-      const extracted = raw.slice(jsonStart, jsonEnd + 1);
-      const parsed = JSON.parse(extracted) as ReviewExtractedData;
-      return { ok: true, data: parsed };
-    } catch {
-      // continue to fallback
-    }
-  }
-
-  return {
-    ok: false,
-    warning: "AI 返回的内容无法解析为结构化 JSON",
-  };
-}
-
-// ============================================================================
 // Helpers
 // ============================================================================
-
-function jsonError(error: string, status = 400) {
-  return NextResponse.json({ success: false, error }, { status });
-}
 
 function str(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -169,18 +114,6 @@ export async function POST(request: Request) {
       functionKey: "review_extract",
     });
 
-    // Log context for debugging
-    console.log("\n========== REVIEW CONTEXT LOG ==========");
-    console.log(`[Function] review_extract`);
-    console.log(`[Book] ${builtContext.metadata.bookTitle}`);
-    console.log(`[Chapter] ${builtContext.metadata.chapterTitle}`);
-    console.log(`[Estimated Tokens] ${builtContext.estimatedTokens}`);
-    console.log("--- System Prompt ---");
-    console.log(builtContext.systemPrompt);
-    console.log("--- User Prompt ---");
-    console.log(builtContext.userPrompt);
-    console.log("========== END REVIEW CONTEXT ==========\n");
-
     // 2. Call AI
     const content = await generateAiText({
       prompt: builtContext.userPrompt,
@@ -190,7 +123,7 @@ export async function POST(request: Request) {
     const latencyMs = Date.now() - startTime;
 
     // 3. Parse AI response as structured JSON
-    const parseResult = parseAiJsonResponse(content);
+    const parseResult = parseAiJson<ReviewExtractedData>(content);
 
     // 4. Record the generation session (best-effort)
     try {

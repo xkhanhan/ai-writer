@@ -155,6 +155,55 @@ export async function getBookOptions(): Promise<BookOptions> {
   const targetAudiences = getList("target_audiences", defaultBookOptions.targetAudiences);
   const endingTypes = getList("ending_types", defaultBookOptions.endingTypes);
 
+  return {
+    genres,
+    platforms,
+    genreTree,
+    writingStyles,
+    narrativePovs,
+    targetAudiences,
+    endingTypes
+  };
+}
+
+export async function ensureBookOptions(): Promise<void> {
+  const db = await getDb();
+
+  const keys = ["genres", "platforms", "genre_tree", "writing_styles", "narrative_povs", "target_audiences", "ending_types"];
+  const rows = db.prepare(`SELECT key, value FROM book_options WHERE key IN (${keys.map(() => "?").join(",")})`).all(...keys) as Array<{ key: string; value: string }>;
+
+  const rowMap = new Map(rows.map((r) => [r.key, r.value]));
+
+  function getList(key: string, fallback: string[]): string[] {
+    const raw = rowMap.get(key);
+    if (!raw) return fallback;
+    try {
+      const parsed = normalizeList(JSON.parse(raw));
+      return parsed.length > 0 ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function getTree(key: string, fallback: GenreTreeNode[]): GenreTreeNode[] {
+    const raw = rowMap.get(key);
+    if (!raw) return fallback;
+    try {
+      const parsed = normalizeGenreTree(JSON.parse(raw));
+      return parsed.length > 0 ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  const genres = getList("genres", defaultBookOptions.genres);
+  const platforms = getList("platforms", defaultBookOptions.platforms);
+  const genreTree = getTree("genre_tree", defaultGenreTree);
+  const writingStyles = getList("writing_styles", defaultBookOptions.writingStyles);
+  const narrativePovs = getList("narrative_povs", defaultBookOptions.narrativePovs);
+  const targetAudiences = getList("target_audiences", defaultBookOptions.targetAudiences);
+  const endingTypes = getList("ending_types", defaultBookOptions.endingTypes);
+
   // 写入缺失的默认值
   const inserts: Array<{ key: string; value: string }> = [];
   if (!rowMap.has("genres")) inserts.push({ key: "genres", value: JSON.stringify(genres) });
@@ -171,16 +220,6 @@ export async function getBookOptions(): Promise<BookOptions> {
       stmt.run(item.key, item.value);
     }
   }
-
-  return {
-    genres,
-    platforms,
-    genreTree,
-    writingStyles,
-    narrativePovs,
-    targetAudiences,
-    endingTypes
-  };
 }
 
 export async function updateBookOptions(options: Partial<BookOptions>): Promise<void> {

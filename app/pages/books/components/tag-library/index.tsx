@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button, Input, Divider } from "antd";
 import { DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import {
@@ -21,6 +21,12 @@ import {
 } from "@/app/api-client/tags";
 import type { Book, TagCategory } from "@/app/types";
 import { showError, showSuccess } from "@/app/utils/error-handler";
+import {
+  findInTree,
+  collectAllIds,
+  searchMatch,
+} from "@/shared/utils/tag-tree-utils";
+import { useDebounce } from "@/shared/hooks/use-debounce";
 import styles from "./index.module.css";
 
 interface TagLibraryProps {
@@ -32,64 +38,6 @@ type ViewState =
   | { type: "create"; parentId?: string }
   | { type: "edit"; tag: TagCategory };
 
-// ---- 工具函数 ----
-
-function findInTree(nodes: TagCategory[], id: string): TagCategory | null {
-  for (const node of nodes) {
-    if (node.id === id) return node;
-    if (node.children) {
-      const found = findInTree(node.children, id);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
-function collectAllIds(tags: TagCategory[]): Set<string> {
-  const ids = new Set<string>();
-  const walk = (nodes: TagCategory[]) => {
-    for (const n of nodes) {
-      ids.add(n.id);
-      if (n.children) walk(n.children);
-    }
-  };
-  walk(tags);
-  return ids;
-}
-
-function searchMatch(
-  tags: TagCategory[],
-  keyword: string
-): Set<string> | null {
-  if (!keyword.trim()) return null;
-  const lower = keyword.toLowerCase();
-  const matched = new Set<string>();
-
-  interface FlatNode {
-    node: TagCategory;
-    path: string[];
-  }
-  const flat: FlatNode[] = [];
-  const walk = (nodes: TagCategory[], path: string[]) => {
-    for (const n of nodes) {
-      flat.push({ node: n, path: [...path, n.id] });
-      if (n.children) walk(n.children, [...path, n.id]);
-    }
-  };
-  walk(tags, []);
-
-  for (const { node, path } of flat) {
-    if (
-      node.name.toLowerCase().includes(lower) ||
-      node.code?.toLowerCase().includes(lower) ||
-      node.description?.toLowerCase().includes(lower)
-    ) {
-      for (const id of path) matched.add(id);
-    }
-  }
-  return matched;
-}
-
 // ---- 持久化展开状态 ----
 
 const EXPANDED_KEY_PREFIX = "tag-lib-expanded-";
@@ -99,6 +47,7 @@ function loadExpanded(bookId: string): string[] {
     const raw = localStorage.getItem(EXPANDED_KEY_PREFIX + bookId);
     return raw ? JSON.parse(raw) : [];
   } catch {
+    console.error("Failed to load expanded keys from localStorage");
     return [];
   }
 }
@@ -107,19 +56,8 @@ function saveExpanded(bookId: string, keys: string[]) {
   try {
     localStorage.setItem(EXPANDED_KEY_PREFIX + bookId, JSON.stringify(keys));
   } catch {
-    // ignore
+    // localStorage may be full or unavailable — ignore
   }
-}
-
-// ---- 防抖 ----
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
 }
 
 // ---- 组件 ----

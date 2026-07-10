@@ -1,0 +1,176 @@
+/* ===== 柱状图 ===== */
+
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 100px;
+}
+
+.barCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--color-primary) 60%, transparent));
+  min-height: 2px;
+}
+
+.barLabel {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.barValue {
+  font-size: 9px;
+  color: var(--text-tertiary);
+}
+
+/* ===== 章节长度分布 ===== */
+
+.distRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+}
+
+.distLabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  width: 52px;
+  flex-shrink: 0;
+}
+
+.distTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.distFill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--color-primary) 60%, transparent));
+}
+
+.distCount {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ===== GitHub 风格热力图 ===== */
+
+.ghHeader {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.ghStats {
+  display: flex;
+  gap: 20px;
+}
+
+.ghStat {
+  text-align: center;
+}
+
+.ghStatNum {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ghStatLabel {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.ghBody {
+  display: flex;
+  gap: 6px;
+}
+
+.ghYLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 18px;
+  justify-content: space-between;
+}
+
+.ghYLabels span {
+  font-size: 9px;
+  color: var(--text-light);
+  height: 13px;
+  line-height: 13px;
+}
+
+.ghMain {
+  flex: 1;
+  overflow: hidden;
+}
+
+.ghMonths {
+  display: flex;
+  margin-bottom: 4px;
+  height: 14px;
+}
+
+.ghMonth {
+  font-size: 9px;
+  color: var(--text-light);
+  display: inline-block;
+}
+
+.ghGrid {
+  display: flex;
+  gap: 3px;
+}
+
+.ghWeek {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ghCell {
+  width: 13px;
+  height: 13px;
+  border-radius: 2px;
+  background: var(--border-light);
+}
+
+.heat1 { background: color-mix(in srgb, var(--color-primary) 15%, transparent); }
+.heat2 { background: color-mix(in srgb, var(--color-primary) 35%, transparent); }
+.heat3 { background: color-mix(in srgb, var(--color-primary) 60%, transparent); }
+.heat4 { background: var(--accent); }
+
+.ghLegend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.ghLegendCell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+}

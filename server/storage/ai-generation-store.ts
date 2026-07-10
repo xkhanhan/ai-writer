@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
+import { buildUpdateSet } from "@/server/utils/store-helpers";
 import type {
   AiGenerationSession,
   CreateGenerationSessionDTO,
@@ -86,42 +87,23 @@ export async function updateGenerationSession(
   }
 ): Promise<AiGenerationSession | null> {
   const db = await getDb();
-  const fields: string[] = [];
-  const values: Array<string | number> = [];
+  const fieldMap = {
+    raw_output: data.rawOutput,
+    adopted: data.adopted !== undefined ? (data.adopted ? 1 : 0) : undefined,
+    tokens_input: data.tokensInput,
+    tokens_output: data.tokensOutput,
+    latency_ms: data.latencyMs,
+  };
 
-  if (data.rawOutput !== undefined) {
-    fields.push("raw_output = ?");
-    values.push(data.rawOutput);
-  }
-  if (data.adopted !== undefined) {
-    fields.push("adopted = ?");
-    values.push(data.adopted ? 1 : 0);
-  }
-  if (data.tokensInput !== undefined) {
-    fields.push("tokens_input = ?");
-    values.push(data.tokensInput);
-  }
-  if (data.tokensOutput !== undefined) {
-    fields.push("tokens_output = ?");
-    values.push(data.tokensOutput);
-  }
-  if (data.latencyMs !== undefined) {
-    fields.push("latency_ms = ?");
-    values.push(data.latencyMs);
-  }
-
-  if (fields.length === 0) {
+  const update = buildUpdateSet("ai_generation_sessions", fieldMap);
+  if (!update) {
     const row = db
       .prepare("SELECT * FROM ai_generation_sessions WHERE id = ?")
       .get(id) as AiGenerationSessionRow | undefined;
     return row ? mapSession(row) : null;
   }
 
-  values.push(id);
-
-  db.prepare(
-    `UPDATE ai_generation_sessions SET ${fields.join(", ")} WHERE id = ?`
-  ).run(...values);
+  db.prepare(update.sql).run(...update.values, id);
 
   const row = db
     .prepare("SELECT * FROM ai_generation_sessions WHERE id = ?")

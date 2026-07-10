@@ -170,7 +170,7 @@ export default function FactLibrary({ book }: FactLibraryProps) {
         }
       }
     } catch {
-      // 表单校验失败
+      // 表单校验失败 — antd handles display
     }
   };
 
