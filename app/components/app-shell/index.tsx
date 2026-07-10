@@ -87,7 +87,7 @@ export default function AppShell({
   if (currentView === "settings") {
     return (
       <div className={styles["wrapper--fullscreen"]}>
-        <AiConfigForm initialConfig={initialAiConfig} onBack={handleBackToHome} />
+        <AiConfigForm initialConfig={initialAiConfig} initialBooks={initialBooks} onBack={handleBackToHome} />
       </div>
     );
   }
