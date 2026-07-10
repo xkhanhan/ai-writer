@@ -58,13 +58,13 @@
   border-radius: 10px;
 }
 
-.dashEditBtn:global(.ant-btn) {
+.dashEditBtn {
   color: var(--accent);
   border-color: var(--line);
   flex-shrink: 0;
 }
 
-.dashEditBtn:global(.ant-btn):hover {
+.dashEditBtn:hover {
   border-color: var(--accent);
   background: var(--color-primary-bg);
 }

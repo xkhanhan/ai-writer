@@ -9,6 +9,7 @@ import {
   CopyOutlined,
 } from "@ant-design/icons";
 import { showError, showSuccess } from "@/app/utils/error-handler";
+import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type { Book, PromptTemplate } from "@/app/types";
 import { validateTemplateVariables } from "@/app/types";
 import { getBooks } from "@/app/pages/home/api/books";
@@ -89,6 +90,8 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
       .then((res) => {
         if (!cancelled && res.ok) {
           setAllBooks(res.data);
+          // B-022: initialize selectedBookId so the Select shows a default value
+          setSelectedBookId((prev) => (prev === null && res.data.length > 0 ? res.data[0].id : prev));
         }
       })
       .finally(() => {
@@ -318,18 +321,20 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   }, [selectedTemplate, loadTemplates]);
 
   // ===== Delete custom template =====
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!selectedTemplate || isSystemDefault) return;
-    setSaving(true);
-    const res = await deleteTemplate(selectedTemplate.id);
-    setSaving(false);
-    if (res.ok) {
-      showSuccess("模板已删除");
-      setSelectedId(null);
-      void loadTemplates();
-    } else {
-      showError(res.error);
-    }
+    confirmDelete(selectedTemplate.displayName, async () => {
+      setSaving(true);
+      const res = await deleteTemplate(selectedTemplate.id);
+      setSaving(false);
+      if (res.ok) {
+        showSuccess("模板已删除");
+        setSelectedId(null);
+        void loadTemplates();
+      } else {
+        showError(res.error);
+      }
+    });
   }, [selectedTemplate, isSystemDefault, loadTemplates]);
 
   // ===== Activate template =====
@@ -448,9 +453,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
                 size="small"
                 danger
                 icon={<DeleteOutlined />}
-                onClick={() => void handleDelete()}
+                onClick={handleDelete}
                 disabled={saving}
                 loading={saving}
+                aria-label="删除模板"
               />
             )}
           </div>

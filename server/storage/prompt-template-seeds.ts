@@ -20,39 +20,39 @@ export const PROMPT_TEMPLATE_SEEDS: PromptTemplateSeed[] = [
 
 ## 输出格式
 - 直接输出正文，不加标题、注释或总结
-- 目标字数：$expectedWords 字（允许 ±15%）
+- 目标字数：\${expectedWords} 字（允许 ±15%）
 
 ---
 
 ## 书籍信息
-书名：$bookTitle
-题材：$bookGenre
-写作风格：$bookStyle
+书名：\${bookTitle}
+题材：\${bookGenre}
+写作风格：\${bookStyle}
 
 ## 世界规则
-$worldRules
+\${worldRules}
 
 ## 写作规则
-$writingRules
+\${writingRules}
 
 ## 章纲信息
-标题：$chapterTitle
-摘要：$chapterSummary
-场景：$chapterScenes
-出场人物：$chapterCharacters
-重要事件：$chapterKeyEvents
+标题：\${chapterTitle}
+摘要：\${chapterSummary}
+场景：\${chapterScenes}
+出场人物：\${chapterCharacters}
+重要事件：\${chapterKeyEvents}
 
 ## 角色档案
-$characterProfiles
+\${characterProfiles}
 
 ## 事实记录
-$facts
+\${facts}
 
 ## 活跃伏笔
-$foreshadows
+\${foreshadows}
 
 ## 前文衔接
-$previousEnding`,
+\${previousEnding}`,
     variables: JSON.stringify([
       { name: "bookTitle", description: "书名", source: "book", required: true },
       { name: "bookGenre", description: "题材", source: "book", required: true },
@@ -100,16 +100,16 @@ $previousEnding`,
 ---
 
 ## 章纲信息
-$chapterInfo
+\${chapterInfo}
 
 ## 正文内容
-$chapterContent
+\${chapterContent}
 
 ## 现有角色设定
-$existingCharacters
+\${existingCharacters}
 
 ## 现有伏笔
-$existingForeshadows`,
+\${existingForeshadows}`,
     variables: JSON.stringify([
       { name: "chapterInfo", description: "章纲信息", source: "chapter", required: false },
       { name: "chapterContent", description: "正文内容", source: "chapter_content", required: true },
@@ -130,20 +130,20 @@ $existingForeshadows`,
 ---
 
 ## 书籍信息
-书名：$bookTitle
-题材：$bookGenre
+书名：\${bookTitle}
+题材：\${bookGenre}
 
 ## 写作规则
-$writingRules
+\${writingRules}
 
 ## 目标字数
-$targetWords
+\${targetWords}
 
 ## 章节上下文
-$chapterContext
+\${chapterContext}
 
 ## 原文
-$selectedText`,
+\${selectedText}`,
     variables: JSON.stringify([
       { name: "bookTitle", description: "书名", source: "book", required: true },
       { name: "bookGenre", description: "题材", source: "book", required: false },
@@ -174,20 +174,20 @@ $selectedText`,
 ---
 
 ## 书籍信息
-书名：$bookTitle
-题材：$bookGenre
+书名：\${bookTitle}
+题材：\${bookGenre}
 
 ## 写作规则
-$writingRules
+\${writingRules}
 
 ## 目标字数
-$targetWords
+\${targetWords}
 
 ## 章节上下文
-$chapterContext
+\${chapterContext}
 
 ## 原文
-$selectedText`,
+\${selectedText}`,
     variables: JSON.stringify([
       { name: "selectedText", description: "选中文本", source: "user_selection", required: true },
       { name: "bookTitle", description: "书名", source: "book", required: true },
@@ -206,22 +206,22 @@ $selectedText`,
 ## 输出格式
 - 在保持原有情节的基础上丰富细节
 - 增加环境描写、心理活动、对话等
-- 扩写到约 $targetWords 字
+- 扩写到约 \${targetWords} 字
 
 ---
 
 ## 书籍信息
-书名：$bookTitle
-题材：$bookGenre
+书名：\${bookTitle}
+题材：\${bookGenre}
 
 ## 写作规则
-$writingRules
+\${writingRules}
 
 ## 背景
-$chapterContext
+\${chapterContext}
 
 ## 原文片段
-$selectedText`,
+\${selectedText}`,
     variables: JSON.stringify([
       { name: "bookTitle", description: "书名", source: "book", required: true },
       { name: "bookGenre", description: "题材", source: "book", required: false },
@@ -247,16 +247,16 @@ $selectedText`,
 ---
 
 ## 角色设定
-$characterProfile
+\${characterProfile}
 
 ## 世界规则
-$worldRules
+\${worldRules}
 
 ## 相关事实记录
-$facts
+\${facts}
 
 ## 已写章节中该角色出现的片段
-$characterAppearances`,
+\${characterAppearances}`,
     variables: JSON.stringify([
       { name: "characterProfile", description: "角色设定", source: "settings", required: true },
       { name: "worldRules", description: "世界规则", source: "world_rules", required: false },
@@ -280,13 +280,13 @@ $characterAppearances`,
 ---
 
 ## 世界规则
-$worldRules
+\${worldRules}
 
 ## 角色设定
-$characterSettings
+\${characterSettings}
 
 ## 事实记录
-$facts`,
+\${facts}`,
     variables: JSON.stringify([
       { name: "worldRules", description: "世界规则", source: "world_rules", required: false },
       { name: "characterSettings", description: "角色设定", source: "settings", required: false },
@@ -302,23 +302,23 @@ $facts`,
 ## 输出要求
 - 在保持核心卖点不变的前提下丰富细节
 - 增加悬念和吸引力
-- 控制在 $targetWords 字以内
+- 控制在 \${targetWords} 字以内
 - 适合在小说平台展示
 
 ---
 
 ## 书籍信息
-书名：$bookTitle
-题材：$bookGenre
+书名：\${bookTitle}
+题材：\${bookGenre}
 
 ## 写作规则
-$writingRules
+\${writingRules}
 
 ## 原始简介
-$originalDescription
+\${originalDescription}
 
 ## 核心卖点
-$sellingPoint`,
+\${sellingPoint}`,
     variables: JSON.stringify([
       { name: "bookTitle", description: "书名", source: "book", required: true },
       { name: "bookGenre", description: "题材", source: "book", required: false },
@@ -363,11 +363,11 @@ $sellingPoint`,
 ---
 
 ## 用户概念
-$userConcept
+\${userConcept}
 
 ## 已有信息（如有）
-书名：$existingTitle
-题材：$existingGenre`,
+书名：\${existingTitle}
+题材：\${existingGenre}`,
     variables: JSON.stringify([
       { name: "userConcept", description: "用户概念描述", source: "user_input", required: true },
       { name: "existingTitle", description: "已有书名", source: "book", required: false },
@@ -407,15 +407,15 @@ $userConcept
 ---
 
 ## 书籍信息
-书名：$bookTitle
-题材：$bookGenre
-卖点：$bookSellingPoint
+书名：\${bookTitle}
+题材：\${bookGenre}
+卖点：\${bookSellingPoint}
 
 ## 用户描述
-$userConcept
+\${userConcept}
 
 ## 已有规则（如有）
-$existingRules`,
+\${existingRules}`,
     variables: JSON.stringify([
       { name: "bookTitle", description: "书名", source: "book", required: true },
       { name: "bookGenre", description: "题材", source: "book", required: false },
