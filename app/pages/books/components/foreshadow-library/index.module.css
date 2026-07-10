@@ -84,7 +84,7 @@
 .groupTitle {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -125,7 +125,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 13px;
   font-family: var(--font-body);
   color: var(--text);
   font-weight: 500;

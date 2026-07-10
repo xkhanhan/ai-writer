@@ -2,12 +2,12 @@
 .listCount {
   font-weight: 600;
   font-size: 13px;
-  color: var(--ink-tertiary);
+  color: var(--text-secondary);
 }
 
 /* ---- 搜索栏 ---- */
 .searchWrap {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -64,7 +64,7 @@
 
 /* ---- 左侧底部操作栏 ---- */
 .bottomBar {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border-top: 1px solid var(--border);
   flex-shrink: 0;
 }

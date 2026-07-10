@@ -130,7 +130,7 @@
 .detailBody {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: var(--space-4) var(--space-5);
 }
 
 /* Info section cards */
@@ -221,7 +221,7 @@
 }
 
 .statusValue {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-primary);
   line-height: 1.6;
 }
