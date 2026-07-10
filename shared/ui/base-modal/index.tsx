@@ -70,7 +70,7 @@ export default function BaseModal({
       destroyOnClose={destroyOnClose}
       closable={closable}
       maskClosable={false}
-      keyboard={false}
+      keyboard={true}
       onCancel={onCancel}
       footer={footer === undefined ? defaultFooter : footer}
       classNames={{

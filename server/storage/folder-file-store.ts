@@ -36,29 +36,59 @@ export async function getFoldersByBookAndCategory(
   category: string
 ): Promise<Folder[]> {
   const db = await getDb();
-  const folders = db.prepare(`
-    SELECT * FROM folders WHERE book_id = ? AND category = ? ORDER BY created_at ASC
-  `).all(bookId, category) as FolderRow[];
+  const rows = db.prepare(`
+    SELECT f.id as folder_id, f.name as folder_name, f.book_id, f.category,
+           f.created_at as folder_created_at, f.updated_at as folder_updated_at,
+           fi.id, fi.name as file_name, fi.content,
+           fi.created_at as file_created_at, fi.updated_at as file_updated_at
+    FROM folders f
+    LEFT JOIN files fi ON fi.folder_id = f.id
+    WHERE f.book_id = ? AND f.category = ?
+    ORDER BY f.created_at ASC, fi.created_at ASC
+  `).all(bookId, category) as Array<{
+    folder_id: string;
+    folder_name: string;
+    book_id: string;
+    category: string;
+    folder_created_at: string;
+    folder_updated_at: string;
+    id: string | null;
+    file_name: string | null;
+    content: string | null;
+    file_created_at: string | null;
+    file_updated_at: string | null;
+  }>;
 
-  const result: Folder[] = [];
+  const folderMap = new Map<string, Folder>();
 
-  for (const folder of folders) {
-    const files = db.prepare(`
-      SELECT * FROM files WHERE folder_id = ? ORDER BY created_at ASC
-    `).all(folder.id) as FileRow[];
+  for (const row of rows) {
+    let folder = folderMap.get(row.folder_id);
+    if (!folder) {
+      folder = {
+        id: row.folder_id,
+        name: row.folder_name,
+        bookId: row.book_id,
+        category: row.category,
+        files: [],
+        createdAt: row.folder_created_at,
+        updatedAt: row.folder_updated_at
+      };
+      folderMap.set(row.folder_id, folder);
+    }
 
-    result.push({
-      id: folder.id,
-      name: folder.name,
-      bookId: folder.book_id,
-      category: folder.category,
-      files: files.map(mapFileRow),
-      createdAt: folder.created_at,
-      updatedAt: folder.updated_at
-    });
+    if (row.id) {
+      folder.files.push({
+        id: row.id,
+        name: row.file_name!,
+        content: row.content!,
+        folderId: row.folder_id!,
+        createdAt: row.file_created_at!,
+        updatedAt: row.file_updated_at!
+      });
+    }
   }
 
-  return result;
+  return Array.from(folderMap.values());
 }
 
 export async function createFolder(

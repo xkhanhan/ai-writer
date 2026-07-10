@@ -1,0 +1,88 @@
+import { getBookById } from "@/server/storage/book-store";
+import { getChapterById, getChaptersByVolumeId } from "@/server/storage/outline-store";
+import { getSettingEntitiesByBookId } from "@/server/storage/setting-entity-store";
+import { getActivePromptTemplate } from "@/server/storage/prompt-template-store";
+import type { ContextInput, BuiltContext } from "../types";
+import { estimateTokens, renderTemplate } from "../utils";
+
+export async function buildReviewContext(
+  input: ContextInput,
+): Promise<BuiltContext> {
+  const book = await getBookById(input.bookId);
+  if (!book) {
+    throw new Error(`书籍不存在（bookId: ${input.bookId}）`);
+  }
+  const chapter = await getChapterById(input.chapterId!);
+  if (!chapter) {
+    throw new Error(`章纲不存在（chapterId: ${input.chapterId}）`);
+  }
+
+  const allChapters = await getChaptersByVolumeId(chapter.volumeId);
+  const chapterNumber =
+    allChapters.findIndex((c) => c.id === chapter.id) + 1;
+
+  const allCharacters = await getSettingEntitiesByBookId(
+    book.id,
+    "character",
+  );
+
+  const allChaptersInVolume = await getChaptersByVolumeId(
+    chapter.volumeId,
+  );
+  const foreshadowSet = new Set<string>();
+  for (const ch of allChaptersInVolume) {
+    const chIdx = allChaptersInVolume.indexOf(ch);
+    if (chIdx <= allChapters.findIndex((c) => c.id === chapter.id)) {
+      for (const f of ch.foreshadowings) {
+        foreshadowSet.add(f);
+      }
+    }
+  }
+
+  const activeTemplate = await getActivePromptTemplate(
+    book.id,
+    "review_extract",
+  );
+  const template = activeTemplate?.template ?? "";
+
+  const chapterInfo = [
+    `标题：${chapter.title}`,
+    `摘要：${chapter.summary || "（无）"}`,
+    `场景：${chapter.scenes.join("、") || "（无）"}`,
+    `出场人物：${chapter.characters.join("、") || "（无）"}`,
+    `重要事件：${chapter.keyEvents.join("、") || "（无）"}`,
+    `章号：第${chapterNumber}章`,
+  ].join("\n");
+
+  const variables: Record<string, string> = {
+    chapterInfo,
+    chapterContent: chapter.content || "（暂无正文内容，请先生成正文后再提取）",
+    existingCharacters:
+      allCharacters.length > 0
+        ? allCharacters.map((c) => `- ${c.name}（${c.level}）：${c.description || "无描述"}`).join("\n")
+        : "（无角色设定）",
+    existingForeshadows:
+      foreshadowSet.size > 0
+        ? [...foreshadowSet].map((f) => `- ${f}`).join("\n")
+        : "（无伏笔记录）",
+    ...input.extraVariables,
+  };
+
+  const userPrompt = renderTemplate(template, variables);
+  const systemPrompt =
+    "你是一位小说数据提取专家。只输出 JSON，不要添加任何解释文字。";
+
+  const fullText = systemPrompt + "\n\n" + userPrompt;
+  const estimatedTokens = estimateTokens(fullText);
+
+  return {
+    systemPrompt,
+    userPrompt,
+    functionKey: input.functionKey,
+    estimatedTokens,
+    metadata: {
+      bookTitle: book.title,
+      chapterTitle: chapter.title,
+    },
+  };
+}

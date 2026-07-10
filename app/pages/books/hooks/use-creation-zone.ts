@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import type { BookOutline, VolumeOutline, ChapterOutline, KeyPoint } from "@/app/types";
+import type { BookOutline, VolumeOutline, ChapterOutline, KeyPoint, CreateChapterDTO, UpdateChapterDTO } from "@/app/types";
 import { showError } from "@/app/utils/error-handler";
 import * as api from "../api/creation";
 
@@ -12,6 +12,49 @@ export type ViewMode =
   | { type: "chapter-form"; volumeId: string; chapterId?: string }
   | { type: "content-editor"; volumeId: string; chapterId: string };
 
+interface ChapterData {
+  id?: string;
+  title: string;
+  summary?: string;
+  prevChapterLink?: string;
+  nextChapterSuspense?: string;
+  scenes?: string[];
+  time?: string;
+  moodTone?: string;
+  characters?: string[];
+  keyEvents?: string[];
+  foreshadowings?: string[];
+  highlights?: string;
+  expectedWords?: number;
+  note?: string;
+}
+
+const CHAPTER_FIELDS: (keyof ChapterData)[] = [
+  "title",
+  "summary",
+  "prevChapterLink",
+  "nextChapterSuspense",
+  "scenes",
+  "time",
+  "moodTone",
+  "characters",
+  "keyEvents",
+  "foreshadowings",
+  "highlights",
+  "expectedWords",
+  "note",
+];
+
+function buildChapterPayload(
+  data: ChapterData
+): Omit<CreateChapterDTO, "volumeId"> {
+  const payload: Record<string, unknown> = {};
+  for (const field of CHAPTER_FIELDS) {
+    payload[field] = data[field];
+  }
+  return payload as Omit<CreateChapterDTO, "volumeId">;
+}
+
 export function useCreationZone(bookId: string) {
   const [outline, setOutline] = useState<BookOutline | null>(null);
   const [volumes, setVolumes] = useState<VolumeOutline[]>([]);
@@ -20,7 +63,6 @@ export function useCreationZone(bookId: string) {
   const [view, setView] = useState<ViewMode>({ type: "empty" });
   const [loading, setLoading] = useState(true);
 
-  // 初始加载
   const loadAll = useCallback(async () => {
     setLoading(true);
     const [outResult, volsResult] = await Promise.all([
@@ -53,7 +95,6 @@ export function useCreationZone(bookId: string) {
     })();
   }, [loadAll]);
 
-  // 展开折叠卷
   const toggleVolume = useCallback((volumeId: string) => {
     setExpandedVolumes((prev) => {
       const next = new Set(prev);
@@ -63,7 +104,6 @@ export function useCreationZone(bookId: string) {
     });
   }, []);
 
-  // 总纲操作
   const saveOutline = useCallback(
     async (data: { direction: string; stages: string; sellingPoints: string }) => {
       const result = await api.updateOutline(bookId, data);
@@ -77,7 +117,6 @@ export function useCreationZone(bookId: string) {
     [bookId]
   );
 
-  // 卷纲操作
   const saveVolume = useCallback(
     async (data: {
       id?: string;
@@ -140,7 +179,6 @@ export function useCreationZone(bookId: string) {
     return true;
   }, []);
 
-  // 章纲操作
   const refreshChapters = useCallback(async (volumeId: string) => {
     const result = await api.fetchChapters(volumeId);
     if (result.ok) {
@@ -151,41 +189,11 @@ export function useCreationZone(bookId: string) {
   }, []);
 
   const saveChapter = useCallback(
-    async (
-      volumeId: string,
-      data: {
-        id?: string;
-        title: string;
-        summary?: string;
-        prevChapterLink?: string;
-        nextChapterSuspense?: string;
-        scenes?: string[];
-        time?: string;
-        moodTone?: string;
-        characters?: string[];
-        keyEvents?: string[];
-        foreshadowings?: string[];
-        highlights?: string;
-        expectedWords?: number;
-        note?: string;
-      }
-    ) => {
+    async (volumeId: string, data: ChapterData) => {
+      const payload = buildChapterPayload(data);
+
       if (data.id) {
-        const result = await api.updateChapter(data.id, {
-          title: data.title,
-          summary: data.summary,
-          prevChapterLink: data.prevChapterLink,
-          nextChapterSuspense: data.nextChapterSuspense,
-          scenes: data.scenes,
-          time: data.time,
-          moodTone: data.moodTone,
-          characters: data.characters,
-          keyEvents: data.keyEvents,
-          foreshadowings: data.foreshadowings,
-          highlights: data.highlights,
-          expectedWords: data.expectedWords,
-          note: data.note
-        });
+        const result = await api.updateChapter(data.id, payload as UpdateChapterDTO);
         if (!result.ok) {
           showError(result.error || "保存章纲失败");
           return null;
@@ -196,21 +204,10 @@ export function useCreationZone(bookId: string) {
         }));
         return result.data;
       }
+
       const result = await api.createChapter({
         volumeId,
-        title: data.title,
-        summary: data.summary,
-        prevChapterLink: data.prevChapterLink,
-        nextChapterSuspense: data.nextChapterSuspense,
-        scenes: data.scenes,
-        time: data.time,
-        moodTone: data.moodTone,
-        characters: data.characters,
-        keyEvents: data.keyEvents,
-        foreshadowings: data.foreshadowings,
-        highlights: data.highlights,
-        expectedWords: data.expectedWords,
-        note: data.note
+        ...payload,
       });
       if (!result.ok) {
         showError(result.error || "创建章纲失败");
@@ -238,7 +235,6 @@ export function useCreationZone(bookId: string) {
     return true;
   }, []);
 
-  // 正文操作
   const saveChapterContent = useCallback(
     async (chapterId: string, content: string, status?: "planned" | "writing" | "done") => {
       const result = await api.updateChapter(chapterId, { content, status });

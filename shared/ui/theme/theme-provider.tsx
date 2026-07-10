@@ -64,8 +64,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     v.setProperty("--shadow-lg", c.shadowLg);
     v.setProperty("--scrollbar-thumb", c.scrollbarThumb);
     v.setProperty("--scrollbar-thumb-hover", c.scrollbarThumbHover);
+    // Aliases — kept for backward compatibility with existing CSS references
     v.setProperty("--accent", c.primary);
-    v.setProperty("--accent-strong", c.primaryHover);
     v.setProperty("--primary", c.primary);
   }, [theme]);
 

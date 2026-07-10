@@ -87,7 +87,6 @@
 
   /* ===== 向后兼容别名 ===== */
   --accent: var(--color-primary);
-  --accent-strong: var(--color-primary-hover);
   --accent-soft: var(--color-primary-bg);
   --accent-10: var(--color-primary-bg-hover);
   --accent-20: var(--color-primary-border);
