@@ -144,58 +144,34 @@
   gap: var(--space-5);
 }
 
-/* ===== 内容卡片 ===== */
-.contentCard {
-  background: var(--bg-elevated);
-  border: none;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+/* ===== 详情分组 ===== */
+.detailSection {
+  padding-bottom: var(--space-4);
   margin-bottom: var(--space-4);
-  box-shadow: var(--shadow);
+  border-bottom: 1px solid var(--border-light);
 }
 
-.contentCardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
-  background: var(--bg-muted);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text);
-  font-family: var(--font-body);
+.detailSection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
-.contentCardTitle {
+.detailSectionLabel {
+  font-size: 11px;
   font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-body);
 }
 
-.contentCardBody {
-  padding: var(--space-4);
+.detailSectionContent {
   font-size: 13px;
   line-height: 1.8;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
-  min-height: 60px;
-}
-
-.detailText {
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--text);
-  font-family: var(--font-body);
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.detailEmpty {
-  font-size: 13px;
-  color: var(--ink-tertiary);
-  font-family: var(--font-body);
-  margin: 0;
-  font-style: italic;
 }
 
 /* ===== 相关角色 ===== */

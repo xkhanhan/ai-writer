@@ -184,24 +184,7 @@ export default function FactLibrary({ book }: FactLibraryProps) {
 
   // 右侧内容（无选中时的空状态）
   const emptyDetail = (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <span
-        style={{
-          fontSize: 13,
-          color: "var(--text-tertiary)",
-          fontFamily: "var(--font-body)",
-        }}
-      >
-        选择一条事实查看详情
-      </span>
-    </div>
+    <div className={styles.emptyState}>选择一条事实查看详情</div>
   );
 
   return (
@@ -335,13 +318,9 @@ export default function FactLibrary({ book }: FactLibraryProps) {
                     记录于：<span>{selectedFact.createdAt}</span>
                   </span>
                 </div>
-                <div className={styles.contentCard}>
-                  <div className={styles.contentCardHeader}>
-                    <span className={styles.contentCardTitle}>事实内容</span>
-                  </div>
-                  <div className={styles.contentCardBody}>
-                    <p className={styles.detailText}>{selectedFact.content}</p>
-                  </div>
+                <div className={styles.detailSection}>
+                  <div className={styles.detailSectionLabel}>事实内容</div>
+                  <div className={styles.detailSectionContent}>{selectedFact.content}</div>
                 </div>
                 <div className={styles.relatedSection}>
                   <div className={styles.relatedLabel}>涉及角色</div>

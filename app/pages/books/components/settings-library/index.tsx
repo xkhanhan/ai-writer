@@ -26,7 +26,6 @@ import {
   StarOutlined,
   ThunderboltOutlined,
   FallOutlined,
-  TagsOutlined,
 } from "@ant-design/icons";
 import {
   PanelContainer,
@@ -148,18 +147,6 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
   const [modalCat, setModalCat] = useState<SettingCategory>("character");
   const [editing, setEditing] = useState<SettingEntity | null>(null);
   const [form] = Form.useForm();
-
-  // 详情区字段折叠
-  const [expandedFields, setExpandedFields] = useState<
-    Record<string, boolean>
-  >({
-    description: true,
-    appearance: true,
-    traits: true,
-    background: true,
-    abilities: true,
-    weaknesses: true,
-  });
 
   const activeEntity = entities.find((e) => e.id === activeId) ?? null;
 
@@ -371,10 +358,6 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
     }
   };
 
-  const toggleField = (key: string) => {
-    setExpandedFields((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
   // ============ 左侧面板 ============
 
   const leftPanelContent = (
@@ -473,52 +456,26 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
           {new Date(activeEntity.createdAt).toLocaleString("zh-CN")} · 更新于{" "}
           {new Date(activeEntity.updatedAt).toLocaleString("zh-CN")}
         </div>
-        {/* 6 个通用信息字段卡片 */}
-        {INFO_FIELDS.map((f) => {
-          const val = activeEntity[f.key];
-          const isExpanded = expandedFields[f.key];
-          return (
-            <div key={f.key} className={styles.infoSection}>
-              <div
-                className={styles.infoSectionHeader}
-                onClick={() => toggleField(f.key)}
-                style={{ cursor: "pointer" }}
-              >
-                <span className={styles.infoSectionTitle}>
-                  <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                    {f.icon}
-                  </span>
-                  {f.label}
-                </span>
-                <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
-                  {isExpanded ? "收起" : "展开"}
-                </span>
+        {/* 6 个通用信息字段 - 简洁分组布局 */}
+        <div className={styles.infoGrid}>
+          {INFO_FIELDS.map((f) => {
+            const val = activeEntity[f.key];
+            return (
+              <div key={f.key} className={styles.infoItem}>
+                <div className={styles.infoLabel}>{f.label}</div>
+                <div className={styles.infoValue}>
+                  {val || <span className={styles.infoEmpty}>暂无</span>}
+                </div>
               </div>
-              <div
-                className={`${styles.infoSectionBody} ${!isExpanded ? styles.infoSectionBodyCollapsed : ""}`}
-              >
-                {val ? (
-                  <div className={styles.descText}>{val}</div>
-                ) : (
-                  <div className={styles.descEmpty}>暂无内容</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
 
         {/* 标签区 */}
         {activeEntity.tagIds && activeEntity.tagIds.length > 0 && (
-          <div className={styles.infoSection}>
-            <div className={styles.infoSectionHeader}>
-              <span className={styles.infoSectionTitle}>
-                <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                  <TagsOutlined />
-                </span>
-                标签
-              </span>
-            </div>
-            <div className={styles.infoSectionBody}>
+          <div className={styles.detailSection}>
+            <div className={styles.detailSectionLabel}>标签</div>
+            <div className={styles.detailSectionContent}>
               <div className={styles.tagList}>
                 {activeEntity.tagIds.map((tagId) => (
                   <span key={tagId} className={styles.tagItem}>
@@ -532,16 +489,9 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
 
         {/* 分类专属字段 */}
         {CATEGORY_FIELD_TEMPLATES[activeEntity.category]?.length > 0 && (
-          <div className={styles.infoSection}>
-            <div className={styles.infoSectionHeader}>
-              <span className={styles.infoSectionTitle}>
-                <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                  <InfoCircleOutlined />
-                </span>
-                分类专属
-              </span>
-            </div>
-            <div className={styles.infoSectionBody}>
+          <div className={styles.detailSection}>
+            <div className={styles.detailSectionLabel}>分类专属</div>
+            <div className={styles.detailSectionContent}>
               {CATEGORY_FIELD_TEMPLATES[activeEntity.category].map((f) => (
                 <div key={f} className={styles.statusField} style={{ marginBottom: 8 }}>
                   <span className={styles.statusLabel}>{f}</span>
@@ -555,21 +505,16 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
         )}
 
         {/* 状态信息区 */}
-        <div className={styles.infoSection}>
-          <div className={styles.infoSectionHeader}>
-            <span className={styles.infoSectionTitle}>
-              <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                <InfoCircleOutlined />
-              </span>
-              状态信息
-            </span>
+        <div className={styles.detailSection}>
+          <div className={styles.detailSectionLabel}>
+            状态信息
             <Tooltip title="状态信息随正文变化，仅记录当前快照">
               <InfoCircleOutlined
-                style={{ fontSize: 14, color: "var(--text-secondary)", cursor: "help" }}
+                style={{ fontSize: 12, color: "var(--text-tertiary)", cursor: "help", marginLeft: 4 }}
               />
             </Tooltip>
           </div>
-          <div className={styles.infoSectionBody}>
+          <div className={styles.detailSectionContent}>
             {Object.keys(activeEntity.statusFields || {}).length > 0 ? (
               <div className={styles.statusGrid}>
                 {Object.entries(activeEntity.statusFields).map(([k, v]) => (
@@ -758,7 +703,9 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
               ) : undefined
             }
           >
-            {activeEntity ? rightPanelContent : null}
+            {activeEntity ? rightPanelContent : (
+              <div className={styles.emptyState}>选择一个设定查看详情</div>
+            )}
           </Panel>
         </PanelGroup>
       </PanelContainer>

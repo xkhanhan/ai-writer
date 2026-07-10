@@ -465,23 +465,8 @@ export default function TagLibrary({ book }: TagLibraryProps) {
                 )}
               </div>
             ) : (
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: "var(--text-tertiary)",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  选择一个标签大类
-                </span>
+              <div className={styles.emptyState}>
+                选择一个标签大类
               </div>
             )}
           </Panel>

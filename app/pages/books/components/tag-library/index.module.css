@@ -72,10 +72,7 @@
 .treeWrap {
   flex: 1;
   overflow-y: auto;
-  margin: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
+  padding: var(--space-3);
 }
 
 /* ---- 弹窗内容 ---- */

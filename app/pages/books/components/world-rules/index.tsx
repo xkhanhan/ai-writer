@@ -363,29 +363,17 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
                   {new Date(activeRule.updatedAt).toLocaleString("zh-CN")}
                 </span>
 
-                <div className={styles.contentCard}>
-                  <div className={styles.contentCardHeader}>
-                    <span className={styles.contentCardTitle}>规则内容</span>
-                    <Tag color={CATEGORY_META[activeRule.category].tagColor}>
-                      {CATEGORY_META[activeRule.category].label}
-                    </Tag>
-                  </div>
-                  <div className={styles.contentCardBody}>
-                    {activeRule.content ? (
-                      <p className={styles.detailText}>{activeRule.content}</p>
-                    ) : (
-                      <p className={styles.detailEmpty}>暂无内容</p>
-                    )}
+                <div className={styles.detailSection}>
+                  <div className={styles.detailSectionLabel}>规则内容</div>
+                  <div className={styles.detailSectionContent}>
+                    {activeRule.content || <span style={{ color: "var(--text-tertiary)", fontStyle: "italic" }}>暂无内容</span>}
                   </div>
                 </div>
 
                 {activeRule.category === "setting" && activeRule.settingType && (
-                  <div className={styles.contentCard}>
-                    <div className={styles.contentCardHeader}>
-                      <InfoCircleOutlined />
-                      <span className={styles.contentCardTitle}>设定规则配置</span>
-                    </div>
-                    <div className={styles.contentCardBody}>
+                  <div className={styles.detailSection}>
+                    <div className={styles.detailSectionLabel}>设定规则配置</div>
+                    <div className={styles.detailSectionContent}>
                       <div className={styles.configRow}>
                         <span className={styles.configLabel}>值类型</span>
                         <Tag color={SETTING_TYPE_COLORS[activeRule.settingType]}>
@@ -425,23 +413,8 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
                 )}
               </div>
             ) : (
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: "var(--text-tertiary)",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  选择一条规则查看详情
-                </span>
+              <div className={styles.emptyState}>
+                选择一条规则查看详情
               </div>
             )}
           </Panel>
