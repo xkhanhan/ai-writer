@@ -35,33 +35,35 @@ const FUNCTION_GROUPS: FunctionGroup[] = [
     key: "creation",
     label: "创作区",
     functionKeys: [
-      { key: "text-generation", label: "正文生成" },
-      { key: "ai-removal", label: "去AI味" },
-      { key: "polishing", label: "润色" },
-      { key: "expansion", label: "扩写" },
+      { key: "content_generate", label: "正文生成" },
+      { key: "deslop", label: "去AI味" },
+      { key: "polish", label: "润色" },
+      { key: "expand", label: "扩写" },
     ],
   },
   {
     key: "review",
     label: "过审",
     functionKeys: [
-      { key: "fact-extraction", label: "事实提取" },
-      { key: "foreshadow-change", label: "伏笔变更" },
-      { key: "character-status", label: "角色状态" },
+      { key: "review_extract", label: "过审提取" },
     ],
   },
   {
     key: "check",
     label: "检查",
     functionKeys: [
-      { key: "character-check", label: "角色检查" },
-      { key: "fact-consistency", label: "事实一致性" },
+      { key: "character_audit", label: "角色一致性检查" },
+      { key: "fact_consistency", label: "事实一致性检查" },
     ],
   },
   {
-    key: "other",
-    label: "其他",
-    functionKeys: [{ key: "book-intro-expansion", label: "书籍简介扩写" }],
+    key: "suggest",
+    label: "AI 建议",
+    functionKeys: [
+      { key: "book_info_suggest", label: "书籍信息建议" },
+      { key: "world_rule_suggest", label: "世界规则建议" },
+      { key: "book_synopsis_expand", label: "书籍简介扩写" },
+    ],
   },
 ];
 

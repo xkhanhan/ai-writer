@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Button,
   Input,
@@ -14,6 +14,7 @@ import {
   PlusOutlined,
   DownOutlined,
   InfoCircleOutlined,
+  ThunderboltOutlined,
 } from "@ant-design/icons";
 import {
   PanelContainer,
@@ -22,6 +23,8 @@ import {
   Divider,
 } from "@/shared/ui/panel-container";
 import BaseModal from "@/shared/ui/base-modal";
+import { AiSceneModal } from "@/shared/ui/ai-scene-modal";
+import { getWorldRuleScenes } from "../../config/ai-scenes";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type {
@@ -91,6 +94,9 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
   // 表单字段
   const [formName, setFormName] = useState("");
   const [formContent, setFormContent] = useState("");
+
+  // AI 建议弹窗
+  const [aiOpen, setAiOpen] = useState(false);
 
   const activeRule = rules.find((r) => r.id === activeId) ?? null;
 
@@ -202,6 +208,24 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
     setCollapsed((prev) => ({ ...prev, [cat]: !prev[cat] }));
   };
 
+  const handleAiSave = async (rulesByCategory: Record<string, { name: string; content: string }[]>) => {
+    const cats: WorldRuleCategory[] = ["global", "writing", "setting"];
+    let savedCount = 0;
+    for (const cat of cats) {
+      const rules = rulesByCategory[cat];
+      if (!Array.isArray(rules)) continue;
+      for (const rule of rules) {
+        const result = await createWorldRule(book.id, {
+          category: cat,
+          name: rule.name,
+          content: rule.content,
+        });
+        if (result.ok) savedCount++;
+      }
+    }
+    if (savedCount === 0) throw new Error("未成功保存任何规则");
+  };
+
   // ============ 左侧面板 ============
 
   const renderCategoryGroup = (category: WorldRuleCategory) => {
@@ -296,6 +320,14 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
     <div className={styles.ruleList}>
       <div className={styles.listToolbar}>
         <span className={styles.ruleCount}>{totalRules} 条规则</span>
+        <Button
+          type="primary"
+          size="small"
+          icon={<ThunderboltOutlined />}
+          onClick={() => setAiOpen(true)}
+        >
+          AI 建议
+        </Button>
       </div>
       {(["global", "writing", "setting"] as WorldRuleCategory[]).map(
         renderCategoryGroup
@@ -470,6 +502,19 @@ export default function WorldRules({ book, activeId, onActiveChange }: WorldRule
           </div>
         </div>
       </BaseModal>
+
+      {/* AI 建议弹窗 */}
+      <AiSceneModal
+        open={aiOpen}
+        scene={getWorldRuleScenes(book.id, handleAiSave)}
+        bookId={book.id}
+        onClose={() => setAiOpen(false)}
+        onSaved={async () => {
+          setAiOpen(false);
+          await loadRules();
+        }}
+        onSave={getWorldRuleScenes(book.id, handleAiSave).onSave}
+      />
     </>
   );
 }

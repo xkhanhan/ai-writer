@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       "fact_consistency",
       "book_synopsis_expand",
       "book_info_suggest",
+      "world_rule_suggest",
     ];
 
     if (!allowedKeys.includes(functionKey as AiFunctionKey)) {

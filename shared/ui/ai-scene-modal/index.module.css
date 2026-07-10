@@ -1,0 +1,65 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inputSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.inputSection :global(.ant-input-textarea-show-count) {
+  padding-bottom: 22px;
+}
+
+.inputLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.inputFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.resultSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resultLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.resultPre {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  padding: 12px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--color-error);
+  font-size: 13px;
+}
