@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Modal } from "antd";
+import { Modal, Select, Button, Tooltip } from "antd";
+import {
+  ThunderboltOutlined,
+  SaveOutlined,
+  DeleteOutlined,
+  CopyOutlined,
+} from "@ant-design/icons";
 import { showError, showSuccess } from "@/app/utils/error-handler";
 import type { Book, PromptTemplate } from "@/app/types";
+import { getBooks } from "@/app/pages/home/api/books";
 import {
   fetchTemplates,
   updateTemplate,
@@ -53,8 +60,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   // Variable panel visibility
   const [showVariables, setShowVariables] = useState(false);
 
-  // Editor view mode
-  const [viewMode, setViewMode] = useState<"editor" | "preview">("editor");
+  // Book selector (for preview)
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+  const [booksLoading, setBooksLoading] = useState(false);
 
   // ===== Load templates =====
   const loadTemplates = useCallback(async () => {
@@ -68,6 +77,24 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   useEffect(() => {
     void loadTemplates();
   }, [loadTemplates]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // ===== Load books (for preview selector) =====
+  /* eslint-disable react-hooks/set-state-in-effect -- async load calls setState in async callback */
+  useEffect(() => {
+    let cancelled = false;
+    setBooksLoading(true);
+    getBooks()
+      .then((res) => {
+        if (!cancelled && res.ok) {
+          setAllBooks(res.data);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBooksLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // ===== Template index (by functionKey) =====
@@ -100,6 +127,23 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
 
   const isSystemDefault =
     selectedTemplate?.isDefault === true && selectedTemplate?.bookId === null;
+
+  // ===== Book selector (for preview) =====
+  const selectedBook = useMemo(() => {
+    if (selectedBookId) {
+      return allBooks.find((b) => b.id === selectedBookId) ?? null;
+    }
+    return allBooks.length > 0 ? allBooks[0] : null;
+  }, [selectedBookId, allBooks]);
+
+  const bookOptions = useMemo(
+    () =>
+      allBooks.map((b) => ({
+        value: b.id,
+        label: b.title,
+      })),
+    [allBooks],
+  );
 
   // ===== Sync edit state on selection change =====
   /* eslint-disable react-hooks/set-state-in-effect -- resetting local edit state on selection change */
@@ -274,11 +318,6 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     setDirty(true);
   }, []);
 
-  // ===== View mode toggle =====
-  const handleViewModeChange = useCallback((mode: "editor" | "preview") => {
-    setViewMode(mode);
-  }, []);
-
   // ===== Render =====
   return (
     <div className={styles.layoutRoot}>
@@ -291,35 +330,120 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
         onToggleGroup={toggleGroup}
       />
 
-      {viewMode === "editor" ? (
-        <PromptEditor
-          template={selectedTemplate}
-          isSystemDefault={isSystemDefault}
-          editContent={editTemplate}
-          dirty={dirty}
-          isActive={selectedTemplate?.isActive ?? false}
-          saving={saving}
-          showVariables={showVariables}
-          viewMode={viewMode}
-          onEditChange={handleEditChange}
-          onToggleVariables={() => setShowVariables((v) => !v)}
-          onSave={() => void handleSave()}
-          onDelete={() => void handleDelete()}
-          onActivate={() => void handleActivate()}
-          onCopyAsCustom={() => void handleCopyAsCustom()}
-          onViewModeChange={handleViewModeChange}
-        />
-      ) : (
-        <PromptPreview
-          template={selectedTemplate}
-          editContent={editTemplate}
-          hasSeparator={hasSeparator}
-          systemPart={systemPart}
-          book={book}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-        />
-      )}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* ===== Shared Toolbar ===== */}
+        <div className={styles.sharedToolbar}>
+          <div className={styles.sharedToolbarLeft}>
+            <span className={styles.sharedToolbarTitle}>
+              {selectedTemplate?.displayName ?? "提示词库"}
+            </span>
+            {selectedTemplate?.description && (
+              <>
+                <div className={styles.sharedToolbarSep} />
+                <span className={styles.sharedToolbarDesc}>
+                  {selectedTemplate.description}
+                </span>
+              </>
+            )}
+          </div>
+          <div className={styles.sharedToolbarRight}>
+            {/* Book selector for preview */}
+            <Select
+              className={styles.bookSelector}
+              size="small"
+              placeholder="选择一本书"
+              options={bookOptions}
+              value={selectedBookId ?? undefined}
+              onChange={(value: string) => setSelectedBookId(value)}
+              loading={booksLoading}
+              notFoundContent={booksLoading ? "加载中..." : "暂无书籍"}
+              allowClear
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+              }
+            />
+
+            <Button
+              size="small"
+              onClick={() => setShowVariables((v) => !v)}
+              type={showVariables ? "default" : "text"}
+            >
+              变量
+            </Button>
+
+            {isSystemDefault && (
+              <Tooltip title="复制系统默认为自定义模板">
+                <Button
+                  size="small"
+                  icon={<CopyOutlined />}
+                  onClick={() => void handleCopyAsCustom()}
+                  loading={saving}
+                >
+                  复制为自定义
+                </Button>
+              </Tooltip>
+            )}
+
+            <Button
+              size="small"
+              icon={<ThunderboltOutlined />}
+              onClick={() => void handleActivate()}
+              type={isSystemDefault || !(selectedTemplate?.isActive) ? "primary" : "default"}
+              disabled={selectedTemplate?.isActive || saving}
+              loading={saving}
+            >
+              {selectedTemplate?.isActive ? "已激活" : "激活"}
+            </Button>
+
+            {!isSystemDefault && (
+              <Button
+                size="small"
+                icon={<SaveOutlined />}
+                onClick={() => void handleSave()}
+                type="primary"
+                disabled={!dirty || saving}
+                loading={saving}
+              >
+                保存
+              </Button>
+            )}
+
+            {!isSystemDefault && (
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => void handleDelete()}
+                disabled={saving}
+                loading={saving}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* ===== Split Area: Editor + Preview side-by-side ===== */}
+        <div className={styles.splitArea}>
+          <div className={styles.editorPane}>
+            <PromptEditor
+              template={selectedTemplate}
+              isSystemDefault={isSystemDefault}
+              editContent={editTemplate}
+              showVariables={showVariables}
+              onEditChange={handleEditChange}
+            />
+          </div>
+          <div className={styles.previewPane}>
+            <PromptPreview
+              template={selectedTemplate}
+              editContent={editTemplate}
+              hasSeparator={hasSeparator}
+              systemPart={systemPart}
+              book={selectedBook}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -4,3 +4,116 @@
   height: 100%;
   overflow: hidden;
 }
+
+/* ===== Shared Toolbar (above split area) ===== */
+.sharedToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--panel);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.sharedToolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sharedToolbarTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.sharedToolbarSep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.sharedToolbarDesc {
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sharedToolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.bookSelector {
+  min-width: 150px;
+  max-width: 200px;
+}
+
+/* ===== Split Container (editor + preview) ===== */
+.splitArea {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.editorPane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.previewPane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid var(--border-light);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .sharedToolbar {
+    padding: 0 12px;
+    height: 48px;
+    gap: 8px;
+  }
+
+  .sharedToolbarTitle {
+    font-size: 14px;
+  }
+
+  .sharedToolbarDesc {
+    display: none;
+  }
+
+  .splitArea {
+    flex-direction: column;
+  }
+
+  .editorPane,
+  .previewPane {
+    flex: none;
+    height: 50%;
+  }
+
+  .previewPane {
+    border-left: none;
+    border-top: 1px solid var(--border-light);
+  }
+}

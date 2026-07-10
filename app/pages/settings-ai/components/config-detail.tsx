@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button, Tag } from "antd";
 import {
   EditOutlined,
@@ -7,6 +8,8 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   MinusCircleOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
 } from "@ant-design/icons";
 import type { StoredConfig } from "../hooks/use-config-list";
 import styles from "../index.module.css";
@@ -39,6 +42,9 @@ const STATUS_MAP: Record<
 
 export default function ConfigDetail({ config, onEdit }: ConfigDetailProps) {
   const statusInfo = STATUS_MAP[config.status];
+  const [showApiKey, setShowApiKey] = useState(false);
+
+  const maskedKey = config.apiKey ? "••••••••" + config.apiKey.slice(-4) : "未设置";
 
   const fields = [
     { label: "厂商", value: config.providerName || config.provider },
@@ -46,7 +52,9 @@ export default function ConfigDetail({ config, onEdit }: ConfigDetailProps) {
     { label: "Base URL", value: config.baseUrl, mono: true },
     {
       label: "API Key",
-      value: config.apiKey ? "••••••••" + config.apiKey.slice(-4) : "未设置",
+      value: showApiKey ? (config.apiKey || "未设置") : maskedKey,
+      mono: true,
+      isApiKey: true,
     },
     { label: "模型", value: config.model || "—" },
     { label: "上下文大小", value: config.contextSize.toLocaleString() + " tokens" },
@@ -85,7 +93,23 @@ export default function ConfigDetail({ config, onEdit }: ConfigDetailProps) {
             <span
               className={`${styles.detailValue} ${field.mono ? styles.detailValueMono : ""}`}
             >
-              {field.value}
+              {field.isApiKey ? (
+                <span className={styles.detailApiKeyRow}>
+                  <span>{field.value}</span>
+                  {config.apiKey && (
+                    <button
+                      type="button"
+                      className={styles.detailApiKeyToggle}
+                      onClick={() => setShowApiKey((v) => !v)}
+                      aria-label={showApiKey ? "隐藏 API Key" : "显示 API Key"}
+                    >
+                      {showApiKey ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                    </button>
+                  )}
+                </span>
+              ) : (
+                field.value
+              )}
             </span>
           </div>
         ))}

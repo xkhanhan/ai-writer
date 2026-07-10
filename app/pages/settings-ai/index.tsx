@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { Popconfirm } from "antd";
 import {
   SettingOutlined,
-  ThunderboltOutlined,
+  FileTextOutlined,
   ArrowLeftOutlined,
   PlusOutlined,
   ApiOutlined,
@@ -112,7 +112,7 @@ export default function AiConfigForm({
           data-tooltip="提示词库"
           aria-label="提示词库"
         >
-          <ThunderboltOutlined />
+          <FileTextOutlined />
         </button>
 
         <div className={styles.activitySpacer} />
@@ -178,7 +178,20 @@ export default function AiConfigForm({
                         <span className={styles.configItemProvider}>
                           {cfg.providerName || cfg.provider}
                         </span>
+                        <span className={styles.configItemKey}>
+                          {cfg.apiKey ? "••••••••" + cfg.apiKey.slice(-4) : "未设置"}
+                        </span>
                       </div>
+                      <span
+                        className={`${styles.configItemStatus} ${
+                          cfg.status === "connected"
+                            ? styles.configItemStatusConnected
+                            : cfg.status === "error"
+                              ? styles.configItemStatusError
+                              : styles.configItemStatusIdle
+                        }`}
+                        aria-label={cfg.status === "connected" ? "已连接" : cfg.status === "error" ? "连接失败" : "未测试"}
+                      />
                       <Popconfirm
                         title="确认删除此配置？"
                         onConfirm={(e) => handleDelete(e as React.MouseEvent, cfg.id)}
@@ -220,7 +233,7 @@ export default function AiConfigForm({
 
         {activeTab === "prompt-library" && (
           <div className={styles.promptPlaceholder}>
-            <ThunderboltOutlined className={styles.promptPlaceholderIcon} />
+            <FileTextOutlined className={styles.promptPlaceholderIcon} />
             <span>提示词库功能即将上线</span>
           </div>
         )}

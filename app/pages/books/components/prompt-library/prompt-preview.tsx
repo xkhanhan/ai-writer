@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Button, Select } from "antd";
+import React, { useMemo, useCallback } from "react";
+import { Button } from "antd";
 import { showSuccess } from "@/app/utils/error-handler";
 import { PROMPT_VARIABLES } from "@/shared/types";
 import type { PromptTemplate, Book } from "@/app/types";
-import { getBooks } from "@/app/pages/home/api/books";
 import styles from "./prompt-preview.module.css";
 
 // ============ Variable Resolution ============
@@ -71,12 +70,8 @@ interface PromptPreviewProps {
   hasSeparator: boolean;
   /** The system-fixed part before the --- separator */
   systemPart: string;
-  /** @deprecated Use the internal book selector instead */
-  book?: Book;
-  /** Current editor view: "editor" or "preview" */
-  viewMode: "editor" | "preview";
-  /** Callback to switch view mode */
-  onViewModeChange: (mode: "editor" | "preview") => void;
+  /** The book selected in the toolbar for preview */
+  book: Book | null;
 }
 
 // ============ Component ============
@@ -86,51 +81,13 @@ const PromptPreview = React.memo(function PromptPreview({
   editContent,
   hasSeparator,
   systemPart,
-  viewMode,
-  onViewModeChange,
+  book,
 }: PromptPreviewProps) {
-  // ---- Book selector state ----
-  const [allBooks, setAllBooks] = useState<Book[]>([]);
-  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
-  const [booksLoading, setBooksLoading] = useState(false);
-
-  // Fetch all books on mount
-  useEffect(() => {
-    let cancelled = false;
-    setBooksLoading(true);
-    getBooks()
-      .then((res) => {
-        if (!cancelled && res.ok) {
-          setAllBooks(res.data);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setBooksLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, []);
-
-  const selectedBook = useMemo(() => {
-    if (selectedBookId) {
-      return allBooks.find((b) => b.id === selectedBookId) ?? null;
-    }
-    return allBooks.length > 0 ? allBooks[0] : null;
-  }, [selectedBookId, allBooks]);
-
-  const bookOptions = useMemo(
-    () =>
-      allBooks.map((b) => ({
-        value: b.id,
-        label: b.title,
-      })),
-    [allBooks],
-  );
-
   // ---- Variable resolution ----
   const variableMap = useMemo(() => {
-    if (!selectedBook) return null;
-    return buildVariableMap(selectedBook);
-  }, [selectedBook]);
+    if (!book) return null;
+    return buildVariableMap(book);
+  }, [book]);
 
   // Build the full resolved preview content
   const resolvedPreview = useMemo(() => {
@@ -149,102 +106,21 @@ const PromptPreview = React.memo(function PromptPreview({
     showSuccess("已复制预览内容");
   }, [resolvedPreview]);
 
-  const noBookSelected = !selectedBook && !booksLoading;
-
   return (
     <div className={styles.previewPanel}>
       {/* ===== Toolbar ===== */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
-          <span className={styles.toolbarTitle}>
-            {template?.displayName ?? "预览"}
-          </span>
-          <div className={styles.toolbarSep} />
-          <span className={styles.previewLabel}>预览模式</span>
+          <span className={styles.previewLabel}>预览</span>
         </div>
         <div className={styles.toolbarRight}>
-          {/* Book selector */}
-          <Select
-            className={styles.bookSelector}
-            size="small"
-            placeholder="选择一本书"
-            options={bookOptions}
-            value={selectedBookId ?? undefined}
-            onChange={(value: string) => setSelectedBookId(value)}
-            loading={booksLoading}
-            notFoundContent={booksLoading ? "加载中..." : "暂无书籍"}
-            allowClear
-            showSearch
-            filterOption={(input, option) =>
-              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
-            }
-          />
-
           <Button
             size="small"
             onClick={handleCopyResolved}
-            disabled={!template || noBookSelected}
+            disabled={!template || !book}
           >
             复制预览
           </Button>
-
-          {/* View mode toggle */}
-          <div
-            style={{
-              display: "flex",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--radius-sm)",
-              overflow: "hidden",
-            }}
-          >
-            <button
-              style={{
-                padding: "0 10px",
-                height: 24,
-                fontSize: 12,
-                border: "none",
-                borderRight: "1px solid var(--border)",
-                background:
-                  viewMode === "editor"
-                    ? "var(--accent-soft)"
-                    : "var(--panel)",
-                color:
-                  viewMode === "editor"
-                    ? "var(--accent)"
-                    : "var(--ink-tertiary)",
-                cursor: "pointer",
-                fontFamily: "var(--font-body)",
-                fontWeight: viewMode === "editor" ? 600 : 400,
-                transition: "all 0.12s ease",
-              }}
-              onClick={() => onViewModeChange("editor")}
-            >
-              编辑
-            </button>
-            <button
-              style={{
-                padding: "0 10px",
-                height: 24,
-                fontSize: 12,
-                border: "none",
-                background:
-                  viewMode === "preview"
-                    ? "var(--accent-soft)"
-                    : "var(--panel)",
-                color:
-                  viewMode === "preview"
-                    ? "var(--accent)"
-                    : "var(--ink-tertiary)",
-                cursor: "pointer",
-                fontFamily: "var(--font-body)",
-                fontWeight: viewMode === "preview" ? 600 : 400,
-                transition: "all 0.12s ease",
-              }}
-              onClick={() => onViewModeChange("preview")}
-            >
-              预览
-            </button>
-          </div>
         </div>
       </div>
 
@@ -254,7 +130,7 @@ const PromptPreview = React.memo(function PromptPreview({
           <div className={styles.previewEmpty}>
             从左侧列表中选择一个功能查看预览
           </div>
-        ) : noBookSelected ? (
+        ) : !book ? (
           <div className={styles.previewEmpty}>
             请先选择一本书以预览提示词
           </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
-import { Form, Input, InputNumber, Select, Slider } from "antd";
+import { useCallback, useEffect, useState } from "react";
+import { Button, Form, Input, InputNumber, Select, Slider, Tooltip, message } from "antd";
+import { CloudDownloadOutlined } from "@ant-design/icons";
 import { AI_PROVIDERS } from "@/shared/ai/providers";
 import type { StoredConfig } from "../hooks/use-config-list";
 import BaseModal from "@/shared/ui/base-modal";
@@ -49,6 +50,9 @@ export default function ConfigModal({
 }: ConfigModalProps) {
   const [form] = Form.useForm();
   const watchedProvider = Form.useWatch("provider", form) ?? "openai";
+  const watchedApiKey = Form.useWatch("apiKey", form) as string | undefined;
+  const watchedBaseUrl = Form.useWatch("baseUrl", form) as string | undefined;
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -77,9 +81,38 @@ export default function ConfigModal({
     [form],
   );
 
+  const handleFetchModels = useCallback(() => {
+    const key = form.getFieldValue("apiKey") as string | undefined;
+    const url = form.getFieldValue("baseUrl") as string | undefined;
+    if (!key || !url) {
+      message.warning("请先填写 API Key 和 Base URL");
+      return;
+    }
+    message.info("模型拉取功能即将上线");
+  }, [form]);
+
   const handleOk = useCallback(async () => {
     const values = await form.validateFields();
     const info = PROVIDER_MAP.get(values.provider);
+
+    // Auto-test connection before saving
+    setTesting(true);
+    try {
+      const testUrl = `${values.baseUrl.replace(/\/+$/, "")}/models`;
+      const res = await fetch(testUrl, {
+        headers: { Authorization: `Bearer ${values.apiKey}` },
+      });
+      if (!res.ok) {
+        message.error(`连接测试失败 (HTTP ${res.status})，请检查 Base URL 和 API Key`);
+        return;
+      }
+    } catch {
+      message.error("连接测试失败，请检查网络、Base URL 和 API Key");
+      return;
+    } finally {
+      setTesting(false);
+    }
+
     onSave({
       ...values,
       providerName: info?.name ?? values.provider,
@@ -96,6 +129,7 @@ export default function ConfigModal({
       onCancel={onClose}
       onOk={handleOk}
       okText={editingConfig ? "保存" : "创建"}
+      confirmLoading={testing}
       width={560}
       destroyOnClose
     >
@@ -153,23 +187,35 @@ export default function ConfigModal({
         </Form.Item>
 
         <Form.Item name="model" label="模型" required>
-          <Select
-            showSearch
-            placeholder="选择模型"
-            options={
-              providerInfo
-                ? providerInfo.models.map((m) => ({
-                    value: m,
-                    label: m,
-                  }))
-                : []
-            }
-            filterOption={(input, option) =>
-              (option?.label as string)
-                ?.toLowerCase()
-                .includes(input.toLowerCase())
-            }
-          />
+          <div className={styles.modelRow}>
+            <Select
+              showSearch
+              placeholder="选择模型"
+              className={styles.modelRowSelect}
+              options={
+                providerInfo
+                  ? providerInfo.models.map((m) => ({
+                      value: m,
+                      label: m,
+                    }))
+                  : []
+              }
+              filterOption={(input, option) =>
+                (option?.label as string)
+                  ?.toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+            />
+            <Tooltip title={!watchedApiKey || !watchedBaseUrl ? "请先填写 API Key 和 Base URL" : ""}>
+              <Button
+                icon={<CloudDownloadOutlined />}
+                className={styles.fetchModelButton}
+                onClick={handleFetchModels}
+              >
+                拉取模型
+              </Button>
+            </Tooltip>
+          </div>
         </Form.Item>
 
         <Form.Item name="contextSize" label="上下文大小 (tokens)">

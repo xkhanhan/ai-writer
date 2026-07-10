@@ -29,21 +29,6 @@
   flex: 1;
 }
 
-.toolbarTitle {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  white-space: nowrap;
-  color: var(--text);
-}
-
-.toolbarSep {
-  width: 1px;
-  height: 18px;
-  background: var(--border);
-  flex-shrink: 0;
-}
-
 .previewLabel {
   font-size: 12px;
   color: var(--ink-tertiary);
@@ -54,11 +39,6 @@
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-}
-
-.bookSelector {
-  min-width: 150px;
-  max-width: 200px;
 }
 
 /* ===== Preview Content ===== */
@@ -89,10 +69,6 @@
   .toolbar {
     padding: 0 12px;
     height: 48px;
-  }
-
-  .toolbarTitle {
-    font-size: 14px;
   }
 
   .previewContent {
