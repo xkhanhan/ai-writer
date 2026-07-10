@@ -18,6 +18,7 @@ import ForeshadowLibrary from "../components/foreshadow-library";
 import { CreationZone } from "../components/creation-zone";
 import ContentLibrary from "../components/content-library";
 import FactLibrary from "../components/fact-library";
+import { WorkspacePanel } from "../components/workspace-panel";
 
 export interface WorkspacePanelProps {
   book: Book;
@@ -25,7 +26,7 @@ export interface WorkspacePanelProps {
   onActiveChange?: (id: string) => void;
 }
 
-export interface WorkspacePanel {
+export interface WorkspacePanelConfig {
   key: ActivePanel;
   title: string;
   icon: React.ReactNode;
@@ -33,12 +34,16 @@ export interface WorkspacePanel {
   component: (props: WorkspacePanelProps) => React.ReactNode;
 }
 
-export const workspacePanels: WorkspacePanel[] = [
+export const workspacePanels: WorkspacePanelConfig[] = [
   {
     key: "info",
     title: "书籍信息",
     icon: <ReadOutlined />,
-    component: ({ book }) => <BookInfoDashboard key={book.id} book={book} />,
+    component: ({ book }) => (
+      <WorkspacePanel key={book.id}>
+        <BookInfoDashboard book={book} />
+      </WorkspacePanel>
+    ),
   },
   {
     key: "world-rules",
@@ -79,20 +84,32 @@ export const workspacePanels: WorkspacePanel[] = [
     title: "创作区",
     icon: <EditOutlined />,
     category: "creation",
-    component: ({ book }) => <CreationZone key={book.id} bookId={book.id} />,
+    component: ({ book }) => (
+      <WorkspacePanel key={book.id}>
+        <CreationZone bookId={book.id} />
+      </WorkspacePanel>
+    ),
   },
   {
     key: "foreshadow",
     title: "伏笔库",
     icon: <PushpinOutlined />,
-    component: ({ book }) => <ForeshadowLibrary key={book.id} book={book} />,
+    component: ({ book }) => (
+      <WorkspacePanel key={book.id}>
+        <ForeshadowLibrary book={book} />
+      </WorkspacePanel>
+    ),
   },
   {
     key: "archive",
     title: "正文库",
     icon: <BookOutlined />,
     category: "archive",
-    component: ({ book }) => <ContentLibrary key={book.id} book={book} />,
+    component: ({ book }) => (
+      <WorkspacePanel key={book.id}>
+        <ContentLibrary book={book} />
+      </WorkspacePanel>
+    ),
   },
   {
     key: "fact-library",
