@@ -360,13 +360,11 @@ async function ensureDefaultTemplates(): Promise<void> {
       description: "根据章纲信息生成小说正文",
       template: `你是一位专注于网络小说创作的资深作家。请根据以下章纲信息撰写正文。
 
-## 写作要求
-- 严格按照章纲的场景和事件展开
-- 人物言行符合设定，不可 OOC
-- 遵守所有世界规则和写作规则
-- 不使用现代网络用语和 AI 常见表达
-- 目标字数：$expectedWords 字（允许 ±15%）
+## 输出格式
 - 直接输出正文，不加标题、注释或总结
+- 目标字数：$expectedWords 字（允许 ±15%）
+
+---
 
 ## 书籍信息
 书名：$bookTitle
@@ -421,7 +419,7 @@ $previousEnding`,
       description: "从章节正文中提取结构化数据（事实、伏笔、角色状态）",
       template: `你是一位小说数据提取专家。请从以下正文中提取结构化信息。
 
-## 提取要求
+## 输出格式
 请以 JSON 格式返回以下内容：
 
 \`\`\`json
@@ -440,6 +438,8 @@ $previousEnding`,
   ]
 }
 \`\`\`
+
+---
 
 ## 章纲信息
 $chapterInfo
@@ -463,11 +463,13 @@ $existingForeshadows`,
       functionKey: "polish",
       displayName: "润色",
       description: "提升文字表现力和感染力",
-      template: `你是一位资深网文编辑。请对以下文本进行润色：
-- 提升文字的表现力和感染力
-- 优化句式结构，让阅读更流畅
-- 保持原文风格和情节不变
+      template: `你是一位资深网文编辑。请对以下文本进行润色。
+
+## 输出格式
 - 保持字数大致不变（±10%）
+- 直接输出润色后的文本，不加注释或说明
+
+---
 
 ## 书籍信息
 书名：$bookTitle
@@ -476,6 +478,12 @@ $existingForeshadows`,
 ## 写作规则
 $writingRules
 
+## 目标字数
+$targetWords
+
+## 章节上下文
+$chapterContext
+
 ## 原文
 $selectedText`,
       variables: JSON.stringify([
@@ -483,13 +491,15 @@ $selectedText`,
         { name: "bookGenre", description: "题材", source: "book", required: false },
         { name: "writingRules", description: "写作规则", source: "world_rules", required: false },
         { name: "selectedText", description: "选中文本", source: "user_selection", required: true },
+        { name: "targetWords", description: "目标字数", source: "user_input", required: false },
+        { name: "chapterContext", description: "章纲背景", source: "chapter", required: false },
       ]),
     },
     {
       functionKey: "deslop",
       displayName: "去AI味",
       description: "去除AI生成痕迹，让文字更自然",
-      template: `你是一位经验丰富的网文编辑。请对以下文本进行"去AI味"处理：
+      template: `你是一位经验丰富的网文编辑。请对以下文本进行"去AI味"处理。
 
 ## 必须删除的模式
 - "值得注意的是"、"让我们来看看"、"总而言之"
@@ -503,29 +513,51 @@ $selectedText`,
 - 不规则句式（短句、倒装、省略）
 - 五感细节（至少2种感官）
 
-## 要求
-- 保持原文情节和信息不变
-- 保持字数大致不变（±10%）
+---
+
+## 书籍信息
+书名：$bookTitle
+题材：$bookGenre
+
+## 写作规则
+$writingRules
+
+## 目标字数
+$targetWords
+
+## 章节上下文
+$chapterContext
 
 ## 原文
 $selectedText`,
       variables: JSON.stringify([
         { name: "selectedText", description: "选中文本", source: "user_selection", required: true },
+        { name: "bookTitle", description: "书名", source: "book", required: true },
+        { name: "bookGenre", description: "题材", source: "book", required: false },
+        { name: "writingRules", description: "写作规则", source: "world_rules", required: false },
+        { name: "targetWords", description: "目标字数", source: "user_input", required: false },
+        { name: "chapterContext", description: "章纲背景", source: "chapter", required: false },
       ]),
     },
     {
       functionKey: "expand",
       displayName: "扩写",
       description: "丰富细节，扩展文本长度",
-      template: `你是一位资深网络小说作家。请对以下片段进行扩写：
+      template: `你是一位资深网络小说作家。请对以下片段进行扩写。
+
+## 输出格式
 - 在保持原有情节的基础上丰富细节
 - 增加环境描写、心理活动、对话等
-- 保持原文风格一致
 - 扩写到约 $targetWords 字
+
+---
 
 ## 书籍信息
 书名：$bookTitle
 题材：$bookGenre
+
+## 写作规则
+$writingRules
 
 ## 背景
 $chapterContext
@@ -535,9 +567,10 @@ $selectedText`,
       variables: JSON.stringify([
         { name: "bookTitle", description: "书名", source: "book", required: true },
         { name: "bookGenre", description: "题材", source: "book", required: false },
-        { name: "chapterContext", description: "章纲背景", source: "chapter", required: false },
+        { name: "writingRules", description: "写作规则", source: "world_rules", required: false },
         { name: "selectedText", description: "选中文本", source: "user_selection", required: true },
         { name: "targetWords", description: "目标字数", source: "user_input", required: false },
+        { name: "chapterContext", description: "章纲背景", source: "chapter", required: false },
       ]),
     },
     {
@@ -546,12 +579,14 @@ $selectedText`,
       description: "检查角色在已写章节中的表现是否符合设定",
       template: `你是一位小说角色一致性审查专家。请检查以下角色在已写章节中的表现是否符合设定。
 
-## 审查要求
+## 审查输出要求
 - 对比角色实际行为与角色设定
 - 标注 OOC（Out of Character）片段
 - 检查能力边界是否合理
 - 检查人际关系是否连贯
 - 给出修改建议
+
+---
 
 ## 角色设定
 $characterProfile
@@ -577,12 +612,14 @@ $characterAppearances`,
       description: "交叉验证已记录事实，检测矛盾",
       template: `你是一位小说事实一致性检查专家。请对已记录的事实进行交叉验证。
 
-## 检查要求
+## 检查输出要求
 - 检查事实之间是否存在矛盾
 - 检查事实是否与世界规则冲突
 - 标注时间线不一致的问题
 - 标注角色信息不一致的问题
 - 给出修复建议
+
+---
 
 ## 世界规则
 $worldRules
@@ -602,25 +639,35 @@ $facts`,
       functionKey: "book_synopsis_expand",
       displayName: "书籍简介扩写",
       description: "扩写书籍简介，增加吸引力",
-      template: `你是一位资深网络小说策划。请对以下书籍简介进行扩写：
+      template: `你是一位资深网络小说策划。请对以下书籍简介进行扩写。
 
-## 要求
+## 输出要求
 - 在保持核心卖点不变的前提下丰富细节
 - 增加悬念和吸引力
 - 控制在 $targetWords 字以内
 - 适合在小说平台展示
 
+---
+
 ## 书籍信息
 书名：$bookTitle
 题材：$bookGenre
-原始简介：$originalDescription
-核心卖点：$sellingPoint`,
+
+## 写作规则
+$writingRules
+
+## 原始简介
+$originalDescription
+
+## 核心卖点
+$sellingPoint`,
       variables: JSON.stringify([
         { name: "bookTitle", description: "书名", source: "book", required: true },
         { name: "bookGenre", description: "题材", source: "book", required: false },
         { name: "originalDescription", description: "原始简介", source: "book", required: true },
         { name: "sellingPoint", description: "核心卖点", source: "book", required: false },
         { name: "targetWords", description: "目标字数", source: "user_input", required: false },
+        { name: "writingRules", description: "写作规则", source: "world_rules", required: false },
       ]),
     },
     {
@@ -629,14 +676,9 @@ $facts`,
       description: "根据概念描述生成完整书籍信息",
       template: `你是一位资深网络小说策划。请根据用户提供的书籍概念，生成完整的书籍信息建议。
 
-## 要求
-- 以 JSON 格式返回，不要包含其他内容
-- 所有字段都必须填写
-- 标签 3-5 个，每标签不超过 4 个字
-- 简介控制在 150 字以内
-- 核心卖点控制在 50 字以内
-
 ## 返回格式
+以 JSON 格式返回，不要包含其他内容：
+
 \`\`\`json
 {
   "title": "建议书名",
@@ -653,6 +695,14 @@ $facts`,
   "description": "书籍简介"
 }
 \`\`\`
+
+## 格式约束
+- 所有字段都必须填写
+- 标签 3-5 个，每标签不超过 4 个字
+- 简介控制在 150 字以内
+- 核心卖点控制在 50 字以内
+
+---
 
 ## 用户概念
 $userConcept
@@ -672,15 +722,9 @@ $userConcept
       description: "根据书籍信息和描述生成世界规则",
       template: `你是一位资深网络小说世界观架构师。请根据书籍信息和用户描述，生成一套完整的世界规则建议。
 
-## 要求
-- 以 JSON 格式返回，不要包含其他内容
-- 分为三类：global（全局规则）、writing（写作规则）、setting（设定规则）
-- 每条规则包含 name 和 content
-- 全局规则 5-8 条，写作规则 3-5 条，设定规则 2-4 条
-- 规则内容要具体可执行，不要太笼统
-- 不要生成政治合规、审核相关的内容，这类规则由平台自动处理
-
 ## 返回格式
+以 JSON 格式返回，不要包含其他内容：
+
 \`\`\`json
 {
   "global": [
@@ -694,6 +738,15 @@ $userConcept
   ]
 }
 \`\`\`
+
+## 格式约束
+- 分为三类：global（全局规则）、writing（写作规则）、setting（设定规则）
+- 每条规则包含 name 和 content
+- 全局规则 5-8 条，写作规则 3-5 条，设定规则 2-4 条
+- 规则内容要具体可执行，不要太笼统
+- 不要生成政治合规、审核相关的内容，这类规则由平台自动处理
+
+---
 
 ## 书籍信息
 书名：$bookTitle

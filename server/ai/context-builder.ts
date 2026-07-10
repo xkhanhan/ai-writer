@@ -461,6 +461,9 @@ async function buildTextProcessingContext(
     selectedText: input.selectedText || "（未提供选中文本）",
     targetWords: String(input.extraVariables?.targetWords ?? 2000),
     chapterContext,
+    // book_synopsis_expand specific
+    originalDescription: book.description || "",
+    sellingPoint: book.sellingPoint || "",
     ...input.extraVariables,
   };
 

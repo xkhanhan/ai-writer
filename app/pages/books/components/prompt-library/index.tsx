@@ -147,10 +147,21 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     setScope(bookMap.has(functionKey) ? "book" : "global");
   }, [bookMap]);
 
+  // Template split by "---": system-fixed (read-only) + user-editable
+  const [systemPart, userPart] = useMemo(() => {
+    if (!currentTemplate) return ["", ""];
+    const parts = currentTemplate.template.split("\n---\n");
+    if (parts.length === 2) return [parts[0].trim(), parts[1].trim()];
+    return ["", currentTemplate.template];
+  }, [currentTemplate]);
+
+  const hasSeparator = systemPart.length > 0;
+
   // Sync edit template when scope or template changes
   useEffect(() => {
     if (currentTemplate) {
-      setEditTemplate(currentTemplate.template);
+      const parts = currentTemplate.template.split("\n---\n");
+      setEditTemplate(parts.length === 2 ? parts[1].trim() : currentTemplate.template);
       setDirty(false);
     }
   }, [currentTemplate]);
@@ -165,12 +176,15 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     });
   };
 
-  // Save template
+  // Save: rejoin system + user parts
   const handleSave = async () => {
     if (!currentTemplate || !dirty) return;
     setSaving(true);
+    const fullTemplate = hasSeparator
+      ? `${systemPart}\n---\n\n${editTemplate}`
+      : editTemplate;
     const res = await updateTemplate(currentTemplate.id, {
-      template: editTemplate,
+      template: fullTemplate,
     });
     setSaving(false);
     if (res.ok) {
@@ -442,7 +456,14 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
 
                 {/* Template content */}
                 <div className={styles.editorSection}>
-                  <div className={styles.sectionTitle}>模板内容</div>
+                  {hasSeparator && (
+                    <>
+                      <div className={styles.sectionTitle}>系统指令（只读）</div>
+                      <pre className={styles.systemPart}>{systemPart}</pre>
+                      <div className={styles.separatorHint}>— 以下内容可编辑 —</div>
+                    </>
+                  )}
+                  <div className={styles.sectionTitle}>{hasSeparator ? "自定义指令" : "模板内容"}</div>
                   <textarea
                     ref={textareaRef}
                     className={styles.templateTextarea}
