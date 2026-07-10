@@ -7,6 +7,7 @@ import { CheckCircleOutlined } from "@ant-design/icons";
 import { SaveButton } from "@/shared/ui/save-button";
 import { AiDropdown } from "@/shared/ui/ai-dropdown";
 import { AiResultPanel, type AiFunctionKey } from "../ai-result-panel";
+import { ReviewResultPanel, type ReviewConfirmData } from "@/app/pages/books/components/review-result-panel";
 import type { CreationZoneState } from "@/app/pages/books/hooks/use-creation-zone";
 
 const { TextArea } = Input;
@@ -28,6 +29,9 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
   const [aiPanelVisible, setAiPanelVisible] = useState(false);
   const [aiFunctionKey, setAiFunctionKey] = useState<AiFunctionKey>("content_generate");
   const [aiSelectedText, setAiSelectedText] = useState<string | undefined>(undefined);
+
+  // Review result panel state
+  const [reviewPanelVisible, setReviewPanelVisible] = useState(false);
 
   const wordCount = useMemo(() => content.replace(/\s/g, "").length, [content]);
 
@@ -97,6 +101,12 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
     setAiPanelVisible(false);
   }, [aiFunctionKey, content]);
 
+  const handleReviewConfirm = useCallback((confirmData: ReviewConfirmData) => {
+    // Log adopted data for now; future: write to fact/foreshadow/character stores
+    console.log("Review adopted data:", confirmData);
+    setReviewPanelVisible(false);
+  }, []);
+
   if (!chapter) return <div style={{ padding: 24 }}>未找到章节</div>;
 
   const aiItems = [
@@ -116,6 +126,9 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <AiDropdown items={aiItems} />
+          <Button size="small" onClick={() => setReviewPanelVisible(true)}>
+            AI过审
+          </Button>
           <SaveButton loading={saving} onClick={() => handleSave()} />
           <Button type="primary" icon={<CheckCircleOutlined />} loading={saving} onClick={handleApprove}>过审</Button>
         </div>
@@ -145,6 +158,14 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
         selectedText={aiSelectedText}
         onAdopt={handleAiAdopt}
         onCancel={() => setAiPanelVisible(false)}
+      />
+
+      <ReviewResultPanel
+        visible={reviewPanelVisible}
+        bookId={bookId}
+        chapterId={chapterId}
+        onConfirm={handleReviewConfirm}
+        onCancel={() => setReviewPanelVisible(false)}
       />
 
       <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 24px", borderTop: "1px solid var(--line)", fontSize: 12, color: "var(--ink-tertiary)" }}>
