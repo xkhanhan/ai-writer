@@ -56,6 +56,11 @@
   flex-shrink: 0;
 }
 
+.bookSelector {
+  min-width: 150px;
+  max-width: 200px;
+}
+
 /* ===== Preview Content ===== */
 .previewContent {
   flex: 1;
