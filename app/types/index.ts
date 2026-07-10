@@ -53,6 +53,9 @@ export type {
   // AI 提示词模板
   PromptTemplate,
   PromptVariable,
+  PromptVariableUsage,
+  PROMPT_VARIABLES,
+  validateTemplateVariables,
   UpdatePromptTemplateDTO,
 } from "@/shared/types";
 

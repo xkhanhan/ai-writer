@@ -82,19 +82,19 @@ export async function getPromptTemplatesByBook(
     const rows = db
       .prepare(
         `SELECT * FROM prompt_templates
-         WHERE (book_id = ? OR book_id IS NULL) AND function_key = ?
+         WHERE book_id IS NULL AND function_key = ?
          ORDER BY created_at DESC`,
       )
-      .all(bookId, functionKey) as PromptTemplateRow[];
+      .all(functionKey) as PromptTemplateRow[];
     return rows.map(mapRow);
   }
   const rows = db
     .prepare(
       `SELECT * FROM prompt_templates
-       WHERE book_id = ? OR book_id IS NULL
+       WHERE book_id IS NULL
        ORDER BY created_at DESC`,
     )
-    .all(bookId) as PromptTemplateRow[];
+    .all() as PromptTemplateRow[];
   return rows.map(mapRow);
 }
 
@@ -173,58 +173,6 @@ export async function deletePromptTemplate(id: string): Promise<boolean> {
   return result.changes > 0;
 }
 
-export async function copyGlobalToBook(
-  bookId: string,
-  functionKey: string,
-): Promise<PromptTemplate> {
-  const db = await getDb();
-
-  const globalRow = db
-    .prepare(
-      `SELECT * FROM prompt_templates
-       WHERE book_id IS NULL AND function_key = ? AND is_default = 1
-       LIMIT 1`,
-    )
-    .get(functionKey) as PromptTemplateRow | undefined;
-
-  if (!globalRow) {
-    throw new Error(`No global default template found for functionKey "${functionKey}".`);
-  }
-
-  const existingBookRow = db
-    .prepare(
-      `SELECT id FROM prompt_templates
-       WHERE book_id = ? AND function_key = ? AND book_id IS NOT NULL
-       LIMIT 1`,
-    )
-    .get(bookId, functionKey) as PromptTemplateRow | undefined;
-
-  if (existingBookRow) {
-    throw new Error(
-      `Book-level template already exists for book "${bookId}" and functionKey "${functionKey}".`,
-    );
-  }
-
-  const newId = randomUUID();
-  db.prepare(
-    `INSERT INTO prompt_templates (id, book_id, function_key, display_name, description, template, variables, is_default, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1)`,
-  ).run(
-    newId,
-    bookId,
-    globalRow.function_key,
-    globalRow.display_name,
-    globalRow.description,
-    globalRow.template,
-    globalRow.variables,
-  );
-
-  const newRow = db
-    .prepare(`SELECT * FROM prompt_templates WHERE id = ?`)
-    .get(newId) as PromptTemplateRow;
-  return mapRow(newRow);
-}
-
 export async function copyAsCustom(
   bookId: string | null,
   sourceTemplateId: string,
@@ -257,35 +205,6 @@ export async function copyAsCustom(
     .prepare(`SELECT * FROM prompt_templates WHERE id = ?`)
     .get(newId) as PromptTemplateRow;
   return mapRow(newRow);
-}
-
-export async function deleteBookOverride(
-  bookId: string,
-  functionKey: string,
-): Promise<boolean> {
-  const db = await getDb();
-  const result = db
-    .prepare(
-      `DELETE FROM prompt_templates
-       WHERE book_id = ? AND function_key = ? AND book_id IS NOT NULL`,
-    )
-    .run(bookId, functionKey);
-  return result.changes > 0;
-}
-
-export async function getTemplateScope(
-  bookId: string,
-  functionKey: string,
-): Promise<"global" | "book"> {
-  const db = await getDb();
-  const row = db
-    .prepare(
-      `SELECT 1 FROM prompt_templates
-       WHERE book_id = ? AND function_key = ? AND is_active = 1 AND book_id IS NOT NULL
-       LIMIT 1`,
-    )
-    .get(bookId, functionKey) as unknown;
-  return row ? "book" : "global";
 }
 
 export async function getAllFunctionKeys(): Promise<

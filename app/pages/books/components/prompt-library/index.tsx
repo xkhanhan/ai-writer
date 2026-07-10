@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Button, Tag, Tooltip, Select } from "antd";
+import { Button, Tag, Tooltip } from "antd";
 import {
   EditOutlined,
   ThunderboltOutlined,
   GlobalOutlined,
-  BookOutlined,
   CopyOutlined,
   DeleteOutlined,
   CheckOutlined,
@@ -323,12 +322,8 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
                                       {c.isActive && (
                                         <span className={styles.badgeActive}>激活</span>
                                       )}
-                                      <Tooltip title={c.bookId ? "本书定制" : "自定义全局"}>
-                                        {c.bookId ? (
-                                          <BookOutlined style={{ fontSize: 11, color: "var(--color-primary)" }} />
-                                        ) : (
-                                          <EditOutlined style={{ fontSize: 11, color: "var(--color-primary)" }} />
-                                        )}
+                                      <Tooltip title="自定义全局">
+                                        <EditOutlined style={{ fontSize: 11, color: "var(--color-primary)" }} />
                                       </Tooltip>
                                     </span>
                                   </div>
@@ -356,10 +351,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
               selectedTemplate ? (
                 <span className={styles.headerBadges}>
                   <Tag
-                    icon={isSystemDefault ? <GlobalOutlined /> : selectedTemplate?.bookId ? <BookOutlined /> : <EditOutlined />}
+                    icon={isSystemDefault ? <GlobalOutlined /> : <EditOutlined />}
                     color={isSystemDefault ? "default" : "blue"}
                   >
-                    {isSystemDefault ? "系统默认" : selectedTemplate?.bookId ? "本书定制" : "自定义全局"}
+                    {isSystemDefault ? "系统默认" : "自定义全局"}
                   </Tag>
                   {isActive && <span className={styles.badgeActive}>激活</span>}
                 </span>
