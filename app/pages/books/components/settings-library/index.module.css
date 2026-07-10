@@ -137,7 +137,7 @@
 .infoGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-3) var(--space-6);
+  gap: var(--space-4) var(--space-6);
 }
 
 .infoItem {
@@ -148,14 +148,14 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--text-tertiary);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: var(--space-1);
   font-family: var(--font-body);
 }
 
 .infoValue {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
   color: var(--text);
 }
@@ -168,8 +168,8 @@
 
 /* Detail section (tags, category-specific, status) */
 .detailSection {
-  padding-bottom: var(--space-4);
-  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-5);
+  margin-bottom: var(--space-5);
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -182,14 +182,14 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--text-tertiary);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: var(--space-2);
   font-family: var(--font-body);
 }
 
 .detailSectionContent {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
   color: var(--text);
 }
