@@ -59,7 +59,7 @@
 
 | ID | Type | 标题 | 描述 | 涉及文件 | 如何修复 | 如何验证 | Status | Owner | Depends |
 |----|------|------|------|----------|----------|----------|--------|-------|---------|
-| F-001 | 需求 | 伏笔库后端持久化 | 当前 foreshadow-library 纯客户端状态，刷新即丢失。需要新建 DB 表 + API + Store | `server/storage/foreshadow-store.ts`(新建), `app/api/books/[id]/foreshadows/`(新建), `app/pages/books/components/foreshadow-library/` | 1. 新建 `foreshadows` 表(id, book_id, content, chapter_id, status, created_at, updated_at) 2. 创建 foreshadow-store.ts (CRUD) 3. 创建 API routes 4. 前端对接 API 替换客户端状态 | tsc 通过; 手动测试：创建伏笔→刷新页面→数据仍在; 通过 API 直接验证 CRUD | pending | none | — |
+| F-001 | 需求 | 伏笔库后端持久化 | 当前 foreshadow-library 纯客户端状态，刷新即丢失。需要新建 DB 表 + API + Store | `server/storage/foreshadow-store.ts`(新建), `app/api/books/[id]/foreshadows/`(新建), `app/pages/books/components/foreshadow-library/` | 1. 新建 `foreshadows` 表(id, book_id, content, chapter_id, status, created_at, updated_at) 2. 创建 foreshadow-store.ts (CRUD) 3. 创建 API routes 4. 前端对接 API 替换客户端状态 | tsc 通过; 手动测试：创建伏笔→刷新页面→数据仍在; 通过 API 直接验证 CRUD | done | claude-dev | — |
 | F-002 | 需求 | 过审落库 — 事实/伏笔/角色确认后写入 | review-result-panel 确认后只做了 UI 状态变更，未真正写入数据库 | `app/pages/books/components/review-result-panel/index.tsx`, `app/pages/books/components/creation-zone/components/content-editor/index.tsx`, `app/api/ai/review/route.ts`, `app/pages/books/components/fact-library/` | 1. content-editor 的 handleReviewConfirm 调用事实库/伏笔库 API 批量写入 2. review-result-panel 确认后触发对应 store 的 create 操作 3. 需要 F-001 完成后伏笔才能落库 | tsc 通过; 手动测试：过审→确认事实→事实库新增条目; 确认伏笔→伏笔库新增条目 | pending | none | F-001 |
 
 ---
@@ -116,6 +116,7 @@
 | ID | 原始任务 | 对应 Commit | 完成时间 |
 |----|---------|------------|---------|
 | ~~G-001~~ | API 响应格式统一 | `88a888e1` | 2026-07-10 |
+| ~~F-001~~ | 伏笔库后端持久化 | `6d3cb32d` | 2026-07-10 |
 | ~~G-002~~ | 验证逻辑下沉到 store | `88a888e1` | 2026-07-10 |
 | ~~G-004~~ | CSS 硬编码清理 | `88a888e1` + `068ca4f8` | 2026-07-10 |
 | ~~A-001~~ | /api/ai/chat 扩展上下文参数 | `3a4844df` | — |
