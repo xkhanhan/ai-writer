@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Button, Input, Breadcrumb } from "antd";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Button, Input, Breadcrumb, Spin } from "antd";
 import { PushpinOutlined, DeleteOutlined } from "@ant-design/icons";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
@@ -32,6 +32,7 @@ const filterOptions: { key: FilterType; label: string }[] = [
 
 export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
   const [items, setItems] = useState<Foreshadow[]>([]);
+  const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
   const [view, setView] = useState<ViewState>({ type: "list" });
@@ -41,6 +42,27 @@ export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
   const [formDescription, setFormDescription] = useState("");
   const [formStatus, setFormStatus] = useState<ForeshadowStatus>("hidden");
   const [formChapterNumber, setFormChapterNumber] = useState<string>("");
+
+  const fetchForeshadows = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/books/${book.id}/foreshadows`);
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data.foreshadows);
+      }
+    } catch (error) {
+      console.error("获取伏笔列表失败:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [book.id]);
+
+  useEffect(() => {
+    void (async () => {
+      await fetchForeshadows();
+    })();
+  }, [fetchForeshadows]);
 
   const resetForm = () => {
     setFormName("");
@@ -88,7 +110,7 @@ export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
     setView({ type: "edit", item });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formName.trim()) return;
     const chapterNum = formChapterNumber
       ? parseInt(formChapterNumber, 10)
@@ -97,30 +119,45 @@ export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
     const resolvedChapter =
       chapterNum != null && !isNaN(chapterNum) ? chapterNum : undefined;
 
-    if (view.type === "create") {
-      const newItem: Foreshadow = {
-        id: `fs_${Date.now()}`,
-        bookId: book.id,
-        name: formName.trim(),
-        description: formDescription,
-        status: formStatus,
-        chapterNumber: resolvedChapter,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setItems((prev) => [...prev, newItem]);
-    } else if (view.type === "edit") {
-      const updated: Foreshadow = {
-        ...view.item,
-        name: formName.trim(),
-        description: formDescription,
-        status: formStatus,
-        chapterNumber: resolvedChapter,
-        updatedAt: new Date().toISOString(),
-      };
-      setItems((prev) =>
-        prev.map((f) => (f.id === view.item.id ? updated : f))
-      );
+    try {
+      if (view.type === "create") {
+        const res = await fetch(`/api/books/${book.id}/foreshadows`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formName.trim(),
+            description: formDescription,
+            status: formStatus,
+            chapterNumber: resolvedChapter,
+          }),
+        });
+        if (res.ok) {
+          const { foreshadow } = await res.json();
+          setItems((prev) => [...prev, foreshadow]);
+        }
+      } else if (view.type === "edit") {
+        const res = await fetch(
+          `/api/books/${book.id}/foreshadows/${view.item.id}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: formName.trim(),
+              description: formDescription,
+              status: formStatus,
+              chapterNumber: resolvedChapter,
+            }),
+          }
+        );
+        if (res.ok) {
+          const { foreshadow } = await res.json();
+          setItems((prev) =>
+            prev.map((f) => (f.id === view.item.id ? foreshadow : f))
+          );
+        }
+      }
+    } catch (error) {
+      console.error("保存伏笔失败:", error);
     }
 
     resetForm();
@@ -128,10 +165,20 @@ export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
   };
 
   const handleDelete = (item: Foreshadow) => {
-    confirmDelete(item.name, () => {
-      setItems((prev) => prev.filter((f) => f.id !== item.id));
-      if (view.type === "edit" && view.item.id === item.id) {
-        setView({ type: "list" });
+    confirmDelete(item.name, async () => {
+      try {
+        const res = await fetch(
+          `/api/books/${book.id}/foreshadows/${item.id}`,
+          { method: "DELETE" }
+        );
+        if (res.ok) {
+          setItems((prev) => prev.filter((f) => f.id !== item.id));
+          if (view.type === "edit" && view.item.id === item.id) {
+            setView({ type: "list" });
+          }
+        }
+      } catch (error) {
+        console.error("删除伏笔失败:", error);
       }
     });
   };
@@ -316,7 +363,11 @@ export default function ForeshadowLibrary({ book }: ForeshadowLibraryProps) {
 
       {/* 伏笔列表 */}
       <div className={styles.itemList}>
-        {filteredItems.length === 0 ? (
+        {loading ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+            <Spin />
+          </div>
+        ) : filteredItems.length === 0 ? (
           <EmptyState
             icon={<PushpinOutlined />}
             title="还没有伏笔"

@@ -391,6 +391,25 @@ function initializeTables(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_prompt_func ON prompt_templates(book_id, function_key);
     CREATE INDEX IF NOT EXISTS idx_prompt_func_key ON prompt_templates(function_key);
   `);
+
+  // 伏笔库
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS foreshadows (
+      id              TEXT PRIMARY KEY,
+      book_id         TEXT NOT NULL,
+      name            TEXT NOT NULL,
+      description     TEXT DEFAULT '',
+      status          TEXT NOT NULL DEFAULT 'hidden',
+      chapter_id      TEXT DEFAULT '',
+      chapter_number  INTEGER,
+      volume_id       TEXT DEFAULT '',
+      created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_foreshadows_book_id ON foreshadows(book_id);
+    CREATE INDEX IF NOT EXISTS idx_foreshadows_status ON foreshadows(book_id, status);
+  `);
 }
 
 

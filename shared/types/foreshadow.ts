@@ -14,3 +14,21 @@ export interface Foreshadow {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CreateForeshadowDTO {
+  name: string;
+  description?: string;
+  status?: ForeshadowStatus;
+  chapterId?: string;
+  chapterNumber?: number;
+  volumeId?: string;
+}
+
+export interface UpdateForeshadowDTO {
+  name?: string;
+  description?: string;
+  status?: ForeshadowStatus;
+  chapterId?: string;
+  chapterNumber?: number;
+  volumeId?: string;
+}

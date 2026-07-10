@@ -28,6 +28,8 @@ export type {
   // 伏笔
   ForeshadowStatus,
   Foreshadow,
+  CreateForeshadowDTO,
+  UpdateForeshadowDTO,
   // 事实一致性库
   StoryFact,
   CreateStoryFactDTO,
