@@ -44,10 +44,55 @@ const FORM_INITIAL: Omit<StoredConfig, "id" | "status" | "updatedAt"> = {
 };
 
 /**
- * Custom component that bridges Form.Item with Slider + InputNumber.
+ * Custom component that bridges Form.Item with Select + Button.
  * Form.Item injects value/onChange into the direct child component,
- * so we need a wrapper that forwards these to both controls.
+ * so we need a wrapper that forwards these to the Select.
  */
+function ModelSelectInput({
+  value,
+  onChange,
+  options,
+  loading,
+  onFetch,
+  fetchDisabled,
+}: {
+  value?: string;
+  onChange?: (val: string) => void;
+  options: Array<{ value: string; label: string }>;
+  loading?: boolean;
+  onFetch?: () => void;
+  fetchDisabled?: boolean;
+}) {
+  return (
+    <div className={styles.modelRow}>
+      <Select
+        showSearch
+        placeholder="选择模型"
+        className={styles.modelRowSelect}
+        value={value}
+        onChange={onChange}
+        options={options}
+        filterOption={(input, option) =>
+          (option?.label as string)
+            ?.toLowerCase()
+            .includes(input.toLowerCase())
+        }
+      />
+      <Tooltip title={fetchDisabled ? "请先填写 API Key 和 Base URL" : ""}>
+        <Button
+          icon={<CloudDownloadOutlined />}
+          className={styles.fetchModelButton}
+          onClick={onFetch}
+          loading={loading}
+          disabled={loading}
+        >
+          拉取模型
+        </Button>
+      </Tooltip>
+    </div>
+  );
+}
+
 function TemperatureInput({
   value,
   onChange,
@@ -296,44 +341,25 @@ export default function ConfigModal({
         </Form.Item>
 
         <Form.Item name="model" label="模型" required>
-          <div className={styles.modelRow}>
-            <Select
-              showSearch
-              placeholder="选择模型"
-              className={styles.modelRowSelect}
-              options={
-                fetchedModels
-                  ? fetchedModels.map((m) => ({ value: m, label: m }))
-                  : providerInfo
-                    ? (() => {
-                        const models = providerInfo.models.map((m) => ({ value: m, label: m }));
-                        // Ensure the current model is in the options (for edit mode)
-                        const currentModel = editingConfig?.model;
-                        if (currentModel && !models.some((m) => m.value === currentModel)) {
-                          models.unshift({ value: currentModel, label: currentModel });
-                        }
-                        return models;
-                      })()
-                    : []
-              }
-              filterOption={(input, option) =>
-                (option?.label as string)
-                  ?.toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-            />
-            <Tooltip title={!watchedApiKey || !watchedBaseUrl ? "请先填写 API Key 和 Base URL" : ""}>
-              <Button
-                icon={<CloudDownloadOutlined />}
-                className={styles.fetchModelButton}
-                onClick={() => void handleFetchModels()}
-                loading={fetchingModels}
-                disabled={fetchingModels}
-              >
-                拉取模型
-              </Button>
-            </Tooltip>
-          </div>
+          <ModelSelectInput
+            options={
+              fetchedModels
+                ? fetchedModels.map((m) => ({ value: m, label: m }))
+                : providerInfo
+                  ? (() => {
+                      const models = providerInfo.models.map((m) => ({ value: m, label: m }));
+                      const currentModel = editingConfig?.model;
+                      if (currentModel && !models.some((m) => m.value === currentModel)) {
+                        models.unshift({ value: currentModel, label: currentModel });
+                      }
+                      return models;
+                    })()
+                  : []
+            }
+            loading={fetchingModels}
+            onFetch={() => void handleFetchModels()}
+            fetchDisabled={!watchedApiKey || !watchedBaseUrl}
+          />
         </Form.Item>
 
         <Form.Item name="contextSize" label="上下文大小 (tokens)">

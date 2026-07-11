@@ -130,14 +130,17 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   // ===== Template split: user-editable part + system blocks (after ---) =====
   const { userContent, systemBlocks } = useMemo(() => {
     if (!selectedTemplate) return { userContent: "", systemBlocks: "" };
-    const sepIdx = selectedTemplate.template.indexOf("\n---\n");
-    if (sepIdx === -1) {
-      return { userContent: selectedTemplate.template, systemBlocks: "" };
+    const tpl = selectedTemplate.template;
+    // Match --- on its own line (with optional surrounding blank lines)
+    const sepMatch = tpl.match(/\n---\n/);
+    if (sepMatch && sepMatch.index !== undefined) {
+      return {
+        userContent: tpl.slice(0, sepMatch.index).trim(),
+        systemBlocks: tpl.slice(sepMatch.index),
+      };
     }
-    return {
-      userContent: selectedTemplate.template.slice(0, sepIdx).trim(),
-      systemBlocks: selectedTemplate.template.slice(sepIdx),
-    };
+    // No separator found — entire template is user content (no system blocks)
+    return { userContent: tpl, systemBlocks: "" };
   }, [selectedTemplate]);
 
   const isSystemDefault =
