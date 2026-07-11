@@ -337,4 +337,40 @@ async function ensureDefaultTemplates(): Promise<void> {
     }
   });
   tx();
+
+  // B-036: Migrate old $variable format to ${variable} in custom templates
+  migrateVariableSyntax(db);
+}
+
+/**
+ * Fix old custom templates that use $varName instead of ${varName}.
+ * Matches $word that is NOT preceded by { (i.e. not already ${...}).
+ */
+function migrateVariableSyntax(db: Awaited<ReturnType<typeof getDb>>): void {
+  const rows = db
+    .prepare(
+      `SELECT id, template FROM prompt_templates WHERE is_default = 0`,
+    )
+    .all() as Array<{ id: string; template: string }>;
+
+  const stmt = db.prepare(
+    `UPDATE prompt_templates SET template = ?, updated_at = datetime('now') WHERE id = ?`,
+  );
+
+  // Match $varName but NOT ${varName} — negative lookbehind for {
+  const oldVarRegex = /(?<!\$)\$(\w+)/g;
+
+  let migrated = 0;
+  for (const row of rows) {
+    const fixed = row.template.replace(oldVarRegex, (_match, name: string) => {
+      return `\${${name}}`;
+    });
+    if (fixed !== row.template) {
+      stmt.run(fixed, row.id);
+      migrated++;
+    }
+  }
+  if (migrated > 0) {
+    console.log(`[prompt-template-store] 迁移 ${migrated} 个模板的变量格式 $variable → \${variable}`);
+  }
 }

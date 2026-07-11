@@ -67,6 +67,11 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   // Mobile list panel toggle
   const [listOpen, setListOpen] = useState(false);
 
+  // Unsaved changes modal
+  const [unsavedModalOpen, setUnsavedModalOpen] = useState(false);
+  const [pendingSwitchId, setPendingSwitchId] = useState<string | null>(null);
+  const [pendingSwitchFn, setPendingSwitchFn] = useState<(() => void) | null>(null);
+
   // Book selector (for preview)
   const [allBooks, setAllBooks] = useState<Book[]>([]);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
@@ -287,20 +292,9 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
       };
 
       if (dirty) {
-        Modal.confirm({
-          title: "未保存的修改",
-          content: "当前模板有未保存的修改，是否先保存？",
-          okText: "保存并切换",
-          cancelText: "不保存",
-          onOk: async () => {
-            const saved = await handleSave();
-            doSwitch();
-            if (saved) showSuccess("已保存并切换");
-          },
-          onCancel: () => {
-            doSwitch();
-          },
-        });
+        setPendingSwitchId(templateId);
+        setPendingSwitchFn(() => doSwitch);
+        setUnsavedModalOpen(true);
       } else {
         doSwitch();
       }
@@ -368,6 +362,29 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     },
     [],
   );
+
+  // ===== Unsaved modal handlers =====
+  const handleUnsavedSave = useCallback(async () => {
+    const saved = await handleSave();
+    if (saved) showSuccess("已保存并切换");
+    pendingSwitchFn?.();
+    setUnsavedModalOpen(false);
+    setPendingSwitchId(null);
+    setPendingSwitchFn(null);
+  }, [handleSave, pendingSwitchFn]);
+
+  const handleUnsavedDiscard = useCallback(() => {
+    pendingSwitchFn?.();
+    setUnsavedModalOpen(false);
+    setPendingSwitchId(null);
+    setPendingSwitchFn(null);
+  }, [pendingSwitchFn]);
+
+  const handleUnsavedCancel = useCallback(() => {
+    setUnsavedModalOpen(false);
+    setPendingSwitchId(null);
+    setPendingSwitchFn(null);
+  }, []);
 
   // ===== Render =====
   return (
@@ -562,6 +579,23 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
           </div>
         </div>
       </div>
+
+      {/* Unsaved changes modal (3 buttons per PRD §3.13) */}
+      <Modal
+        open={unsavedModalOpen}
+        title="未保存的修改"
+        onCancel={handleUnsavedCancel}
+        footer={
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <Button onClick={handleUnsavedCancel}>取消</Button>
+            <Button onClick={() => void handleUnsavedDiscard()}>不保存切换</Button>
+            <Button type="primary" loading={saving} onClick={() => void handleUnsavedSave()}>保存并切换</Button>
+          </div>
+        }
+        destroyOnClose
+      >
+        当前模板有未保存的修改，是否先保存？
+      </Modal>
     </div>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useMemo, useCallback } from "react";
-import { Button } from "antd";
-import { showSuccess } from "@/app/utils/error-handler";
+import React, { useMemo } from "react";
 import { PROMPT_VARIABLES } from "@/shared/types";
 import type { PromptTemplate, Book } from "@/app/types";
 import styles from "./prompt-preview.module.css";
@@ -57,7 +55,9 @@ function substituteVariables(
   variableMap: Record<string, string>,
 ): string {
   return template.replace(/\$\{(\w+)\}/g, (_match, varName: string) => {
-    return varName in variableMap ? variableMap[varName] : `[${varName}]`;
+    if (varName in variableMap) return variableMap[varName];
+    // Non-standard variables: keep original format
+    return `\${${varName}}`;
   });
 }
 
@@ -101,29 +101,8 @@ const PromptPreview = React.memo(function PromptPreview({
     return substituteVariables(fullTemplate, variableMap);
   }, [template, editContent, hasSeparator, systemPart, variableMap]);
 
-  const handleCopyResolved = useCallback(() => {
-    void navigator.clipboard?.writeText(resolvedPreview);
-    showSuccess("已复制预览内容");
-  }, [resolvedPreview]);
-
   return (
     <div className={styles.previewPanel}>
-      {/* ===== Toolbar ===== */}
-      <div className={styles.toolbar}>
-        <div className={styles.toolbarLeft}>
-          <span className={styles.previewLabel}>预览</span>
-        </div>
-        <div className={styles.toolbarRight}>
-          <Button
-            size="small"
-            onClick={handleCopyResolved}
-            disabled={!template || !book}
-          >
-            复制预览
-          </Button>
-        </div>
-      </div>
-
       {/* ===== Preview Content ===== */}
       <div className={styles.previewContent}>
         {!template ? (

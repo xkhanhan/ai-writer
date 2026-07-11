@@ -106,19 +106,15 @@ const PromptList = React.memo(function PromptList({
 }: PromptListProps) {
   return (
     <div className={styles.listPanel}>
-      <div className={styles.listHeader}>
-        <div className={styles.listHeaderTitle}>AI 功能</div>
-        <div className={styles.listHeaderSub}>选择功能编辑提示词</div>
-        {onClose && (
-          <button
-            className={styles.closeBtn}
-            onClick={onClose}
-            aria-label="关闭列表"
-          >
-            &times;
-          </button>
-        )}
-      </div>
+      {onClose && (
+        <button
+          className={styles.closeBtn}
+          onClick={onClose}
+          aria-label="关闭列表"
+        >
+          &times;
+        </button>
+      )}
       {loading ? (
         <div className={styles.emptyState}>加载中...</div>
       ) : (

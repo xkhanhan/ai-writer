@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Input, InputNumber, Select, Slider, Tooltip, message } from "antd";
-import { CloudDownloadOutlined } from "@ant-design/icons";
+import { CloudDownloadOutlined, ApiOutlined } from "@ant-design/icons";
 import { AI_PROVIDERS } from "@/shared/ai/providers";
 import type { StoredConfig } from "../hooks/use-config-list";
 import BaseModal from "@/shared/ui/base-modal";
@@ -116,6 +116,31 @@ export default function ConfigModal({
     }
   }, [form]);
 
+  const handleTestConnection = useCallback(async () => {
+    const key = form.getFieldValue("apiKey") as string | undefined;
+    const url = form.getFieldValue("baseUrl") as string | undefined;
+    if (!key || !url) {
+      message.warning("请先填写 API Key 和 Base URL");
+      return;
+    }
+    setTesting(true);
+    try {
+      const testUrl = `${url.replace(/\/+$/, "")}/models`;
+      const res = await fetch(testUrl, {
+        headers: { Authorization: `Bearer ${key}` },
+      });
+      if (res.ok) {
+        message.success("连接测试成功");
+      } else {
+        message.error(`连接测试失败 (HTTP ${res.status})`);
+      }
+    } catch {
+      message.error("连接测试失败，请检查网络和配置");
+    } finally {
+      setTesting(false);
+    }
+  }, [form]);
+
   const handleOk = useCallback(async () => {
     const values = await form.validateFields();
     const info = PROVIDER_MAP.get(values.provider);
@@ -150,13 +175,28 @@ export default function ConfigModal({
   return (
     <BaseModal
       open={open}
-      title={editingConfig ? "编辑配置" : "新建配置"}
+      title={editingConfig ? "编辑 AI 配置" : "新建 AI 配置"}
       onCancel={onClose}
       onOk={handleOk}
-      okText={editingConfig ? "保存" : "创建"}
+      okText={editingConfig ? "保存" : "创建并保存"}
       confirmLoading={testing}
       width={560}
       destroyOnClose
+      footer={
+        <div className={styles.modalFooter}>
+          <Button onClick={onClose}>取消</Button>
+          <Button
+            icon={<ApiOutlined />}
+            loading={testing}
+            onClick={() => void handleTestConnection()}
+          >
+            测试连接
+          </Button>
+          <Button type="primary" loading={testing} onClick={() => void handleOk()}>
+            {editingConfig ? "保存" : "创建并保存"}
+          </Button>
+        </div>
+      }
     >
       <Form
         form={form}
@@ -188,8 +228,15 @@ export default function ConfigModal({
           />
         </Form.Item>
 
-        <Form.Item name="apiFormat" label="API 格式" hidden>
-          <Input />
+        <Form.Item name="apiFormat" label="API 格式" required>
+          <Select
+            options={[
+              { value: "openai", label: "OpenAI Compatible" },
+              { value: "anthropic", label: "Anthropic" },
+              { value: "custom", label: "自定义" },
+            ]}
+            disabled
+          />
         </Form.Item>
         <Form.Item name="providerName" label="厂商名称" hidden>
           <Input />
@@ -257,16 +304,20 @@ export default function ConfigModal({
         </Form.Item>
 
         <Form.Item name="temperature" label="温度">
-          <Slider
-            min={0}
-            max={providerInfo?.temperatureRange[1] ?? 2}
-            step={0.1}
-            marks={{
-              0: "0",
-              [providerInfo?.temperatureRange[1] ?? 2]:
-                String(providerInfo?.temperatureRange[1] ?? 2),
-            }}
-          />
+          <div className={styles.modelRow}>
+            <Slider
+              min={0}
+              max={providerInfo?.temperatureRange[1] ?? 2}
+              step={0.1}
+              className={styles.modelRowSelect}
+            />
+            <InputNumber
+              min={0}
+              max={providerInfo?.temperatureRange[1] ?? 2}
+              step={0.1}
+              style={{ width: 72 }}
+            />
+          </div>
         </Form.Item>
       </Form>
     </BaseModal>
