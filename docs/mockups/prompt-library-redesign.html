@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>提示词库三栏布局 — 视觉稿 v3</title>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@5/dist/index.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary:#2F5D50;--color-primary-hover:#1e4438;
+    --color-primary-bg:rgba(47,93,80,0.05);--color-primary-bg-hover:rgba(47,93,80,0.10);--color-primary-border:rgba(47,93,80,0.20);
+    --color-success:#2E8B57;--color-success-bg:rgba(46,139,87,0.1);--color-warning:#964400;--color-warning-bg:rgba(150,68,0,0.1);
+    --bg-page:#f0ece4;--bg-elevated:#faf8f4;--bg-muted:#f5f2ec;--bg-strong:#e8e4dc;
+    --text-primary:#1a1814;--text-secondary:#4a4640;--text-tertiary:#807b74;--text-light:#b5b0a8;
+    --border:#ddd8d0;--border-strong:#c0bbb3;--border-light:#ebe7e0;
+    --accent:var(--color-primary);--accent-soft:var(--color-primary-bg);
+    --panel:var(--bg-elevated);--panel-soft:var(--bg-muted);--panel-strong:var(--bg-strong);
+    --text:var(--text-primary);--muted:var(--text-secondary);--ink-tertiary:var(--text-tertiary);--line:var(--border);
+    --shadow:0 1px 3px rgba(24,28,34,0.08);--shadow-md:0 4px 12px rgba(24,28,34,0.12);
+    --font-display:'Noto Serif SC',serif;--font-body:'Noto Sans SC',-apple-system,sans-serif;
+    --font-mono:'JetBrains Mono','Fira Code',Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--font-body);background:var(--bg-page);color:var(--text);font-size:14px;height:100vh;overflow:hidden;}
+  .ant-btn-primary{background:var(--color-primary)!important;border-color:var(--color-primary)!important;}
+  .ant-btn-primary:hover{background:var(--color-primary-hover)!important;border-color:var(--color-primary-hover)!important;}
+  .ant-select-selector{font-family:var(--font-body)!important;}
+
+  .page{display:flex;height:100vh;overflow:hidden;}
+  /* Activity Bar */
+  .ab{width:56px;min-width:56px;background:linear-gradient(180deg,#e8e4dc 0%,#e0dbd3 100%);border-right:1px solid var(--border-strong);display:flex;flex-direction:column;padding:16px 0;gap:6px;align-items:center;}
+  .abBtn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:var(--radius-md);cursor:pointer;color:var(--ink-tertiary);font-size:18px;transition:all 0.2s ease;position:relative;}
+  .abBtn:hover{background:rgba(47,93,80,0.08);color:var(--text-secondary);}
+  .abBtn.on{background:var(--panel);color:var(--accent);box-shadow:var(--shadow);border:1px solid var(--border-light);}
+  .abBtn.on::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0;}
+  .abBtn .tp{display:none;position:absolute;left:56px;top:50%;transform:translateY(-50%);background:var(--text);color:var(--panel);padding:5px 10px;border-radius:var(--radius-sm);font-size:12px;white-space:nowrap;z-index:100;box-shadow:var(--shadow-md);}
+  .abBtn:hover .tp{display:block;}
+  .abSp{flex:1;}
+  .abDv{width:20px;height:1px;background:var(--border-strong);margin:6px 0;}
+
+  /* Function List */
+  .fl{width:232px;min-width:232px;background:var(--panel);border-right:1px solid var(--border-light);display:flex;flex-direction:column;overflow:hidden;}
+  .flHd{padding:16px 18px 12px;border-bottom:1px solid var(--border-light);flex-shrink:0;}
+  .flHdTitle{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;}
+  .flHdSub{font-size:11px;color:var(--ink-tertiary);}
+  .flBd{flex:1;overflow-y:auto;padding:8px 0;}
+  .fg{margin-bottom:2px;}
+  .fgHd{display:flex;align-items:center;padding:7px 18px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink-tertiary);gap:6px;user-select:none;text-transform:uppercase;letter-spacing:0.8px;}
+  .fgHd:hover{color:var(--text-secondary);}
+  .fgArr{font-size:9px;transition:transform 0.15s;}
+  .fgArr.cl{transform:rotate(-90deg);}
+  .fgIt{padding:8px 18px 8px 30px;font-size:13px;color:var(--muted);cursor:pointer;border-radius:0;margin:0;display:flex;align-items:center;gap:8px;border-left:2px solid transparent;transition:all 0.12s;}
+  .fgIt:hover{background:rgba(47,93,80,0.04);color:var(--text-secondary);}
+  .fgIt.on{background:var(--accent-soft);color:var(--accent);font-weight:500;border-left-color:var(--accent);}
+  .fgDot{width:5px;height:5px;border-radius:50%;background:var(--border-strong);flex-shrink:0;}
+  .fgIt.on .fgDot{background:var(--accent);}
+  .tagDef{font-size:9px;color:var(--accent);background:var(--accent-soft);padding:1px 5px;border-radius:3px;margin-left:auto;flex-shrink:0;font-weight:600;letter-spacing:0.3px;}
+  .tagCus{font-size:9px;color:var(--color-warning);background:var(--color-warning-bg);padding:1px 5px;border-radius:3px;margin-left:auto;flex-shrink:0;font-weight:600;letter-spacing:0.3px;}
+
+  /* Content Area */
+  .ct{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--bg-page);}
+
+  /* Header Toolbar */
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;border-bottom:1px solid var(--border-light);background:var(--panel);flex-shrink:0;}
+  .hdrLeft{display:flex;align-items:center;gap:10px;}
+  .hdrTitle{font-family:var(--font-display);font-size:15px;font-weight:700;white-space:nowrap;}
+  .hdrSep{width:1px;height:18px;background:var(--border);flex-shrink:0;}
+  .hdrRight{display:flex;align-items:center;gap:8px;}
+
+  /* Variable Panel — collapsible, scrollable */
+  .vPanel{background:var(--bg-muted);border-bottom:1px solid var(--border-light);overflow:hidden;transition:max-height 0.2s ease;}
+  .vPanel.open{max-height:200px;overflow-y:auto;}
+  .vPanel.closed{max-height:0;}
+  .vPanelInner{padding:10px 18px;}
+  .vGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .vItem{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--panel);border:1px solid var(--border-light);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.12s;}
+  .vItem:hover{border-color:var(--accent);background:var(--accent-soft);}
+  .vItemName{font-family:var(--font-mono,'Courier New',monospace);font-size:11px;font-weight:600;color:var(--accent);white-space:nowrap;}
+  .vItemDesc{font-size:11px;color:var(--ink-tertiary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .vItemCopy{font-size:10px;color:var(--ink-tertiary);flex-shrink:0;opacity:0;transition:opacity 0.12s;}
+  .vItem:hover .vItemCopy{opacity:1;}
+  .vItem.ro{opacity:0.65;cursor:default;}
+  .vItem.ro .vItemName{color:var(--ink-tertiary);}
+
+  /* Editor-Preview Split — IDE-like content area */
+  .split{flex:1;display:flex;overflow:hidden;}
+  .pane{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--panel);}
+  .pane+.pane{border-left:1px solid var(--border-light);}
+  .paneBd{flex:1;overflow:hidden;padding:0;}
+  .editorArea{width:100%;height:100%;border:none;outline:none;resize:none;padding:20px;font-family:var(--font-mono,'Courier New',monospace);font-size:13px;line-height:1.75;color:var(--text);background:var(--panel);tab-size:2;white-space:pre;overflow:auto;}
+  .previewArea{width:100%;height:100%;overflow:auto;padding:20px;font-family:var(--font-mono,'Courier New',monospace);font-size:13px;line-height:1.75;color:var(--text);background:var(--panel);white-space:pre-wrap;word-break:break-word;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var C=React.createElement;
+var icons=window.icons;
+var SettingOutlined=icons.SettingOutlined,FileTextOutlined=icons.FileTextOutlined,ArrowLeftOutlined=icons.ArrowLeftOutlined;
+var SaveOutlined=icons.SaveOutlined,CopyOutlined=icons.CopyOutlined,RocketOutlined=icons.RocketOutlined;
+var CodeOutlined=icons.CodeOutlined,EyeOutlined=icons.EyeOutlined,TagOutlined=icons.TagOutlined;
+var CopyOutlined2=icons.CopyOutlined;
+var Select=antd.Select,Button=antd.Button;
+
+var GROUPS=[
+  {key:'info',label:'书籍信息',items:[{key:'book_info_suggest',label:'书籍简介扩写'}]},
+  {key:'world-rules',label:'世界规则',items:[{key:'world_rule_suggest',label:'规则建议'}]},
+  {key:'creation',label:'创作区',items:[
+    {key:'content_generate',label:'内容生成',tag:'default'},
+    {key:'review_extract',label:'过审提取'},
+    {key:'polish',label:'润色',tag:'custom'},
+    {key:'deslop',label:'去AI味'},
+    {key:'expand',label:'扩写'}
+  ]},
+  {key:'fact-library',label:'事实库',items:[{key:'fact_consistency',label:'事实一致性检查'}]},
+  {key:'settings',label:'设定库',items:[{key:'character_audit',label:'角色审计'}]},
+  {key:'archive',label:'正文库',items:[{key:'book_synopsis_expand',label:'简介扩写'}]}
+];
+
+var VARS=[
+  {name:'bookTitle',desc:'书籍名称'},
+  {name:'bookGenre',desc:'题材类型'},
+  {name:'bookSynopsis',desc:'书籍简介'},
+  {name:'bookCoreSellingPoint',desc:'核心卖点'},
+  {name:'bookCharacterCount',desc:'字符数量'},
+  {name:'userSupplement',desc:'用户补充'},
+  {name:'outputFormat',desc:'输出格式',ro:true}
+];
+
+var PREFIXES={
+  book_info_suggest:'请根据以下书籍信息，为作者提供专业的书籍简介建议。\n\n书籍名称：${bookTitle}\n题材类型：${bookGenre}\n书籍简介：${bookSynopsis}\n核心卖点：${bookCoreSellingPoint}\n字符数量：${bookCharacterCount}\n用户补充：${userSupplement}\n\n要求：\n1. 突出核心卖点\n2. 符合题材定位\n3. 控制在200字以内',
+  content_generate:'请为本书生成第${chapterNumber}章的内容。\n\n本书名称：${bookTitle}\n题材类型：${bookGenre}\n书籍简介：${bookSynopsis}\n核心卖点：${bookCoreSellingPoint}\n\n要求：\n1. 保持角色性格一致性\n2. 情节推进自然流畅\n3. 适当运用环境描写\n4. 字数约3000字\n5. 结尾留悬念',
+  polish:'请对以下文本进行润色。\n\n本书名称：${bookTitle}\n题材类型：${bookGenre}\n核心卖点：${bookCoreSellingPoint}\n\n要求：\n1. 保持原文风格\n2. 优化用词和句式\n3. 不改变情节走向',
+  deslop:'请将以下AI生成的文本改写为自然的人类写作风格。\n\n本书名称：${bookTitle}\n题材类型：${bookGenre}\n\n要求：\n1. 去除模板化表达\n2. 增加个人化语气\n3. 保持信息完整'
+};
+
+var PVIEWS={
+  book_info_suggest:'请根据以下书籍信息，为作者提供专业的书籍简介建议。\n\n书籍名称：夜行\n题材类型：都市悬疑\n书籍简介：一位失忆的出租车司机在深夜接到了一个奇怪的乘客...\n核心卖点：第一人称沉浸式悬疑体验\n字符数量：45万字\n用户补充：希望简介突出悬疑感和都市氛围\n\n要求：\n1. 突出核心卖点\n2. 符合题材定位\n3. 控制在200字以内',
+  content_generate:'请为本书生成第3章的内容。\n\n本书名称：夜行\n题材类型：都市悬疑\n书籍简介：一位失忆的出租车司机在深夜接到了一个奇怪的乘客...\n核心卖点：第一人称沉浸式悬疑体验\n\n要求：\n1. 保持角色性格一致性\n2. 情节推进自然流畅\n3. 适当运用环境描写\n4. 字数约3000字\n5. 结尾留悬念',
+  polish:'请对以下文本进行润色。\n\n本书名称：夜行\n题材类型：都市悬疑\n核心卖点：第一人称沉浸式悬疑体验\n\n要求：\n1. 保持原文风格\n2. 优化用词和句式\n3. 不改变情节走向'
+};
+
+function App(){
+  var s1=React.useState('prompt-lib');
+  var s2=React.useState('content_generate');
+  var s3=React.useState([]);
+  var s4=React.useState('nightWalk');
+  var s5=React.useState(true);
+  var active=s1[0],setActive=s1[1];
+  var selFn=s2[0],setSelFn=s2[1];
+  var collapsed=s3[0],setCollapsed=s3[1];
+  var bookId=s4[0],setBookId=s4[1];
+  var showVars=s5[0],setShowVars=s5[1];
+
+  var toggle=function(k){
+    setCollapsed(function(p){return p.indexOf(k)>=0?p.filter(function(x){return x!==k}):p.concat(k);});
+  };
+
+  var fnLabel='';
+  GROUPS.forEach(function(g){g.items.forEach(function(i){if(i.key===selFn)fnLabel=i.label;});});
+  var sysPfx=PREFIXES[selFn]||'系统指令';
+  var pvText=PVIEWS[selFn]||'选择一个功能查看预览。';
+
+  var ab=C('div',{className:'ab'},
+    C('button',{className:'abBtn'+(active==='ai-config'?' on':''),onClick:function(){setActive('ai-config')}},
+      C(SettingOutlined),C('span',{className:'tp'},'AI 配置')),
+    C('button',{className:'abBtn'+(active==='prompt-lib'?' on':''),onClick:function(){setActive('prompt-lib')}},
+      C(FileTextOutlined),C('span',{className:'tp'},'提示词库')),
+    C('div',{className:'abSp'}),
+    C('div',{className:'abDv'}),
+    C('button',{className:'abBtn',onClick:function(){alert('返回上一页')}},
+      C(ArrowLeftOutlined),C('span',{className:'tp'},'返回'))
+  );
+
+  var fl=C('div',{className:'fl'},
+    C('div',{className:'flHd'},
+      C('div',{className:'flHdTitle'},'AI 功能'),
+      C('div',{className:'flHdSub'},'选择功能编辑提示词')),
+    C('div',{className:'flBd'},
+      GROUPS.map(function(g){
+        var isCl=collapsed.indexOf(g.key)>=0;
+        return C('div',{className:'fg',key:g.key},
+          C('div',{className:'fgHd',onClick:function(){toggle(g.key)}},
+            C('span',{className:'fgArr'+(isCl?' cl':'')},'▼'),g.label),
+          !isCl?g.items.map(function(it){
+            return C('div',{key:it.key,className:'fgIt'+(selFn===it.key?' on':''),
+              onClick:function(){setSelFn(it.key);}},
+              C('span',{className:'fgDot'}),it.label,
+              it.tag==='default'?C('span',{className:'tagDef'},'默认'):
+              it.tag==='custom'?C('span',{className:'tagCus'},'自定义'):null);
+          }):null);
+      })
+    )
+  );
+
+  var header=C('div',{className:'hdr'},
+    C('div',{className:'hdrLeft'},
+      C('span',{className:'hdrTitle'},fnLabel),
+      C('div',{className:'hdrSep'}),
+      C(Select,{size:'small',style:{width:150},value:bookId,onChange:setBookId,
+        options:[{value:'nightWalk',label:'夜行'},{value:'starTrek',label:'星际迷途'}],
+        placeholder:'选择测试书籍'})
+    ),
+    C('div',{className:'hdrRight'},
+      C(Button,{size:'small',icon:C(TagOutlined),onClick:function(){setShowVars(!showVars);},
+        type:showVars?'default':'text'},'变量'),
+      C(Button,{size:'small',icon:C(CopyOutlined)},'复制为自定义'),
+      C(Button,{size:'small',icon:C(RocketOutlined),type:'primary'},'激活'),
+      C(Button,{size:'small',icon:C(SaveOutlined),type:'primary'},'保存'))
+  );
+
+  var varPanel=C('div',{className:'vPanel'+(showVars?' open':' closed')},
+    C('div',{className:'vPanelInner'},
+      C('div',{className:'vGrid'},
+        VARS.map(function(v){
+          return C('div',{key:v.name,className:'vItem'+(v.ro?' ro':''),
+            title:v.desc+(v.ro?' (不可编辑)':''),
+            onClick:function(){navigator.clipboard&&navigator.clipboard.writeText('${'+v.name+'}');}},
+            C('span',{className:'vItemName'},'${'+v.name+'}'),
+            C('span',{className:'vItemDesc'},v.desc),
+            C('span',{className:'vItemCopy'},'复制'));
+        })))
+  );
+
+  var editorPane=C('div',{className:'pane'},
+    C('div',{className:'paneBd'},
+      C('textarea',{className:'editorArea',defaultValue:sysPfx}))
+  );
+
+  var previewPane=C('div',{className:'pane'},
+    C('div',{className:'paneBd'},
+      C('div',{className:'previewArea'},pvText))
+  );
+
+  var content=C('div',{className:'ct'},
+    header,varPanel,
+    C('div',{className:'split'},editorPane,previewPane)
+  );
+
+  if(active==='ai-config'){
+    return C('div',{className:'page'},ab,
+      C('div',{className:'ct'},
+        C('div',{style:{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--ink-tertiary)',fontSize:13}},
+          'AI 配置页面（见 settings-activity-bar mockup）')));
+  }
+
+  return C('div',{className:'page'},ab,fl,content);
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(C(App));
+</script>
+</body>
+</html>
