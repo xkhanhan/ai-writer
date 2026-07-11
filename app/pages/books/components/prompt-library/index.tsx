@@ -128,51 +128,45 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   }, [selectedId, templates]);
 
   // ===== Template split: user-editable part + system blocks =====
-  // System blocks are identified by content patterns (## 返回格式, JSON code blocks, etc.)
-  // NOT by --- separator, which users can delete
-  const SYSTEM_BLOCK_PATTERNS = [
-    /^##\s*返回格式/m,
-    /^##\s*格式约束/m,
-    /^##\s*输出格式/m,
-    /^##\s*输出要求/m,
-    /^##\s*审查输出要求/m,
-    /^##\s*检查输出要求/m,
-    /^##\s*必须删除的模式/m,
-    /^##\s*必须增加的元素/m,
-    /^```json/m,
-  ];
+  // System blocks: return format, output requirements, constraints, JSON code blocks
+  // Identified by content patterns, NOT by --- separator
+  const SYSTEM_START = /^##\s*(返回格式|格式约束|输出格式|输出要求|审查输出要求|检查输出要求|必须删除的模式|必须增加的元素)\s*$/m;
+  const SYSTEM_JSON_BLOCK = /^```json\s*$/m;
 
   const { userContent, systemBlocks } = useMemo(() => {
     if (!selectedTemplate) return { userContent: "", systemBlocks: "" };
     const tpl = selectedTemplate.template;
 
-    // Find the earliest system block marker
-    let earliestIdx = tpl.length;
-    for (const pattern of SYSTEM_BLOCK_PATTERNS) {
+    // Find all system block start positions
+    const starts: number[] = [];
+    for (const pattern of [SYSTEM_START, SYSTEM_JSON_BLOCK]) {
       const match = tpl.match(pattern);
-      if (match && match.index !== undefined && match.index < earliestIdx) {
-        earliestIdx = match.index;
-      }
+      if (match?.index !== undefined) starts.push(match.index);
     }
 
-    if (earliestIdx < tpl.length) {
-      // Found system blocks — strip them for user editing
-      return {
-        userContent: tpl.slice(0, earliestIdx).trim(),
-        systemBlocks: tpl.slice(earliestIdx),
-      };
+    if (starts.length > 0) {
+      // Find end of the first system block (next ## heading or --- or end)
+      const firstStart = Math.min(...starts);
+      const afterFirst = tpl.slice(firstStart);
+      const endMatch = afterFirst.match(/\n---\n|\n##\s/);
+      const blockEnd = endMatch?.index !== undefined
+        ? firstStart + endMatch.index
+        : tpl.length;
+
+      const userPart = tpl.slice(0, firstStart).trim();
+      const sysPart = tpl.slice(firstStart, blockEnd);
+      return { userContent: userPart, systemBlocks: sysPart };
     }
 
-    // No system blocks detected — also check for --- separator as fallback
+    // Fallback: --- separator
     const sepMatch = tpl.match(/\n---\n/);
-    if (sepMatch && sepMatch.index !== undefined) {
+    if (sepMatch?.index !== undefined) {
       return {
         userContent: tpl.slice(0, sepMatch.index).trim(),
         systemBlocks: tpl.slice(sepMatch.index),
       };
     }
 
-    // No system blocks at all — entire template is user content
     return { userContent: tpl, systemBlocks: "" };
   }, [selectedTemplate]);
 
