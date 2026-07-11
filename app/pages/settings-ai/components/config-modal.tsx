@@ -42,6 +42,43 @@ const FORM_INITIAL: Omit<StoredConfig, "id" | "status" | "updatedAt"> = {
   temperature: 0.7,
 };
 
+/**
+ * Custom component that bridges Form.Item with Slider + InputNumber.
+ * Form.Item injects value/onChange into the direct child component,
+ * so we need a wrapper that forwards these to both controls.
+ */
+function TemperatureInput({
+  value,
+  onChange,
+  max = 2,
+}: {
+  value?: number;
+  onChange?: (val: number) => void;
+  max?: number;
+}) {
+  const current = value ?? 0.7;
+  return (
+    <div className={styles.modelRow}>
+      <Slider
+        min={0}
+        max={max}
+        step={0.1}
+        value={current}
+        onChange={onChange}
+        className={styles.modelRowSelect}
+      />
+      <InputNumber
+        min={0}
+        max={max}
+        step={0.1}
+        value={current}
+        onChange={(v) => onChange?.(v ?? 0)}
+        style={{ width: 72 }}
+      />
+    </div>
+  );
+}
+
 export default function ConfigModal({
   open,
   editingConfig,
@@ -235,7 +272,6 @@ export default function ConfigModal({
               { value: "anthropic", label: "Anthropic" },
               { value: "custom", label: "自定义" },
             ]}
-            disabled
           />
         </Form.Item>
         <Form.Item name="providerName" label="厂商名称" hidden>
@@ -268,7 +304,15 @@ export default function ConfigModal({
                 fetchedModels
                   ? fetchedModels.map((m) => ({ value: m, label: m }))
                   : providerInfo
-                    ? providerInfo.models.map((m) => ({ value: m, label: m }))
+                    ? (() => {
+                        const models = providerInfo.models.map((m) => ({ value: m, label: m }));
+                        // Ensure the current form value is in the options (for edit mode)
+                        const currentModel = form.getFieldValue("model") as string | undefined;
+                        if (currentModel && !models.some((m) => m.value === currentModel)) {
+                          models.unshift({ value: currentModel, label: currentModel });
+                        }
+                        return models;
+                      })()
                     : []
               }
               filterOption={(input, option) =>
@@ -304,20 +348,9 @@ export default function ConfigModal({
         </Form.Item>
 
         <Form.Item name="temperature" label="温度">
-          <div className={styles.modelRow}>
-            <Slider
-              min={0}
-              max={providerInfo?.temperatureRange[1] ?? 2}
-              step={0.1}
-              className={styles.modelRowSelect}
-            />
-            <InputNumber
-              min={0}
-              max={providerInfo?.temperatureRange[1] ?? 2}
-              step={0.1}
-              style={{ width: 72 }}
-            />
-          </div>
+          <TemperatureInput
+            max={providerInfo?.temperatureRange[1] ?? 2}
+          />
         </Form.Item>
       </Form>
     </BaseModal>

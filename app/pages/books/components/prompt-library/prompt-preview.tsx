@@ -5,13 +5,36 @@ import type { PromptTemplate, Book } from "@/app/types";
 import { resolvePreview, type PreviewResult } from "../../api/preview";
 import styles from "./prompt-preview.module.css";
 
+/**
+ * Filter out system-only blocks from template text for preview display.
+ * Removes JSON code blocks and "返回格式" sections that are internal
+ * to the AI and should not be shown to the user.
+ */
+function filterSystemBlocks(text: string): string {
+  // Remove ```json ... ``` code blocks (return format templates)
+  let result = text.replace(/```json\s*\{[\s\S]*?\}\s*```/g, "");
+  // Remove "## 返回格式" and "## 格式约束" sections up to next ## or end
+  result = result.replace(/## 返回格式[\s\S]*?(?=## |\n---|\n*$)/g, "");
+  result = result.replace(/## 格式约束[\s\S]*?(?=## |\n---|\n*$)/g, "");
+  // Remove "## 审查输出要求" and "## 检查输出要求" sections
+  result = result.replace(/## 审查输出要求[\s\S]*?(?=## |\n---|\n*$)/g, "");
+  result = result.replace(/## 检查输出要求[\s\S]*?(?=## |\n---|\n*$)/g, "");
+  // Remove "## 必须删除的模式" and "## 必须增加的元素" sections
+  result = result.replace(/## 必须删除的模式[\s\S]*?(?=## |\n---|\n*$)/g, "");
+  result = result.replace(/## 必须增加的元素[\s\S]*?(?=## |\n---|\n*$)/g, "");
+  // Remove "## 输出格式" and "## 输出要求" sections
+  result = result.replace(/## 输出格式[\s\S]*?(?=## |\n---|\n*$)/g, "");
+  result = result.replace(/## 输出要求[\s\S]*?(?=## |\n---|\n*$)/g, "");
+  // Clean up excessive blank lines
+  result = result.replace(/\n{3,}/g, "\n\n");
+  return result.trim();
+}
+
 // ============ Props ============
 
 interface PromptPreviewProps {
   template: PromptTemplate | null;
   editContent: string;
-  hasSeparator: boolean;
-  systemPart: string;
   book: Book | null;
 }
 
@@ -20,20 +43,17 @@ interface PromptPreviewProps {
 const PromptPreview = React.memo(function PromptPreview({
   template,
   editContent,
-  hasSeparator,
-  systemPart,
   book,
 }: PromptPreviewProps) {
   const [previewResult, setPreviewResult] = useState<PreviewResult | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
-  // Build the full template text
+  // Build the full template text (use editContent which now contains the full template)
   const fullTemplate = useMemo(() => {
     if (!template) return "";
-    return hasSeparator
-      ? `${systemPart}\n\n${editContent}`
-      : editContent;
-  }, [template, editContent, hasSeparator, systemPart]);
+    // editContent is the full template content (editor shows full template)
+    return editContent;
+  }, [template, editContent]);
 
   // Call backend preview API when template or book changes
   useEffect(() => {
@@ -58,7 +78,11 @@ const PromptPreview = React.memo(function PromptPreview({
     return () => { cancelled = true; };
   }, [fullTemplate, book, template?.functionKey]);
 
-  const resolvedPreview = previewResult?.resolved ?? "";
+  // Filter system blocks from resolved preview
+  const resolvedPreview = useMemo(() => {
+    const raw = previewResult?.resolved ?? "";
+    return raw ? filterSystemBlocks(raw) : "";
+  }, [previewResult]);
 
   return (
     <div className={styles.previewPanel}>

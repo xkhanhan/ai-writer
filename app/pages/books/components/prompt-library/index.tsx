@@ -127,20 +127,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     return templates.find((t) => t.id === selectedId) ?? null;
   }, [selectedId, templates]);
 
-  // ===== Template split by --- separator =====
-  const { systemPart, userPart, hasSeparator } = useMemo(() => {
-    if (!selectedTemplate) {
-      return { systemPart: "", userPart: "", hasSeparator: false };
-    }
-    const parts = selectedTemplate.template.split("\n---\n");
-    if (parts.length === 2) {
-      return {
-        systemPart: parts[0].trim(),
-        userPart: parts[1].trim(),
-        hasSeparator: true,
-      };
-    }
-    return { systemPart: "", userPart: selectedTemplate.template, hasSeparator: false };
+  // ===== Template content (full template, no --- splitting) =====
+  const templateContent = useMemo(() => {
+    if (!selectedTemplate) return "";
+    return selectedTemplate.template;
   }, [selectedTemplate]);
 
   const isSystemDefault =
@@ -167,10 +157,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   /* eslint-disable react-hooks/set-state-in-effect -- resetting local edit state on selection change */
   useEffect(() => {
     if (selectedTemplate) {
-      setEditTemplate(userPart);
+      setEditTemplate(templateContent);
       setDirty(false);
     }
-  }, [selectedTemplate, userPart]);
+  }, [selectedTemplate, templateContent]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // ===== Auto-select first function on mount =====
@@ -241,9 +231,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   const handleSave = useCallback(async (): Promise<boolean> => {
     if (!selectedTemplate || !dirty || isSystemDefault) return false;
 
-    const fullTemplate = hasSeparator
-      ? `${systemPart}\n---\n\n${editTemplate}`
-      : editTemplate;
+    const fullTemplate = editTemplate;
 
     const undefinedVars = validateTemplateVariables(fullTemplate);
     if (undefinedVars.length > 0) {
@@ -294,8 +282,6 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     selectedTemplate,
     dirty,
     isSystemDefault,
-    hasSeparator,
-    systemPart,
     editTemplate,
     loadTemplates,
   ]);
@@ -597,8 +583,6 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
             <PromptPreview
               template={selectedTemplate}
               editContent={editTemplate}
-              hasSeparator={hasSeparator}
-              systemPart={systemPart}
               book={selectedBook}
             />
           </div>
