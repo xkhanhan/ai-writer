@@ -127,10 +127,17 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     return templates.find((t) => t.id === selectedId) ?? null;
   }, [selectedId, templates]);
 
-  // ===== Template content (full template, no --- splitting) =====
-  const templateContent = useMemo(() => {
-    if (!selectedTemplate) return "";
-    return selectedTemplate.template;
+  // ===== Template split: user-editable part + system blocks (after ---) =====
+  const { userContent, systemBlocks } = useMemo(() => {
+    if (!selectedTemplate) return { userContent: "", systemBlocks: "" };
+    const sepIdx = selectedTemplate.template.indexOf("\n---\n");
+    if (sepIdx === -1) {
+      return { userContent: selectedTemplate.template, systemBlocks: "" };
+    }
+    return {
+      userContent: selectedTemplate.template.slice(0, sepIdx).trim(),
+      systemBlocks: selectedTemplate.template.slice(sepIdx),
+    };
   }, [selectedTemplate]);
 
   const isSystemDefault =
@@ -157,10 +164,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   /* eslint-disable react-hooks/set-state-in-effect -- resetting local edit state on selection change */
   useEffect(() => {
     if (selectedTemplate) {
-      setEditTemplate(templateContent);
+      setEditTemplate(userContent);
       setDirty(false);
     }
-  }, [selectedTemplate, templateContent]);
+  }, [selectedTemplate, userContent]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // ===== Auto-select first function on mount =====
@@ -231,7 +238,27 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   const handleSave = useCallback(async (): Promise<boolean> => {
     if (!selectedTemplate || !dirty || isSystemDefault) return false;
 
-    const fullTemplate = editTemplate;
+    // Sanitize user content (detect injection, warn)
+    const sanitizeRes = await client.post<{ safe: boolean; warnings: string[]; cleaned: string }>(
+      "/api/ai/sanitize",
+      { content: editTemplate },
+    );
+    if (sanitizeRes.ok && !sanitizeRes.data.safe) {
+      const ok = await new Promise<boolean>((resolve) => {
+        Modal.confirm({
+          title: "提示词安全检查",
+          content: `检测到以下潜在风险：\n${sanitizeRes.data.warnings.join("\n")}\n\n是否仍要保存？`,
+          okText: "继续保存",
+          cancelText: "返回修改",
+          onOk: () => resolve(true),
+          onCancel: () => resolve(false),
+        });
+      });
+      if (!ok) return false;
+    }
+
+    // Rebuild full template: user content + original system blocks
+    const fullTemplate = editTemplate + systemBlocks;
 
     const undefinedVars = validateTemplateVariables(fullTemplate);
     if (undefinedVars.length > 0) {
@@ -283,6 +310,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     dirty,
     isSystemDefault,
     editTemplate,
+    systemBlocks,
     loadTemplates,
   ]);
 
@@ -582,7 +610,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
           <div className={styles.previewPane}>
             <PromptPreview
               template={selectedTemplate}
-              editContent={editTemplate}
+              editContent={userContent + systemBlocks}
               book={selectedBook}
             />
           </div>
