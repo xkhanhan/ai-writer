@@ -128,10 +128,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   }, [selectedId, templates]);
 
   // ===== Template split: user-editable part + system blocks =====
-  // System blocks: return format, output requirements, constraints, JSON code blocks
-  // Identified by content patterns, NOT by --- separator
-  const SYSTEM_START = /^##\s*(返回格式|格式约束|输出格式|输出要求|审查输出要求|检查输出要求|必须删除的模式|必须增加的元素)\s*$/m;
-  const SYSTEM_JSON_BLOCK = /^```json\s*$/m;
+  // System blocks (return format, JSON, constraints) are hidden from editor.
+  // User content (identity, instructions, variable sections) is preserved.
+  const SYSTEM_HEADING = /^##\s*(返回格式|格式约束|输出格式|输出要求|审查输出要求|检查输出要求|必须删除的模式|必须增加的元素)\s*$/m;
+  const SYSTEM_JSON = /^```json\s*$/m;
 
   const { userContent, systemBlocks } = useMemo(() => {
     if (!selectedTemplate) return { userContent: "", systemBlocks: "" };
@@ -139,35 +139,69 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
 
     // Find all system block start positions
     const starts: number[] = [];
-    for (const pattern of [SYSTEM_START, SYSTEM_JSON_BLOCK]) {
-      const match = tpl.match(pattern);
-      if (match?.index !== undefined) starts.push(match.index);
+    for (const p of [SYSTEM_HEADING, SYSTEM_JSON]) {
+      // Use global regex to find all matches
+      const regex = new RegExp(p.source, p.flags.includes("g") ? p.flags : p.flags + "g");
+      let m: RegExpExecArray | null;
+      while ((m = regex.exec(tpl)) !== null) {
+        starts.push(m.index);
+      }
     }
 
-    if (starts.length > 0) {
-      // Find end of the first system block (next ## heading or --- or end)
-      const firstStart = Math.min(...starts);
-      const afterFirst = tpl.slice(firstStart);
-      const endMatch = afterFirst.match(/\n---\n|\n##\s/);
-      const blockEnd = endMatch?.index !== undefined
-        ? firstStart + endMatch.index
+    if (starts.length === 0) {
+      // No system blocks — check for --- separator as fallback
+      const sep = tpl.match(/\n---\n/);
+      if (sep?.index !== undefined) {
+        return {
+          userContent: tpl.slice(0, sep.index).trim(),
+          systemBlocks: tpl.slice(sep.index),
+        };
+      }
+      return { userContent: tpl, systemBlocks: "" };
+    }
+
+    // For each system block start, find its end (next ## heading, ---, or end of string)
+    const removeRanges: Array<[number, number]> = [];
+    for (const start of starts) {
+      const after = tpl.slice(start + 1);
+      const endMatch = after.match(/\n##\s|\n---\n/);
+      const end = endMatch?.index !== undefined
+        ? start + 1 + endMatch.index
         : tpl.length;
-
-      const userPart = tpl.slice(0, firstStart).trim();
-      const sysPart = tpl.slice(firstStart, blockEnd);
-      return { userContent: userPart, systemBlocks: sysPart };
+      removeRanges.push([start, end]);
     }
 
-    // Fallback: --- separator
-    const sepMatch = tpl.match(/\n---\n/);
-    if (sepMatch?.index !== undefined) {
-      return {
-        userContent: tpl.slice(0, sepMatch.index).trim(),
-        systemBlocks: tpl.slice(sepMatch.index),
-      };
+    // Merge overlapping ranges
+    removeRanges.sort((a, b) => a[0] - b[0]);
+    const merged: Array<[number, number]> = [];
+    for (const range of removeRanges) {
+      if (merged.length > 0 && range[0] <= merged[merged.length - 1][1]) {
+        merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], range[1]);
+      } else {
+        merged.push([...range]);
+      }
     }
 
-    return { userContent: tpl, systemBlocks: "" };
+    // Extract user content (non-system-block parts)
+    const userParts: string[] = [];
+    let cursor = 0;
+    for (const [start, end] of merged) {
+      if (cursor < start) {
+        userParts.push(tpl.slice(cursor, start));
+      }
+      cursor = end;
+    }
+    if (cursor < tpl.length) {
+      userParts.push(tpl.slice(cursor));
+    }
+
+    // System blocks text
+    const sysParts = merged.map(([s, e]) => tpl.slice(s, e).trim()).filter(Boolean);
+
+    return {
+      userContent: userParts.join("").trim(),
+      systemBlocks: sysParts.join("\n\n"),
+    };
   }, [selectedTemplate]);
 
   const isSystemDefault =
