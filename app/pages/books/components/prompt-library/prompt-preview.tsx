@@ -57,8 +57,8 @@ function substituteVariables(
 ): string {
   return template.replace(/\$\{(\w+)\}/g, (_match, varName: string) => {
     if (varName in variableMap) return variableMap[varName];
-    // Non-standard variables: keep original format
-    return `\${${varName}}`;
+    // Unmapped variables (template-specific): show [未设置]
+    return "[未设置]";
   });
 }
 
