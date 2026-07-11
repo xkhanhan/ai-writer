@@ -11,10 +11,11 @@ import {
 } from "@ant-design/icons";
 import { showError, showSuccess } from "@/app/utils/error-handler";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
-import type { Book, PromptTemplate } from "@/app/types";
+import type { Book, PromptTemplate, PromptVariable } from "@/app/types";
 import { validateTemplateVariables } from "@/app/types";
 import { PROMPT_VARIABLES } from "@/shared/types";
 import { getBooks } from "@/app/pages/home/api/books";
+import { client } from "@/app/api-client";
 import {
   fetchTemplates,
   updateTemplate,
@@ -63,6 +64,9 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
 
   // Variable panel visibility
   const [showVariables, setShowVariables] = useState(false);
+
+  // Function-specific variables (fetched from backend per functionKey)
+  const [functionVariables, setFunctionVariables] = useState<PromptVariable[]>(PROMPT_VARIABLES);
 
   // Mobile list panel toggle
   const [listOpen, setListOpen] = useState(false);
@@ -189,6 +193,27 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
       }
     }
   }, [loading, selectedFunctionKey, templates.length, templateIndex]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // ===== Fetch function-specific variables when functionKey changes =====
+  /* eslint-disable react-hooks/set-state-in-effect -- async load calls setState in async callback */
+  useEffect(() => {
+    if (!selectedFunctionKey) return;
+    let cancelled = false;
+    client
+      .get<{ variables: PromptVariable[] }>(`/api/ai/variables?functionKey=${selectedFunctionKey}`)
+      .then((res) => {
+        if (!cancelled && res.ok && res.data.variables.length > 0) {
+          setFunctionVariables(res.data.variables);
+        } else if (!cancelled) {
+          setFunctionVariables(PROMPT_VARIABLES);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setFunctionVariables(PROMPT_VARIABLES);
+      });
+    return () => { cancelled = true; };
+  }, [selectedFunctionKey]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // ===== Warn on unsaved changes before page unload =====
@@ -518,7 +543,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
         >
           <div className={styles.varPanelInner}>
             <div className={styles.varGrid}>
-              {PROMPT_VARIABLES.map((v) => (
+              {functionVariables.map((v) => (
                 <div
                   key={v.name}
                   className={`${styles.varItem} ${v.readOnly ? styles.varItemReadOnly : ""}`}
