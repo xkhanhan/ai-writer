@@ -63,7 +63,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   );
 
   // Variable panel visibility
-  const [showVariables, setShowVariables] = useState(false);
+  const [showVariables, setShowVariables] = useState(true);
 
   // Function-specific variables (fetched from backend per functionKey)
   const [functionVariables, setFunctionVariables] = useState<PromptVariable[]>(PROMPT_VARIABLES);
