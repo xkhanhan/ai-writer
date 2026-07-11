@@ -14,10 +14,6 @@ import styles from "./prompt-preview.module.css";
 function buildVariableMap(book: Book): Record<string, string> {
   const map: Record<string, string> = {};
   for (const v of PROMPT_VARIABLES) {
-    if (v.readOnly) {
-      map[v.name] = "";
-      continue;
-    }
     switch (v.name) {
       case "bookTitle":
         map[v.name] = book.title || "[未设置]";
@@ -37,7 +33,12 @@ function buildVariableMap(book: Book): Record<string, string> {
           : "[未设置]";
         break;
       case "userSupplement":
-        map[v.name] = "[用户补充]";
+        map[v.name] = "[未设置]";
+        break;
+      case "outputFormat":
+        // outputFormat is resolved per-functionKey; leave as-is for now
+        // (the constant is not yet defined in the codebase)
+        map[v.name] = "[输出格式]";
         break;
       default:
         map[v.name] = "";
@@ -93,9 +94,10 @@ const PromptPreview = React.memo(function PromptPreview({
   const resolvedPreview = useMemo(() => {
     if (!template || !variableMap) return "";
 
-    // Combine system prefix (if any) with user content
+    // Preview shows the full template with variables replaced.
+    // The --- separator is internal; do not render it as visible text.
     const fullTemplate = hasSeparator
-      ? `${systemPart}\n---\n\n${editContent}`
+      ? `${systemPart}\n\n${editContent}`
       : editContent;
 
     return substituteVariables(fullTemplate, variableMap);
@@ -111,7 +113,7 @@ const PromptPreview = React.memo(function PromptPreview({
           </div>
         ) : !book ? (
           <div className={styles.previewEmpty}>
-            请先选择一本书以预览提示词
+            请在顶部选择一本书以预览提示词
           </div>
         ) : (
           resolvedPreview
