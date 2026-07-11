@@ -6,6 +6,7 @@ import { CloudDownloadOutlined, ApiOutlined } from "@ant-design/icons";
 import { AI_PROVIDERS } from "@/shared/ai/providers";
 import type { StoredConfig } from "../hooks/use-config-list";
 import BaseModal from "@/shared/ui/base-modal";
+import baseModalStyles from "@/shared/ui/base-modal/index.module.css";
 import styles from "../index.module.css";
 
 interface ConfigModalProps {
@@ -220,7 +221,7 @@ export default function ConfigModal({
       width={560}
       destroyOnClose
       footer={
-        <div className={styles.modalFooter}>
+        <div className={baseModalStyles.modalFooter}>
           <Button onClick={onClose}>取消</Button>
           <Button
             icon={<ApiOutlined />}
@@ -306,8 +307,8 @@ export default function ConfigModal({
                   : providerInfo
                     ? (() => {
                         const models = providerInfo.models.map((m) => ({ value: m, label: m }));
-                        // Ensure the current form value is in the options (for edit mode)
-                        const currentModel = form.getFieldValue("model") as string | undefined;
+                        // Ensure the current model is in the options (for edit mode)
+                        const currentModel = editingConfig?.model;
                         if (currentModel && !models.some((m) => m.value === currentModel)) {
                           models.unshift({ value: currentModel, label: currentModel });
                         }
