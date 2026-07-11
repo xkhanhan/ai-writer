@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Form, Input, InputNumber, Select, Slider, Tooltip, message } from "antd";
 import { CloudDownloadOutlined, ApiOutlined } from "@ant-design/icons";
 import { AI_PROVIDERS } from "@/shared/ai/providers";
@@ -43,11 +43,7 @@ const FORM_INITIAL: Omit<StoredConfig, "id" | "status" | "updatedAt"> = {
   temperature: 0.7,
 };
 
-/**
- * Custom component that bridges Form.Item with Select + Button.
- * Form.Item injects value/onChange into the direct child component,
- * so we need a wrapper that forwards these to the Select.
- */
+/** Bridges Form.Item with Select + Button for model selection */
 function ModelSelectInput({
   value,
   onChange,
@@ -93,6 +89,7 @@ function ModelSelectInput({
   );
 }
 
+/** Bridges Form.Item with Slider + InputNumber for temperature */
 function TemperatureInput({
   value,
   onChange,
@@ -139,6 +136,9 @@ export default function ConfigModal({
   const [fetchingModels, setFetchingModels] = useState(false);
   const [fetchedModels, setFetchedModels] = useState<string[] | null>(null);
 
+  // Track the model value from editing config for option inclusion
+  const editingModel = editingConfig?.model ?? null;
+
   useEffect(() => {
     if (open) {
       if (editingConfig) {
@@ -146,6 +146,7 @@ export default function ConfigModal({
       } else {
         form.setFieldsValue(FORM_INITIAL);
       }
+      setFetchedModels(null);
     }
   }, [open, editingConfig, form]);
 
@@ -255,6 +256,20 @@ export default function ConfigModal({
 
   const providerInfo = PROVIDER_MAP.get(watchedProvider);
 
+  // Compute model options, always including the editing model
+  const modelOptions = useMemo(() => {
+    const base = fetchedModels
+      ? fetchedModels.map((m) => ({ value: m, label: m }))
+      : providerInfo
+        ? providerInfo.models.map((m) => ({ value: m, label: m }))
+        : [];
+    // Always include the editing model so it can be displayed
+    if (editingModel && !base.some((m) => m.value === editingModel)) {
+      base.unshift({ value: editingModel, label: editingModel });
+    }
+    return base;
+  }, [fetchedModels, providerInfo, editingModel]);
+
   return (
     <BaseModal
       open={open}
@@ -342,20 +357,7 @@ export default function ConfigModal({
 
         <Form.Item name="model" label="模型" required>
           <ModelSelectInput
-            options={
-              fetchedModels
-                ? fetchedModels.map((m) => ({ value: m, label: m }))
-                : providerInfo
-                  ? (() => {
-                      const models = providerInfo.models.map((m) => ({ value: m, label: m }));
-                      const currentModel = editingConfig?.model;
-                      if (currentModel && !models.some((m) => m.value === currentModel)) {
-                        models.unshift({ value: currentModel, label: currentModel });
-                      }
-                      return models;
-                    })()
-                  : []
-            }
+            options={modelOptions}
             loading={fetchingModels}
             onFetch={() => void handleFetchModels()}
             fetchDisabled={!watchedApiKey || !watchedBaseUrl}

@@ -127,11 +127,43 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     return templates.find((t) => t.id === selectedId) ?? null;
   }, [selectedId, templates]);
 
-  // ===== Template split: user-editable part + system blocks (after ---) =====
+  // ===== Template split: user-editable part + system blocks =====
+  // System blocks are identified by content patterns (## 返回格式, JSON code blocks, etc.)
+  // NOT by --- separator, which users can delete
+  const SYSTEM_BLOCK_PATTERNS = [
+    /^##\s*返回格式/m,
+    /^##\s*格式约束/m,
+    /^##\s*输出格式/m,
+    /^##\s*输出要求/m,
+    /^##\s*审查输出要求/m,
+    /^##\s*检查输出要求/m,
+    /^##\s*必须删除的模式/m,
+    /^##\s*必须增加的元素/m,
+    /^```json/m,
+  ];
+
   const { userContent, systemBlocks } = useMemo(() => {
     if (!selectedTemplate) return { userContent: "", systemBlocks: "" };
     const tpl = selectedTemplate.template;
-    // Match --- on its own line (with optional surrounding blank lines)
+
+    // Find the earliest system block marker
+    let earliestIdx = tpl.length;
+    for (const pattern of SYSTEM_BLOCK_PATTERNS) {
+      const match = tpl.match(pattern);
+      if (match && match.index !== undefined && match.index < earliestIdx) {
+        earliestIdx = match.index;
+      }
+    }
+
+    if (earliestIdx < tpl.length) {
+      // Found system blocks — strip them for user editing
+      return {
+        userContent: tpl.slice(0, earliestIdx).trim(),
+        systemBlocks: tpl.slice(earliestIdx),
+      };
+    }
+
+    // No system blocks detected — also check for --- separator as fallback
     const sepMatch = tpl.match(/\n---\n/);
     if (sepMatch && sepMatch.index !== undefined) {
       return {
@@ -139,7 +171,8 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
         systemBlocks: tpl.slice(sepMatch.index),
       };
     }
-    // No separator found — entire template is user content (no system blocks)
+
+    // No system blocks at all — entire template is user content
     return { userContent: tpl, systemBlocks: "" };
   }, [selectedTemplate]);
 
