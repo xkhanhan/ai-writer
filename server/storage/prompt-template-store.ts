@@ -283,10 +283,12 @@ export async function getActivePromptTemplate(
 // Seed: system-level default templates
 // ============================================================================
 
-let _seeded = false;
+/** Sync seed templates to DB on every call. Runs once per server start. */
+let _seedRan = false;
 
 async function ensureDefaultTemplates(): Promise<void> {
-  if (_seeded) return;
+  if (_seedRan) return;
+  _seedRan = true;
   const db = await getDb();
 
   const existing = db
@@ -299,7 +301,6 @@ async function ensureDefaultTemplates(): Promise<void> {
 
   const now = new Date().toISOString();
 
-  // 1. Migrate: update existing defaults whose template content has changed
   const updateStmt = db.prepare(
     `UPDATE prompt_templates SET template = ?, updated_at = ? WHERE id = ?`,
   );
@@ -309,15 +310,15 @@ async function ensureDefaultTemplates(): Promise<void> {
   );
 
   const tx = db.transaction(() => {
+    let changed = false;
     for (const s of PROMPT_TEMPLATE_SEEDS) {
       const existingTemplate = existingMap.get(s.functionKey);
       if (existingTemplate) {
-        // Migrate: if template content differs, update it
         if (existingTemplate.template !== s.template) {
           updateStmt.run(s.template, now, existingTemplate.id);
+          changed = true;
         }
       } else {
-        // New seed: insert it
         insertStmt.run(
           randomUUID(),
           s.functionKey,
@@ -328,9 +329,12 @@ async function ensureDefaultTemplates(): Promise<void> {
           now,
           now,
         );
+        changed = true;
       }
+    }
+    if (changed) {
+      console.log("[prompt-template-store] 种子模板已同步更新");
     }
   });
   tx();
-  _seeded = true;
 }
