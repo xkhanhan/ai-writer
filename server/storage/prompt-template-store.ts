@@ -288,20 +288,47 @@ let _seeded = false;
 async function ensureDefaultTemplates(): Promise<void> {
   if (_seeded) return;
   const db = await getDb();
-  const count = db
-    .prepare(`SELECT COUNT(*) as c FROM prompt_templates WHERE book_id IS NULL`)
-    .get() as { c: number };
-  if (count.c > 0) { _seeded = true; return; }
+
+  const existing = db
+    .prepare(
+      `SELECT id, function_key, template FROM prompt_templates WHERE book_id IS NULL AND is_default = 1`,
+    )
+    .all() as Array<{ id: string; function_key: string; template: string }>;
+
+  const existingMap = new Map(existing.map((r) => [r.function_key, r]));
 
   const now = new Date().toISOString();
-  const insert = db.prepare(
+
+  // 1. Migrate: update existing defaults whose template content has changed
+  const updateStmt = db.prepare(
+    `UPDATE prompt_templates SET template = ?, updated_at = ? WHERE id = ?`,
+  );
+  const insertStmt = db.prepare(
     `INSERT INTO prompt_templates (id, book_id, function_key, display_name, description, template, variables, is_default, is_active, created_at, updated_at)
      VALUES (?, NULL, ?, ?, ?, ?, ?, 1, 0, ?, ?)`,
   );
 
   const tx = db.transaction(() => {
     for (const s of PROMPT_TEMPLATE_SEEDS) {
-      insert.run(randomUUID(), s.functionKey, s.displayName, s.description, s.template, s.variables, now, now);
+      const existingTemplate = existingMap.get(s.functionKey);
+      if (existingTemplate) {
+        // Migrate: if template content differs, update it
+        if (existingTemplate.template !== s.template) {
+          updateStmt.run(s.template, now, existingTemplate.id);
+        }
+      } else {
+        // New seed: insert it
+        insertStmt.run(
+          randomUUID(),
+          s.functionKey,
+          s.displayName,
+          s.description,
+          s.template,
+          s.variables,
+          now,
+          now,
+        );
+      }
     }
   });
   tx();
