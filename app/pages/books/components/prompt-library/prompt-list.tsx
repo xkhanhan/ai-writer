@@ -85,10 +85,10 @@ export function buildTemplateIndex(
 
 interface PromptListProps {
   loading: boolean;
-  selectedFunctionKey: string | null;
+  selectedId: string | null;
   templateIndex: Map<string, TemplateEntry>;
   expandedGroups: Set<string>;
-  onSelect: (functionKey: string) => void;
+  onSelect: (templateId: string) => void;
   onToggleGroup: (panelKey: string) => void;
   onClose?: () => void;
 }
@@ -97,7 +97,7 @@ interface PromptListProps {
 
 const PromptList = React.memo(function PromptList({
   loading,
-  selectedFunctionKey,
+  selectedId,
   templateIndex,
   expandedGroups,
   onSelect,
@@ -142,32 +142,40 @@ const PromptList = React.memo(function PromptList({
                 {isExpanded &&
                   group.functionKeys.map((fk) => {
                     const entry = templateIndex.get(fk.key);
-                    const isActive = selectedFunctionKey === fk.key;
+                    if (!entry) return null;
 
-                    // Determine tag: system default or custom
-                    const hasCustom = entry && entry.customs.length > 0;
-                    const isSystem = entry?.system != null;
+                    // Collect renderable items: system default (if exists) + customs
+                    const items: { id: string; label: string; isSystem: boolean }[] = [];
+                    if (entry.system) {
+                      items.push({ id: entry.system.id, label: fk.label, isSystem: true });
+                    }
+                    for (const custom of entry.customs) {
+                      items.push({ id: custom.id, label: fk.label, isSystem: false });
+                    }
+                    if (items.length === 0) return null;
 
-                    return (
-                      <button
-                        key={fk.key}
-                        className={`${styles.functionItem} ${isActive ? styles.functionItemActive : ""}`}
-                        onClick={() => onSelect(fk.key)}
-                      >
-                        <span className={styles.functionDot} />
-                        {fk.label}
-                        {hasCustom && (
-                          <span className={styles.tagCustom}>
-                            <EditOutlined style={{ fontSize: 8 }} />
-                          </span>
-                        )}
-                        {isSystem && !hasCustom && (
-                          <span className={styles.tagDefault}>
-                            <GlobalOutlined style={{ fontSize: 8 }} />
-                          </span>
-                        )}
-                      </button>
-                    );
+                    return items.map((item) => {
+                      const isActive = selectedId === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          className={`${styles.functionItem} ${isActive ? styles.functionItemActive : ""}`}
+                          onClick={() => onSelect(item.id)}
+                        >
+                          <span className={styles.functionDot} />
+                          {item.label}
+                          {item.isSystem ? (
+                            <span className={styles.tagDefault}>
+                              <GlobalOutlined style={{ fontSize: 8 }} />
+                            </span>
+                          ) : (
+                            <span className={styles.tagCustom}>
+                              <EditOutlined style={{ fontSize: 8 }} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    });
                   })}
               </div>
             );

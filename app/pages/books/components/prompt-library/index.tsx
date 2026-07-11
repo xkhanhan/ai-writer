@@ -270,22 +270,20 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     loadTemplates,
   ]);
 
-  // ===== Select function (with save prompt) =====
+  // ===== Select template (with save prompt) =====
   const handleSelect = useCallback(
-    (functionKey: string) => {
-      if (functionKey === selectedFunctionKey) return;
+    (templateId: string) => {
+      if (templateId === selectedId) return;
+
+      // Look up the template to get its functionKey
+      const template = templates.find((t) => t.id === templateId);
+      if (!template) return;
+
+      const newFunctionKey = template.functionKey;
 
       const doSwitch = () => {
-        setSelectedFunctionKey(functionKey);
-        // Select the system default or first custom for this functionKey
-        const entry = templateIndex.get(functionKey);
-        if (entry) {
-          const first =
-            entry.customs.length > 0 ? entry.customs[0] : entry.system;
-          setSelectedId(first?.id ?? null);
-        } else {
-          setSelectedId(null);
-        }
+        setSelectedFunctionKey(newFunctionKey);
+        setSelectedId(templateId);
       };
 
       if (dirty) {
@@ -307,7 +305,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
         doSwitch();
       }
     },
-    [selectedFunctionKey, dirty, templateIndex, handleSave],
+    [selectedId, dirty, templates, handleSave],
   );
 
   // ===== Copy as custom =====
@@ -384,11 +382,11 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
       <div className={`${styles.listWrapper} ${listOpen ? styles.listWrapperOpen : ""}`}>
         <PromptList
           loading={loading}
-          selectedFunctionKey={selectedFunctionKey}
+          selectedId={selectedId}
           templateIndex={templateIndex}
           expandedGroups={expandedGroups}
-          onSelect={(key) => {
-            handleSelect(key);
+          onSelect={(id) => {
+            handleSelect(id);
             setListOpen(false);
           }}
           onToggleGroup={toggleGroup}

@@ -53,6 +53,8 @@ export default function ConfigModal({
   const watchedApiKey = Form.useWatch("apiKey", form) as string | undefined;
   const watchedBaseUrl = Form.useWatch("baseUrl", form) as string | undefined;
   const [testing, setTesting] = useState(false);
+  const [fetchingModels, setFetchingModels] = useState(false);
+  const [fetchedModels, setFetchedModels] = useState<string[] | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -68,6 +70,7 @@ export default function ConfigModal({
     (providerId: string) => {
       const info = PROVIDER_MAP.get(providerId);
       if (!info) return;
+      setFetchedModels(null);
       form.setFieldsValue({
         providerName: info.name,
         apiFormat: info.apiFormat,
@@ -81,14 +84,36 @@ export default function ConfigModal({
     [form],
   );
 
-  const handleFetchModels = useCallback(() => {
+  const handleFetchModels = useCallback(async () => {
     const key = form.getFieldValue("apiKey") as string | undefined;
     const url = form.getFieldValue("baseUrl") as string | undefined;
+    const providerId = form.getFieldValue("provider") as string | undefined;
     if (!key || !url) {
       message.warning("请先填写 API Key 和 Base URL");
       return;
     }
-    message.info("模型拉取功能即将上线");
+
+    setFetchingModels(true);
+    setFetchedModels(null);
+    try {
+      const res = await fetch("/api/ai/models", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerId, baseUrl: url, apiKey: key }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        message.error(data.error ?? "模型拉取失败");
+        return;
+      }
+      const models: string[] = data.models ?? [];
+      setFetchedModels(models);
+      message.success(`成功拉取 ${models.length} 个模型`);
+    } catch {
+      message.error("模型拉取失败，请检查网络连接");
+    } finally {
+      setFetchingModels(false);
+    }
   }, [form]);
 
   const handleOk = useCallback(async () => {
@@ -193,12 +218,11 @@ export default function ConfigModal({
               placeholder="选择模型"
               className={styles.modelRowSelect}
               options={
-                providerInfo
-                  ? providerInfo.models.map((m) => ({
-                      value: m,
-                      label: m,
-                    }))
-                  : []
+                fetchedModels
+                  ? fetchedModels.map((m) => ({ value: m, label: m }))
+                  : providerInfo
+                    ? providerInfo.models.map((m) => ({ value: m, label: m }))
+                    : []
               }
               filterOption={(input, option) =>
                 (option?.label as string)
@@ -210,7 +234,9 @@ export default function ConfigModal({
               <Button
                 icon={<CloudDownloadOutlined />}
                 className={styles.fetchModelButton}
-                onClick={handleFetchModels}
+                onClick={() => void handleFetchModels()}
+                loading={fetchingModels}
+                disabled={fetchingModels}
               >
                 拉取模型
               </Button>
