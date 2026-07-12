@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>创作区 v4 — 沉浸写作 + 按需参考</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================
+     Design Tokens — 暖纸色
+     ============================ */
+  :root {
+    --bg-page: #f0ece4;
+    --bg-elevated: #faf8f4;
+    --bg-muted: #f5f2ec;
+    --bg-strong: #e8e4dc;
+    --text-primary: #1a1814;
+    --text-secondary: #4a4640;
+    --text-tertiary: #807b74;
+    --text-light: #b5b0a8;
+    --border: #ddd8d0;
+    --border-strong: #c0bbb3;
+    --border-light: #ebe7e0;
+    --color-primary: #2F5D50;
+    --color-primary-hover: #1e4438;
+    --color-primary-bg: rgba(47, 93, 80, 0.06);
+    --color-primary-bg-hover: rgba(47, 93, 80, 0.12);
+    --color-primary-border: rgba(47, 93, 80, 0.22);
+    --color-success: #2E8B57;
+    --color-success-bg: rgba(46, 139, 87, 0.08);
+    --color-warning: #964400;
+    --color-warning-bg: rgba(150, 68, 0, 0.08);
+    --color-error: #ba1a1a;
+    --shadow-sm: 0 1px 3px rgba(24,28,34,0.06);
+    --shadow-md: 0 4px 12px rgba(24,28,34,0.10);
+    --shadow-lg: 0 8px 24px rgba(24,28,34,0.14);
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    --radius-xl: 14px;
+    --font-display: 'Noto Serif SC', serif;
+    --font-body: 'Noto Sans SC', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-page);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--color-primary); color: #fff; }
+
+  /* ============================
+     App Shell
+     ============================ */
+  .shell { display: flex; flex-direction: column; height: 100vh; }
+
+  /* --- Topbar --- */
+  .topbar {
+    height: 48px; min-height: 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+  }
+  .tb-left { display: flex; align-items: center; gap: 14px; }
+  .tb-brand { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.04em; }
+  .tb-divider { width: 1px; height: 14px; background: var(--border); }
+  .tb-book { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+  .tb-right { display: flex; align-items: center; gap: 6px; }
+  .tb-icon {
+    width: 30px; height: 30px; border: none; background: transparent;
+    border-radius: var(--radius-md); color: var(--text-tertiary);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; transition: all 0.15s;
+  }
+  .tb-icon:hover { background: var(--bg-muted); color: var(--text-primary); }
+
+  /* --- Main --- */
+  .main-area { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+  /* --- Activity Bar --- */
+  .activity-bar {
+    width: 48px; min-width: 48px;
+    background: var(--bg-strong);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 0; gap: 2px;
+    border-right: 1px solid var(--border);
+  }
+  .ab-btn {
+    width: 36px; height: 36px; border: none; background: transparent;
+    border-radius: var(--radius-md); color: var(--text-tertiary);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; transition: all 0.15s; position: relative;
+  }
+  .ab-btn:hover { background: var(--bg-muted); color: var(--text-secondary); }
+  .ab-btn.active { color: var(--color-primary); background: var(--color-primary-bg); }
+  .ab-btn.active::before {
+    content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+    width: 2px; background: var(--color-primary); border-radius: 0 2px 2px 0;
+  }
+  .ab-spacer { flex: 1; }
+
+  /* --- Navigation Tree (narrow) --- */
+  .nav-tree {
+    width: 220px; min-width: 220px;
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--border-light);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .nt-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nt-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.04em; }
+  .nt-add {
+    width: 22px; height: 22px; border: none; background: transparent;
+    border-radius: var(--radius-sm); color: var(--text-tertiary);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; transition: all 0.15s;
+  }
+  .nt-add:hover { background: var(--color-primary-bg); color: var(--color-primary); }
+
+  .nt-body { flex: 1; overflow-y: auto; padding: 6px 6px; }
+
+  .nt-section { margin-bottom: 4px; }
+
+  .nt-item {
+    display: flex; align-items: center; gap: 7px;
+    padding: 5px 10px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.12s; font-size: 12.5px;
+    position: relative; color: var(--text-secondary);
+  }
+  .nt-item:hover { background: var(--bg-muted); }
+  .nt-item.active {
+    background: var(--color-primary-bg); color: var(--color-primary); font-weight: 500;
+  }
+  .nt-item.active::before {
+    content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+    width: 2px; background: var(--color-primary); border-radius: 0 2px 2px 0;
+  }
+  .nt-icon { font-size: 11px; width: 16px; text-align: center; flex-shrink: 0; opacity: 0.6; }
+  .nt-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nt-badge {
+    font-size: 10px; padding: 0 5px; border-radius: 8px;
+    background: var(--bg-muted); color: var(--text-light); font-weight: 500;
+  }
+
+  .vol-group { margin-bottom: 2px; }
+  .vol-header {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 12px; font-weight: 500; transition: background 0.12s;
+    color: var(--text-secondary);
+  }
+  .vol-header:hover { background: var(--bg-muted); }
+  .vol-arrow {
+    font-size: 8px; color: var(--text-light); transition: transform 0.2s;
+    width: 12px; text-align: center;
+  }
+  .vol-arrow.collapsed { transform: rotate(-90deg); }
+  .ch-list { padding-left: 14px; }
+  .ch-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 12px; transition: background 0.12s;
+    color: var(--text-secondary);
+  }
+  .ch-item:hover { background: var(--bg-muted); }
+  .ch-item.active { background: var(--color-primary-bg); color: var(--color-primary); font-weight: 500; }
+  .ch-num { color: var(--text-light); font-size: 10px; width: 16px; text-align: right; font-family: var(--font-mono); }
+  .ch-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .dot-p { background: var(--text-light); }
+  .dot-w { background: var(--color-warning); }
+  .dot-d { background: var(--color-success); }
+
+  /* ============================
+     Content Area — 三栏式
+     ============================ */
+  .content-area {
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden; min-width: 0;
+  }
+
+  /* --- Editor Toolbar --- */
+  .editor-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 20px; border-bottom: 1px solid var(--border-light);
+    background: var(--bg-elevated); min-height: 42px;
+  }
+  .et-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .et-breadcrumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 4px; }
+  .et-breadcrumb .current { color: var(--text-primary); font-weight: 500; }
+  .et-sep { color: var(--text-light); font-size: 10px; }
+  .et-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .et-count { font-size: 11px; color: var(--text-light); font-family: var(--font-mono); letter-spacing: -0.02em; }
+
+  /* Status Switcher */
+  .status-pills {
+    display: inline-flex; background: var(--bg-muted); border-radius: 20px; padding: 2px;
+  }
+  .s-pill {
+    padding: 3px 10px; border: none; background: transparent; border-radius: 16px;
+    font-size: 11px; cursor: pointer; color: var(--text-tertiary);
+    font-weight: 500; transition: all 0.15s; font-family: var(--font-body);
+  }
+  .s-pill:hover { color: var(--text-secondary); }
+  .s-pill.active {
+    background: var(--bg-elevated); color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* AI Button */
+  .ai-trigger {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border: none; border-radius: 20px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    background: linear-gradient(135deg, #2F5D50, #3a7565);
+    color: #fff; transition: all 0.2s;
+    box-shadow: 0 1px 4px rgba(47,93,80,0.25);
+    font-family: var(--font-body);
+  }
+  .ai-trigger:hover { box-shadow: 0 2px 8px rgba(47,93,80,0.35); transform: translateY(-0.5px); }
+  .ai-trigger .sparkle { font-size: 11px; }
+
+  /* Save Button */
+  .save-btn {
+    padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    background: var(--bg-elevated); color: var(--text-secondary);
+    transition: all 0.15s; font-family: var(--font-body);
+  }
+  .save-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .save-btn.saved { border-color: var(--color-success); color: var(--color-success); }
+
+  /* --- Editor + Reference Split --- */
+  .editor-split { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+  /* Editor Main */
+  .editor-main {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    min-width: 0;
+  }
+  .editor-body {
+    flex: 1; overflow-y: auto; padding: 28px 36px;
+    display: flex; justify-content: center;
+  }
+  .editor-content {
+    width: 100%; max-width: 680px;
+  }
+  .editor-content .chapter-title {
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 600;
+    color: var(--text-primary); margin-bottom: 24px;
+    line-height: 1.4; outline: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+    padding-bottom: 12px;
+  }
+  .editor-content .chapter-title:focus { border-bottom-color: var(--color-primary-border); }
+  .editor-content .chapter-title::placeholder { color: var(--text-light); }
+
+  .prose {
+    font-family: var(--font-body);
+    font-size: 15px; line-height: 2;
+    color: var(--text-primary);
+    outline: none; min-height: 300px;
+    letter-spacing: 0.02em;
+  }
+  .prose p { margin-bottom: 1em; text-indent: 2em; }
+  .prose p:first-child { text-indent: 0; }
+  .prose .cursor-line {
+    border-left: 2px solid var(--color-primary);
+    padding-left: 12px; margin-left: -14px;
+    animation: cursorPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes cursorPulse {
+    0%, 100% { border-left-color: var(--color-primary); }
+    50% { border-left-color: transparent; }
+  }
+
+  /* --- AI Command Bar (Bottom) --- */
+  .ai-command-bar {
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-elevated);
+    padding: 10px 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .acb-row { display: flex; align-items: center; gap: 8px; }
+  .acb-input {
+    flex: 1; padding: 7px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    font-size: 13px; font-family: var(--font-body);
+    outline: none; background: var(--bg-muted);
+    transition: all 0.15s; color: var(--text-primary);
+  }
+  .acb-input::placeholder { color: var(--text-light); }
+  .acb-input:focus { border-color: var(--color-primary-border); background: var(--bg-elevated); box-shadow: 0 0 0 3px var(--color-primary-bg); }
+
+  .acb-btn {
+    padding: 7px 14px; border: none; border-radius: var(--radius-lg);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    transition: all 0.15s; font-family: var(--font-body);
+    white-space: nowrap;
+  }
+  .acb-ghost {
+    background: var(--bg-muted); color: var(--text-secondary);
+    border: 1px solid var(--border-light);
+  }
+  .acb-ghost:hover { background: var(--bg-strong); border-color: var(--border); }
+  .acb-primary {
+    background: var(--color-primary); color: #fff;
+    box-shadow: 0 1px 4px rgba(47,93,80,0.2);
+  }
+  .acb-primary:hover { background: var(--color-primary-hover); }
+
+  .acb-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .acb-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border: 1px solid var(--border); border-radius: 16px;
+    font-size: 11px; color: var(--text-tertiary); cursor: pointer;
+    background: transparent; transition: all 0.15s; font-family: var(--font-body);
+  }
+  .acb-chip:hover { border-color: var(--color-primary-border); color: var(--color-primary); background: var(--color-primary-bg); }
+  .acb-chip .chip-icon { font-size: 10px; }
+
+  /* ============================
+     Reference Panel (Right)
+     ============================ */
+  .ref-panel {
+    width: 320px; min-width: 260px;
+    border-left: 1px solid var(--border);
+    background: var(--bg-elevated);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transition: width 0.25s ease, opacity 0.2s;
+  }
+  .ref-panel.collapsed { width: 0; min-width: 0; opacity: 0; border-left: none; overflow: hidden; }
+
+  .rp-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+    min-height: 42px;
+  }
+  .rp-tabs { display: flex; gap: 0; }
+  .rp-tab {
+    padding: 5px 12px; border: none; background: transparent;
+    font-size: 12px; font-weight: 500; color: var(--text-tertiary);
+    cursor: pointer; transition: all 0.15s; position: relative;
+    font-family: var(--font-body);
+  }
+  .rp-tab:hover { color: var(--text-secondary); }
+  .rp-tab.active { color: var(--color-primary); }
+  .rp-tab.active::after {
+    content: ''; position: absolute; bottom: -10px; left: 12px; right: 12px;
+    height: 2px; background: var(--color-primary); border-radius: 1px;
+  }
+  .rp-close {
+    width: 24px; height: 24px; border: none; background: transparent;
+    border-radius: var(--radius-sm); color: var(--text-light);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; transition: all 0.12s;
+  }
+  .rp-close:hover { background: var(--bg-muted); color: var(--text-secondary); }
+
+  .rp-body { flex: 1; overflow-y: auto; padding: 16px; }
+
+  /* Reference fields */
+  .ref-section { margin-bottom: 16px; }
+  .ref-section-title {
+    font-size: 11px; font-weight: 600; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .ref-section-title .icon { font-size: 10px; }
+
+  .ref-field { margin-bottom: 10px; }
+  .ref-field-label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 3px; font-weight: 500; }
+  .ref-field-value {
+    font-size: 13px; line-height: 1.65; color: var(--text-secondary);
+    padding: 8px 10px; background: var(--bg-muted); border-radius: var(--radius-md);
+    border: 1px solid transparent; transition: border-color 0.15s;
+  }
+  .ref-field-value:hover { border-color: var(--border); }
+  .ref-field-value.editable { cursor: text; }
+  .ref-field-value.editable:focus { border-color: var(--color-primary-border); background: var(--bg-elevated); outline: none; }
+
+  .ref-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .ref-tag {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; background: var(--color-primary-bg); color: var(--color-primary);
+    border-radius: 4px; font-size: 11.5px; font-weight: 500;
+  }
+  .ref-tag.status-planted { background: var(--color-warning-bg); color: var(--color-warning); }
+  .ref-tag.status-resolved { background: var(--color-success-bg); color: var(--color-success); }
+
+  .ref-divider { height: 1px; background: var(--border-light); margin: 14px 0; }
+
+  /* AI Suggestion Card in Ref Panel */
+  .ai-suggest {
+    border: 1px solid var(--color-primary-border);
+    border-radius: var(--radius-lg);
+    padding: 14px; background: var(--color-primary-bg);
+    margin-top: 8px;
+  }
+  .ai-suggest-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .ai-suggest-label {
+    font-size: 11px; font-weight: 600; color: var(--color-primary);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .ai-suggest-actions { display: flex; gap: 5px; }
+  .ai-suggest-btn {
+    padding: 3px 8px; border-radius: var(--radius-sm); font-size: 10.5px;
+    cursor: pointer; transition: all 0.12s; font-family: var(--font-body); font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated); color: var(--text-secondary);
+  }
+  .ai-suggest-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .ai-suggest-btn.primary {
+    background: var(--color-primary); color: #fff; border-color: var(--color-primary);
+  }
+  .ai-suggest-content { font-size: 12.5px; line-height: 1.7; color: var(--text-secondary); }
+  .ai-suggest-content strong { color: var(--text-primary); font-weight: 500; }
+
+  /* ============================
+     AI Overlay Panel
+     ============================ */
+  .ai-overlay {
+    position: fixed; bottom: 60px; right: 24px;
+    width: 420px; max-height: 50vh;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    z-index: 200;
+    animation: slideUp 0.25s ease-out;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .ao-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ao-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .ao-title .sparkle { color: var(--color-primary); }
+  .ao-meta { font-size: 11px; color: var(--text-light); display: flex; gap: 10px; }
+  .ao-close {
+    width: 24px; height: 24px; border: none; background: transparent;
+    border-radius: var(--radius-sm); color: var(--text-light);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; transition: all 0.12s;
+  }
+  .ao-close:hover { background: var(--bg-muted); color: var(--text-secondary); }
+
+  .ao-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .ao-result {
+    font-size: 14px; line-height: 1.85; color: var(--text-primary);
+    font-family: var(--font-body);
+  }
+  .ao-result p { margin-bottom: 0.8em; }
+  .ao-result .typing-cursor {
+    display: inline-block; width: 2px; height: 1em;
+    background: var(--color-primary); margin-left: 2px;
+    animation: blink 0.8s step-end infinite; vertical-align: text-bottom;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .ao-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ao-actions { display: flex; gap: 6px; }
+  .ao-action {
+    padding: 5px 12px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    font-size: 12px; cursor: pointer; background: var(--bg-elevated);
+    color: var(--text-secondary); transition: all 0.15s; font-family: var(--font-body);
+  }
+  .ao-action:hover { border-color: var(--border-strong); background: var(--bg-muted); }
+  .ao-action.adopt {
+    background: var(--color-primary); color: #fff; border-color: var(--color-primary);
+  }
+  .ao-action.adopt:hover { background: var(--color-primary-hover); }
+
+  /* ============================
+     Footer
+     ============================ */
+  .footerbar {
+    height: 28px; min-height: 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-light);
+  }
+  .fb-group { display: flex; align-items: center; gap: 14px; }
+  .fb-item { display: inline-flex; align-items: center; gap: 4px; }
+  .fb-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .fb-dot.ok { background: var(--color-success); }
+  .fb-dot.warn { background: var(--color-warning); }
+
+  /* ============================
+     Scrollbar
+     ============================ */
+  * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  *::-webkit-scrollbar { width: 5px; height: 5px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  *::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+  /* ============================
+     Drag Handle
+     ============================ */
+  .drag-handle {
+    width: 5px; cursor: col-resize; position: relative;
+    flex-shrink: 0; z-index: 10;
+  }
+  .drag-handle::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3px; height: 32px; border-radius: 2px;
+    background: var(--border); transition: background 0.15s;
+  }
+  .drag-handle:hover::after { background: var(--color-primary-border); }
+
+  /* ============================
+     Overlay backdrop
+     ============================ */
+  .overlay-backdrop {
+    position: fixed; inset: 0; background: rgba(24,28,34,0.08);
+    z-index: 190; animation: fadeIn 0.2s;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ===== Topbar ===== -->
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-brand">AI Writer</span>
+      <span class="tb-divider"></span>
+      <span class="tb-book">夜行</span>
+    </div>
+    <div class="tb-right">
+      <button class="tb-icon" title="搜索">🔍</button>
+      <button class="tb-icon" title="设置">⚙</button>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <!-- ===== Activity Bar ===== -->
+    <div class="activity-bar">
+      <button class="ab-btn" title="书籍信息">📊</button>
+      <button class="ab-btn" title="世界规则">🌐</button>
+      <button class="ab-btn" title="设定库">📖</button>
+      <button class="ab-btn" title="标签库">🏷</button>
+      <button class="ab-btn active" title="创作区">✏</button>
+      <button class="ab-btn" title="伏笔库">📌</button>
+      <button class="ab-btn" title="正文库">📚</button>
+      <button class="ab-btn" title="事实库">📋</button>
+      <div class="ab-spacer"></div>
+      <button class="ab-btn" title="返回">◀</button>
+    </div>
+
+    <!-- ===== Navigation Tree ===== -->
+    <div class="nav-tree">
+      <div class="nt-header">
+        <span class="nt-title">大纲导航</span>
+        <button class="nt-add" title="新建卷">＋</button>
+      </div>
+      <div class="nt-body">
+        <div class="nt-section">
+          <div class="nt-item">
+            <span class="nt-icon">📋</span>
+            <span class="nt-label">总纲</span>
+          </div>
+        </div>
+
+        <div class="vol-group">
+          <div class="vol-header" onclick="toggleVol(this)">
+            <span class="vol-arrow">▼</span>
+            <span class="nt-label">第一卷 · 迷雾觉醒</span>
+            <span class="nt-badge">5</span>
+          </div>
+          <div class="ch-list">
+            <div class="ch-item" onclick="selCh(this,'01','深夜的乘客')">
+              <span class="ch-num">01</span><span class="ch-dot dot-d"></span><span class="nt-label">深夜的乘客</span>
+            </div>
+            <div class="ch-item" onclick="selCh(this,'02','消失的地址')">
+              <span class="ch-num">02</span><span class="ch-dot dot-d"></span><span class="nt-label">消失的地址</span>
+            </div>
+            <div class="ch-item active" onclick="selCh(this,'03','梦境碎片')">
+              <span class="ch-num">03</span><span class="ch-dot dot-w"></span><span class="nt-label">梦境碎片</span>
+            </div>
+            <div class="ch-item" onclick="selCh(this,'04','镜中人')">
+              <span class="ch-num">04</span><span class="ch-dot dot-p"></span><span class="nt-label">镜中人</span>
+            </div>
+            <div class="ch-item" onclick="selCh(this,'05','废弃医院')">
+              <span class="ch-num">05</span><span class="ch-dot dot-p"></span><span class="nt-label">废弃医院</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="vol-group">
+          <div class="vol-header" onclick="toggleVol(this)">
+            <span class="vol-arrow collapsed">▼</span>
+            <span class="nt-label">第二卷 · 暗流涌动</span>
+            <span class="nt-badge">12</span>
+          </div>
+          <div class="ch-list" style="display:none">
+            <div class="ch-item"><span class="ch-num">06</span><span class="ch-dot dot-p"></span><span class="nt-label">新线索</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Content Area ===== -->
+    <div class="content-area">
+      <!-- Editor Toolbar -->
+      <div class="editor-toolbar">
+        <div class="et-left">
+          <div class="et-breadcrumb">
+            <span>第一卷</span>
+            <span class="et-sep">›</span>
+            <span class="current">第3章 梦境碎片</span>
+          </div>
+        </div>
+        <div class="et-right">
+          <span class="et-count">1,247 / 3,000</span>
+          <div class="status-pills">
+            <button class="s-pill" onclick="setSt(this)">已规划</button>
+            <button class="s-pill active" onclick="setSt(this)">撰写中</button>
+            <button class="s-pill" onclick="setSt(this)">已完成</button>
+          </div>
+          <button class="save-btn saved" onclick="toggleSave(this)">已保存</button>
+          <button class="ai-trigger" onclick="showAiPanel()">
+            <span class="sparkle">✦</span> AI 生成
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor + Reference Split -->
+      <div class="editor-split">
+        <!-- Editor Main -->
+        <div class="editor-main">
+          <div class="editor-body">
+            <div class="editor-content">
+              <div class="chapter-title" contenteditable="true" spellcheck="false">梦境碎片</div>
+              <div class="prose" contenteditable="true" spellcheck="false">
+                <p>深夜十一点四十三分。</p>
+                <p>林夜把车停在路边，透过后视镜看了一眼后座。那个男人从上车到现在一直低着头，像是在看什么东西。路灯的光透过车窗，在男人的侧脸上投下明暗交替的阴影。</p>
+                <p>"到了。"男人突然开口，声音沙哑得像是砂纸划过玻璃。</p>
+                <p>林夜这才注意到计价器上的数字已经跳到了一百二十块。他从没走过这么远的夜路。计价器的红色数字在黑暗中格外刺眼，像是某种不祥的倒计时。</p>
+                <p>男人递过来一张皱巴巴的纸条，上面写着一个地址。林夜接过来的时候，手指碰到了男人的指尖——</p>
+                <p class="cursor-line">冰凉得不像是活人的温度。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Command Bar -->
+          <div class="ai-command-bar">
+            <div class="acb-chips">
+              <button class="acb-chip" onclick="showAiPanel()"><span class="chip-icon">✦</span> 润色选中段落</button>
+              <button class="acb-chip" onclick="showAiPanel()"><span class="chip-icon">✦</span> 扩写</button>
+              <button class="acb-chip" onclick="showAiPanel()"><span class="chip-icon">✦</span> 去 AI 味</button>
+              <button class="acb-chip" onclick="showAiPanel()"><span class="chip-icon">✦</span> 生成续写</button>
+            </div>
+            <div class="acb-row">
+              <input class="acb-input" placeholder="输入 AI 指令... 例如：把这段改得更紧张一些">
+              <button class="acb-btn acb-ghost">过审</button>
+              <button class="acb-btn acb-primary"><span class="sparkle">✦</span> 执行</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drag Handle -->
+        <div class="drag-handle"></div>
+
+        <!-- Reference Panel -->
+        <div class="ref-panel" id="refPanel">
+          <div class="rp-header">
+            <div class="rp-tabs">
+              <button class="rp-tab active" onclick="setTab(this)">章纲</button>
+              <button class="rp-tab" onclick="setTab(this)">角色</button>
+              <button class="rp-tab" onclick="setTab(this)">伏笔</button>
+              <button class="rp-tab" onclick="setTab(this)">事实</button>
+            </div>
+            <button class="rp-close" onclick="toggleRefPanel()" title="收起参考面板">✕</button>
+          </div>
+          <div class="rp-body">
+            <!-- 章纲 Tab -->
+            <div class="ref-section">
+              <div class="ref-section-title"><span class="icon">📝</span> 情节概要</div>
+              <div class="ref-field-value editable" contenteditable="true" spellcheck="false">主角在梦中看到了一段不属于自己的记忆，记忆中出现了一个和他长相一样的人，站在一栋废弃的建筑前。醒来后发现枕边多了一张从未见过的照片。</div>
+            </div>
+
+            <div class="ref-divider"></div>
+
+            <div class="ref-section">
+              <div class="ref-section-title"><span class="icon">🔗</span> 上下文衔接</div>
+              <div class="ref-field">
+                <div class="ref-field-label">前文衔接</div>
+                <div class="ref-field-value">上一章结尾：主角在出租车后座发现了一张写着地址的纸条</div>
+              </div>
+              <div class="ref-field">
+                <div class="ref-field-label">后文悬念</div>
+                <div class="ref-field-value">照片背面写着一个日期，正是明天</div>
+              </div>
+            </div>
+
+            <div class="ref-divider"></div>
+
+            <div class="ref-section">
+              <div class="ref-section-title"><span class="icon">👤</span> 出场人物</div>
+              <div class="ref-tags">
+                <span class="ref-tag">林夜</span>
+                <span class="ref-tag">神秘乘客</span>
+              </div>
+            </div>
+
+            <div class="ref-section">
+              <div class="ref-section-title"><span class="icon">🎬</span> 场景</div>
+              <div class="ref-tags">
+                <span class="ref-tag">出租车内</span>
+                <span class="ref-tag">主角卧室</span>
+                <span class="ref-tag">梦境·废弃建筑</span>
+              </div>
+            </div>
+
+            <div class="ref-section">
+              <div class="ref-section-title"><span class="icon">⚡</span> 关键事件</div>
+              <div class="ref-tags">
+                <span class="ref-tag">发现照片</span>
+                <span class="ref-tag">梦境闪回</span>
+                <span class="ref-tag">记忆碎片觉醒</span>
+              </div>
+            </div>
+
+            <div class="ref-section">
+              <div class="ref-section-title"><span class="icon">📌</span> 伏笔</div>
+              <div class="ref-tags">
+                <span class="ref-tag status-planted">废弃建筑的真实身份</span>
+                <span class="ref-tag status-planted">照片上的日期</span>
+              </div>
+            </div>
+
+            <!-- AI Suggestion -->
+            <div class="ai-suggest">
+              <div class="ai-suggest-header">
+                <span class="ai-suggest-label"><span class="sparkle">✦</span> AI 章纲建议</span>
+                <div class="ai-suggest-actions">
+                  <button class="ai-suggest-btn">重新生成</button>
+                  <button class="ai-suggest-btn primary">采纳</button>
+                </div>
+              </div>
+              <div class="ai-suggest-content">
+                <strong>摘要：</strong>主角在出租车上接到一个神秘乘客，到达目的地后发现乘客消失，座位上留下一张写着地址的纸条和一张老照片。<br><br>
+                <strong>人物：</strong>林夜、神秘乘客<br>
+                <strong>场景：</strong>深夜出租车、城市街道<br>
+                <strong>事件：</strong>接到神秘乘客、乘客消失、发现纸条和照片
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <div class="footerbar">
+    <div class="fb-group">
+      <span class="fb-item"><span class="fb-dot ok"></span> AI 已配置</span>
+      <span class="fb-item">·</span>
+      <span class="fb-item">DeepSeek / deepseek-chat</span>
+    </div>
+    <div class="fb-group">
+      <span class="fb-item">3 卷 · 17 章 · 42,380 字</span>
+      <span class="fb-item">·</span>
+      <span class="fb-item">v0.1.0</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AI Overlay Panel ===== -->
+<div class="overlay-backdrop" id="aiBackdrop" style="display:none" onclick="hideAiPanel()"></div>
+<div class="ai-overlay" id="aiPanel" style="display:none">
+  <div class="ao-header">
+    <div class="ao-title"><span class="sparkle">✦</span> AI 内容生成</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="ao-meta">
+        <span>1,204 tokens</span>
+        <span>3.2s</span>
+      </div>
+      <button class="ao-close" onclick="hideAiPanel()">✕</button>
+    </div>
+  </div>
+  <div class="ao-body">
+    <div class="ao-result" id="aiResult">
+      <p>深夜十一点四十三分，城市边缘的路灯稀疏得像是被遗忘的星辰。</p>
+      <p>林夜把车停在路边，引擎的低鸣在寂静中格外清晰。他透过后视镜看了一眼后座——那个男人从上车到现在一直低着头，佝偻的身影几乎融进了车厢的暗影里。</p>
+      <p>"到了。"</p>
+      <p>男人突然开口，声音沙哑得像砂纸划过生锈的铁皮。林夜的手指不自觉地收紧了方向盘。他这才注意到计价器上的数字——一百二十块，红色的LED数字在黑暗中跳动，像某种不祥的倒计时。</p>
+      <p>他从没走过这么远的夜路。</p>
+      <p>男人递过来一张皱巴巴的纸条。林夜接过去的时候，指尖触到了男人的指腹——</p>
+      <p>冰凉。干燥。像是触碰到了陈年的纸页，而不是一个活人的皮肤。<span class="typing-cursor"></span></p>
+    </div>
+  </div>
+  <div class="ao-footer">
+    <div class="ao-actions">
+      <button class="ao-action" onclick="hideAiPanel()">放弃</button>
+      <button class="ao-action">重新生成</button>
+    </div>
+    <button class="ao-action adopt" onclick="hideAiPanel()">采纳并替换</button>
+  </div>
+</div>
+
+<script>
+function toggleVol(el) {
+  const arrow = el.querySelector('.vol-arrow');
+  const list = el.nextElementSibling;
+  if (list.style.display === 'none') { list.style.display = 'block'; }
+  else { list.style.display = 'none'; }
+  arrow.classList.toggle('collapsed');
+}
+
+function setSt(el) {
+  el.parentElement.querySelectorAll('.s-pill').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function selCh(el, num, title) {
+  document.querySelectorAll('.ch-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelector('.et-breadcrumb .current').textContent = '第' + parseInt(num) + '章 ' + title;
+  document.querySelector('.chapter-title').textContent = title;
+}
+
+function setTab(el) {
+  el.parentElement.querySelectorAll('.rp-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleSave(el) {
+  if (el.textContent === '已保存') return;
+  el.textContent = '已保存';
+  el.classList.add('saved');
+}
+
+function showAiPanel() {
+  document.getElementById('aiBackdrop').style.display = 'block';
+  document.getElementById('aiPanel').style.display = 'flex';
+}
+
+function hideAiPanel() {
+  document.getElementById('aiBackdrop').style.display = 'none';
+  document.getElementById('aiPanel').style.display = 'none';
+}
+
+function toggleRefPanel() {
+  document.getElementById('refPanel').classList.toggle('collapsed');
+}
+</script>
+</body>
+</html>

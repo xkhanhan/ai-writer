@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>创作区 v6 — AI 原生写作工作台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   Design Tokens — 严格对齐 globals.css
+   ================================================================ */
+:root {
+  /* 主色 */
+  --color-primary: #2F5D50;
+  --color-primary-hover: #1e4438;
+  --color-primary-bg: rgba(47,93,80,0.05);
+  --color-primary-bg-hover: rgba(47,93,80,0.10);
+  --color-primary-border: rgba(47,93,80,0.20);
+  /* 功能色 */
+  --color-success: #2E8B57;
+  --color-success-bg: rgba(46,139,87,0.1);
+  --color-warning: #964400;
+  --color-warning-bg: rgba(150,68,0,0.1);
+  --color-error: #ba1a1a;
+  --color-error-bg: rgba(186,26,26,0.06);
+  /* 传统色 */
+  --color-jade: #2F5D50;
+  --color-gold: #964400;
+  --color-indigo: #465f88;
+  /* 背景 */
+  --bg-page: #f0ece4;
+  --bg-elevated: #faf8f4;
+  --bg-muted: #f5f2ec;
+  --bg-strong: #e8e4dc;
+  /* 文字 */
+  --text-primary: #1a1814;
+  --text-secondary: #4a4640;
+  --text-tertiary: #807b74;
+  --text-light: #b5b0a8;
+  --text-inverse: #ffffff;
+  /* 边框 */
+  --border: #ddd8d0;
+  --border-strong: #c0bbb3;
+  --border-light: #ebe7e0;
+  /* 阴影 */
+  --shadow: 0 1px 3px rgba(24,28,34,0.08);
+  --shadow-md: 0 4px 12px rgba(24,28,34,0.12);
+  --shadow-lg: 0 8px 24px rgba(24,28,34,0.16);
+  /* 间距 */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px;
+  --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px;
+  /* 圆角 */
+  --radius-sm: 0.25rem; --radius-md: 0.375rem;
+  --radius-lg: 0.5rem; --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+  /* 字体 */
+  --font-display: 'Noto Serif SC', serif;
+  --font-body: 'Inter', 'Noto Sans', 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  /* 滚动条 */
+  --scrollbar-thumb: #c8c0b4;
+  --scrollbar-thumb-hover: #a8a098;
+  /* 布局 */
+  --topbar-height: 56px;
+  --footerbar-height: 32px;
+}
+
+/* ================================================================
+   Reset
+   ================================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+::selection { background: var(--color-primary); color: var(--text-inverse); }
+a { color: inherit; text-decoration: none; }
+
+/* ================================================================
+   App Shell
+   ================================================================ */
+.shell { display: flex; flex-direction: column; height: 100vh; }
+
+/* --- Topbar (56px) --- */
+.topbar {
+  height: var(--topbar-height); min-height: var(--topbar-height);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--space-6);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+.tb-left { display: flex; align-items: center; gap: var(--space-4); }
+.tb-brand { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: 0.05em; }
+.tb-divider { height: 16px; width: 1px; background: var(--border); }
+.tb-book { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+.tb-right { display: flex; align-items: center; gap: var(--space-1); }
+.tb-icon {
+  width: 32px; height: 32px; border: none; background: transparent;
+  border-radius: var(--radius-md); color: var(--text-tertiary);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: background 0.2s;
+}
+.tb-icon:hover { background: var(--bg-muted); color: var(--text-primary); }
+
+/* --- Main Area --- */
+.main-area { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+/* --- Activity Bar (56px) --- */
+.activity-bar {
+  width: 56px; min-width: 56px;
+  background: var(--bg-strong);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center;
+  padding: var(--space-2) 0; gap: var(--space-1);
+}
+.ab-btn {
+  width: 40px; height: 40px; border: none; background: transparent;
+  border-radius: var(--radius-md); color: var(--text-tertiary);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: all 0.2s; position: relative;
+}
+.ab-btn:hover { background: var(--bg-muted); color: var(--text-secondary); }
+.ab-btn.active { color: var(--color-primary); background: var(--color-primary-bg); }
+.ab-btn.active::before {
+  content: ''; position: absolute; left: 0; top: 10px; bottom: 10px;
+  width: 2px; background: var(--color-primary); border-radius: 0 2px 2px 0;
+}
+.ab-spacer { flex: 1; }
+
+/* --- Left Panel: Outline Navigation --- */
+.left-panel {
+  width: 260px; min-width: 220px; max-width: 400px;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+  position: relative;
+}
+.lp-header {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.lp-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.04em; }
+.lp-add {
+  width: 24px; height: 24px; border: none; background: transparent;
+  border-radius: var(--radius-sm); color: var(--text-tertiary);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: all 0.2s;
+}
+.lp-add:hover { background: var(--color-primary-bg); color: var(--color-primary); }
+.lp-body { flex: 1; overflow-y: auto; padding: var(--space-1) var(--space-2); }
+
+.nt-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 5px var(--space-3); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s; font-size: 13px;
+  position: relative; color: var(--text-secondary);
+}
+.nt-item:hover { background: var(--bg-muted); }
+.nt-item.active { background: var(--color-primary-bg); color: var(--color-primary); font-weight: 500; }
+.nt-item.active::before {
+  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+  width: 2px; background: var(--color-primary); border-radius: 0 2px 2px 0;
+}
+.nt-icon { font-size: 11px; width: 16px; text-align: center; flex-shrink: 0; opacity: 0.6; }
+.nt-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nt-badge {
+  font-size: 10px; padding: 0 6px; border-radius: var(--radius-full);
+  background: var(--bg-muted); color: var(--text-light); font-weight: 500;
+}
+
+.vol-group { margin-bottom: var(--space-1); }
+.vol-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px var(--space-3); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 12px; font-weight: 500;
+  transition: background 0.15s; color: var(--text-secondary);
+}
+.vol-header:hover { background: var(--bg-muted); }
+.vol-arrow {
+  font-size: 8px; color: var(--text-light); transition: transform 0.2s;
+  width: 12px; text-align: center;
+}
+.vol-arrow.collapsed { transform: rotate(-90deg); }
+.ch-list { padding-left: 14px; }
+.ch-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px var(--space-3); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 12px; transition: background 0.15s;
+  color: var(--text-secondary);
+}
+.ch-item:hover { background: var(--bg-muted); }
+.ch-item.active { background: var(--color-primary-bg); color: var(--color-primary); font-weight: 500; }
+.ch-num {
+  color: var(--text-light); font-size: 10px; width: 16px;
+  text-align: right; font-family: var(--font-mono);
+}
+.ch-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.dot-p { background: var(--text-light); }
+.dot-w { background: var(--color-warning); }
+.dot-d { background: var(--color-success); }
+
+.lp-drag {
+  position: absolute; top: 0; right: -3px; bottom: 0; width: 6px;
+  cursor: col-resize; z-index: 10;
+}
+.lp-drag::after {
+  content: ''; position: absolute; top: 50%; right: 2px;
+  transform: translateY(-50%); width: 3px; height: 32px;
+  border-radius: 2px; background: transparent; transition: background 0.15s;
+}
+.lp-drag:hover::after { background: var(--color-primary-border); }
+
+/* ================================================================
+   Center: Editor
+   ================================================================ */
+.editor-center {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; min-width: 0;
+}
+.ed-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-2) var(--space-5);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-elevated); min-height: 42px;
+}
+.et-left { display: flex; align-items: center; gap: var(--space-3); }
+.et-status { display: inline-flex; background: var(--bg-muted); border-radius: var(--radius-full); padding: 2px; }
+.et-pill {
+  padding: 3px 10px; border: none; background: transparent;
+  border-radius: var(--radius-full); font-size: 11px; cursor: pointer;
+  color: var(--text-tertiary); font-weight: 500; transition: all 0.15s;
+  font-family: var(--font-body);
+}
+.et-pill:hover { color: var(--text-secondary); }
+.et-pill.active { background: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow); }
+
+.et-right { display: flex; align-items: center; gap: var(--space-2); }
+.et-count { font-size: 11px; color: var(--text-light); font-family: var(--font-mono); }
+.et-sep { width: 1px; height: 14px; background: var(--border-light); }
+.et-btn {
+  height: 28px; padding: 0 var(--space-3);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+  font-family: var(--font-body); display: inline-flex; align-items: center;
+  gap: 4px; background: var(--bg-elevated); color: var(--text-secondary);
+}
+.et-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.et-btn.saved { border-color: var(--color-success); color: var(--color-success); }
+.et-btn.ai-primary {
+  background: var(--color-primary); border-color: var(--color-primary);
+  color: var(--text-inverse);
+}
+.et-btn.ai-primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+
+/* Editor Body */
+.ed-body { flex: 1; overflow-y: auto; display: flex; justify-content: center; }
+.ed-content { width: 100%; max-width: 680px; padding: var(--space-8) var(--space-8); }
+
+.ch-title {
+  font-family: var(--font-display); font-size: 22px; font-weight: 600;
+  color: var(--text-primary); margin-bottom: var(--space-8);
+  line-height: 1.4; outline: none;
+  border-bottom: 1px solid transparent; padding-bottom: var(--space-3);
+  transition: border-color 0.2s;
+}
+.ch-title:focus { border-bottom-color: var(--color-primary-border); }
+
+.prose {
+  font-size: 15px; line-height: 2; color: var(--text-primary);
+  outline: none; min-height: 300px; letter-spacing: 0.02em;
+}
+.prose p { margin-bottom: 1em; text-indent: 2em; }
+.prose p:first-child { text-indent: 0; }
+
+/* ================================================================
+   Right: AI Panel (核心改动)
+   ================================================================ */
+.ai-panel {
+  width: 380px; min-width: 320px; max-width: 500px;
+  border-left: 1px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+
+/* --- AI Panel Header --- */
+.ai-panel-header {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 44px;
+}
+.ai-panel-left { display: flex; align-items: center; gap: var(--space-2); }
+.ai-mode-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 var(--space-2);
+  border-radius: var(--radius-sm); font-size: 10px; font-weight: 600;
+  border: 1px solid;
+}
+.ai-mode-tag .dot { width: 6px; height: 6px; border-radius: 50%; }
+.ai-mode-tag.explore { background: var(--color-primary-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
+.ai-mode-tag.explore .dot { background: var(--color-primary); }
+.ai-mode-tag.plan { background: var(--color-success-bg); color: var(--color-success); border-color: rgba(46,139,87,0.2); }
+.ai-mode-tag.plan .dot { background: var(--color-success); }
+.ai-mode-tag.draft { background: var(--color-warning-bg); color: var(--color-warning); border-color: rgba(150,68,0,0.15); }
+.ai-mode-tag.draft .dot { background: var(--color-warning); }
+.ai-mode-tag.check { background: rgba(70,95,136,0.08); color: var(--color-indigo); border-color: rgba(70,95,136,0.2); }
+.ai-mode-tag.check .dot { background: var(--color-indigo); }
+
+.ai-panel-title { font-size: 13px; font-weight: 600; }
+.ai-panel-right { display: flex; align-items: center; gap: var(--space-1); }
+.ai-panel-btn {
+  width: 24px; height: 24px; border: none; background: transparent;
+  border-radius: var(--radius-sm); color: var(--text-light);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; transition: all 0.15s;
+}
+.ai-panel-btn:hover { background: var(--bg-muted); color: var(--text-secondary); }
+
+/* --- AI Mode Tabs --- */
+.ai-mode-tabs {
+  display: flex; border-bottom: 1px solid var(--border-light);
+  padding: 0 var(--space-4);
+}
+.ai-mode-tab {
+  flex: 1; padding: 8px 0; border: none; background: transparent;
+  font-size: 11px; font-weight: 500; color: var(--text-tertiary);
+  cursor: pointer; transition: all 0.15s; position: relative;
+  font-family: var(--font-body); text-align: center;
+}
+.ai-mode-tab:hover { color: var(--text-secondary); }
+.ai-mode-tab.active { color: var(--color-primary); }
+.ai-mode-tab.active::after {
+  content: ''; position: absolute; bottom: 0; left: 8px; right: 8px;
+  height: 2px; background: var(--color-primary); border-radius: 1px 1px 0 0;
+}
+
+/* --- AI Context Bar --- */
+.ai-context-bar {
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-muted);
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.ai-ctx-label { font-size: 10px; color: var(--text-light); font-weight: 500; }
+.ai-ctx-tag {
+  display: inline-flex; align-items: center; height: 18px;
+  padding: 0 6px; border-radius: var(--radius-sm);
+  font-size: 10px; font-weight: 500;
+  background: var(--color-primary-bg); color: var(--color-primary);
+  border: 1px solid var(--color-primary-border);
+}
+.ai-ctx-tag.loaded::before { content: '✓ '; }
+
+/* --- AI Body --- */
+.ai-body { flex: 1; overflow-y: auto; padding: var(--space-3) var(--space-4); }
+
+/* AI Card */
+.ai-card {
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--bg-elevated); overflow: hidden; margin-bottom: var(--space-2);
+  transition: border-color 0.2s;
+}
+.ai-card.adopted { border-color: var(--color-success); background: #fcfefc; }
+.ai-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-muted);
+}
+.ai-card.adopted .ai-card-header { background: var(--color-success-bg); border-bottom-color: rgba(46,139,87,0.1); }
+.ai-card-title { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.ai-card-status { font-size: 10px; font-weight: 500; color: var(--color-success); }
+.ai-card-body { padding: var(--space-3); }
+.ai-card-content {
+  font-size: 13px; color: var(--text-primary); line-height: 1.7;
+  min-height: 20px; outline: none; word-break: break-word;
+}
+.ai-card-footer {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-muted);
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.ai-card.adopted .ai-card-footer { background: var(--color-success-bg); }
+
+/* AI Card Buttons */
+.ai-act {
+  height: 24px; padding: 0 var(--space-2);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 11px; cursor: pointer; background: var(--bg-elevated);
+  color: var(--text-secondary); transition: all 0.15s;
+  font-family: var(--font-body); font-weight: 500;
+}
+.ai-act:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.ai-act.adopted { background: var(--color-success); color: var(--text-inverse); border-color: var(--color-success); }
+.ai-act.primary { background: var(--color-primary); color: var(--text-inverse); border-color: var(--color-primary); }
+.ai-act.primary:hover { background: var(--color-primary-hover); }
+
+/* AI Text Preview (Draft mode) */
+.ai-draft-preview {
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--bg-elevated); overflow: hidden;
+}
+.ai-draft-header {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-muted);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ai-draft-title { font-size: 12px; font-weight: 600; }
+.ai-draft-meta { font-size: 10px; color: var(--text-light); }
+.ai-draft-body { padding: var(--space-3); }
+.ai-draft-text {
+  font-size: 13px; color: var(--text-primary); line-height: 1.9;
+}
+.ai-draft-text p { margin-bottom: 10px; text-indent: 2em; }
+.ai-draft-actions {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border-light);
+  display: flex; gap: var(--space-2);
+}
+.ai-typing-cursor {
+  display: inline-block; width: 2px; height: 1em;
+  background: var(--color-primary); margin-left: 2px;
+  animation: blink 0.8s step-end infinite;
+  vertical-align: text-bottom;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* AI Stats */
+.ai-stats {
+  display: flex; justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  font-size: 10px; color: var(--text-light);
+  border-top: 1px solid var(--border-light);
+}
+
+/* AI Issue Card (Check mode) */
+.ai-issue {
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--bg-elevated); overflow: hidden; margin-bottom: var(--space-2);
+}
+.ai-issue-header {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+}
+.ai-issue-icon {
+  width: 20px; height: 20px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.ai-issue-icon.error { background: var(--color-error-bg); color: var(--color-error); }
+.ai-issue-icon.warning { background: var(--color-warning-bg); color: var(--color-warning); }
+.ai-issue-title { font-size: 12px; font-weight: 600; flex: 1; }
+.ai-issue-severity {
+  font-size: 10px; font-weight: 600; padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+.ai-issue-severity.error { background: var(--color-error-bg); color: var(--color-error); }
+.ai-issue-severity.warning { background: var(--color-warning-bg); color: var(--color-warning); }
+.ai-issue-body { padding: var(--space-2) var(--space-3); }
+.ai-issue-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: var(--space-2); }
+.ai-issue-refs { display: flex; gap: 4px; flex-wrap: wrap; }
+.ai-issue-ref {
+  display: inline-flex; height: 18px; padding: 0 6px;
+  border-radius: var(--radius-sm); font-size: 10px;
+  background: var(--bg-muted); color: var(--text-light); align-items: center;
+}
+.ai-issue-footer {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-muted);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* --- AI Footer (Input) --- */
+.ai-footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-elevated);
+}
+.ai-input-wrap {
+  width: 100%; min-height: 56px; padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  font-size: 13px; color: var(--text-primary);
+  background: #fff; outline: none; resize: vertical;
+  line-height: 1.5; font-family: var(--font-body);
+}
+.ai-input-wrap:focus { border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-bg); }
+.ai-input-wrap::placeholder { color: var(--text-light); }
+.ai-footer-actions {
+  display: flex; gap: var(--space-2); margin-top: var(--space-2);
+}
+
+/* ================================================================
+   Footer (32px)
+   ================================================================ */
+.footerbar {
+  height: var(--footerbar-height); min-height: var(--footerbar-height);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--space-6);
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-light);
+}
+.fb-group { display: flex; align-items: center; gap: var(--space-4); }
+.fb-item { display: inline-flex; align-items: center; gap: var(--space-1); }
+.fb-dot { width: 5px; height: 5px; border-radius: 50%; }
+.fb-dot.ok { background: var(--color-success); }
+
+/* ================================================================
+   Scrollbar
+   ================================================================ */
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) transparent; }
+*::-webkit-scrollbar { width: 5px; height: 5px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background-color: var(--scrollbar-thumb-hover); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ===== Topbar ===== -->
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-brand">AI Writer</span>
+      <span class="tb-divider"></span>
+      <span class="tb-book">夜行 · 都市悬疑</span>
+    </div>
+    <div class="tb-right">
+      <button class="tb-icon" title="搜索">🔍</button>
+      <button class="tb-icon" title="设置">⚙</button>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <!-- ===== Activity Bar ===== -->
+    <div class="activity-bar">
+      <button class="ab-btn" title="书籍信息">📊</button>
+      <button class="ab-btn" title="世界规则">🌐</button>
+      <button class="ab-btn" title="设定库">📖</button>
+      <button class="ab-btn" title="标签库">🏷</button>
+      <button class="ab-btn active" title="创作区">✏</button>
+      <button class="ab-btn" title="伏笔库">📌</button>
+      <button class="ab-btn" title="正文库">📚</button>
+      <button class="ab-btn" title="事实库">📋</button>
+      <div class="ab-spacer"></div>
+      <button class="ab-btn" title="返回">◀</button>
+    </div>
+
+    <!-- ===== Left Panel: Outline ===== -->
+    <div class="left-panel">
+      <div class="lp-header">
+        <span class="lp-title">大纲导航</span>
+        <button class="lp-add" title="新建卷">＋</button>
+      </div>
+      <div class="lp-body">
+        <div class="nt-item">
+          <span class="nt-icon">📋</span><span class="nt-label">总纲</span>
+        </div>
+        <div class="vol-group">
+          <div class="vol-header" onclick="toggleVol(this)">
+            <span class="vol-arrow">▼</span>
+            <span class="nt-label">第一卷 · 迷雾觉醒</span>
+            <span class="nt-badge">5</span>
+          </div>
+          <div class="ch-list">
+            <div class="ch-item" onclick="selCh(this,'01','深夜的乘客')">
+              <span class="ch-num">01</span><span class="ch-dot dot-d"></span><span class="nt-label">深夜的乘客</span>
+            </div>
+            <div class="ch-item" onclick="selCh(this,'02','消失的地址')">
+              <span class="ch-num">02</span><span class="ch-dot dot-d"></span><span class="nt-label">消失的地址</span>
+            </div>
+            <div class="ch-item active" onclick="selCh(this,'03','梦境碎片')">
+              <span class="ch-num">03</span><span class="ch-dot dot-w"></span><span class="nt-label">梦境碎片</span>
+            </div>
+            <div class="ch-item" onclick="selCh(this,'04','镜中人')">
+              <span class="ch-num">04</span><span class="ch-dot dot-p"></span><span class="nt-label">镜中人</span>
+            </div>
+            <div class="ch-item" onclick="selCh(this,'05','废弃医院')">
+              <span class="ch-num">05</span><span class="ch-dot dot-p"></span><span class="nt-label">废弃医院</span>
+            </div>
+          </div>
+        </div>
+        <div class="vol-group">
+          <div class="vol-header" onclick="toggleVol(this)">
+            <span class="vol-arrow collapsed">▼</span>
+            <span class="nt-label">第二卷 · 暗流涌动</span>
+            <span class="nt-badge">12</span>
+          </div>
+          <div class="ch-list" style="display:none">
+            <div class="ch-item"><span class="ch-num">06</span><span class="ch-dot dot-p"></span><span class="nt-label">新线索</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="lp-drag"></div>
+    </div>
+
+    <!-- ===== Editor Center ===== -->
+    <div class="editor-center">
+      <div class="ed-toolbar">
+        <div class="et-left">
+          <div class="et-status">
+            <button class="et-pill" onclick="setSt(this)">已规划</button>
+            <button class="et-pill active" onclick="setSt(this)">撰写中</button>
+            <button class="et-pill" onclick="setSt(this)">已完成</button>
+          </div>
+        </div>
+        <div class="et-right">
+          <span class="et-count">1,247 / 3,000</span>
+          <span class="et-sep"></span>
+          <button class="et-btn saved">✓ 已保存</button>
+        </div>
+      </div>
+      <div class="ed-body">
+        <div class="ed-content">
+          <div class="ch-title" contenteditable="true" spellcheck="false">梦境碎片</div>
+          <div class="prose" contenteditable="true" spellcheck="false">
+            <p>深夜十一点四十三分。</p>
+            <p>林夜把车停在路边，透过后视镜看了一眼后座。那个男人从上车到现在一直低着头，像是在看什么东西。路灯的光透过车窗，在男人的侧脸上投下明暗交替的阴影。</p>
+            <p>"到了。"男人突然开口，声音沙哑得像是砂纸划过玻璃。</p>
+            <p>林夜这才注意到计价器上的数字已经跳到了一百二十块。他从没走过这么远的夜路。计价器的红色数字在黑暗中格外刺眼，像是某种不祥的倒计时。</p>
+            <p>男人递过来一张皱巴巴的纸条，上面写着一个地址。林夜接过来的时候，手指碰到了男人的指尖——</p>
+            <p style="border-left:2px solid var(--color-primary);padding-left:var(--space-3);margin-left:-14px;">冰凉得不像是活人的温度。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Right: AI Panel ===== -->
+    <div class="ai-panel">
+      <!-- Header -->
+      <div class="ai-panel-header">
+        <div class="ai-panel-left">
+          <span class="ai-mode-tag draft"><span class="dot"></span>写作</span>
+          <span class="ai-panel-title">AI 写作</span>
+        </div>
+        <div class="ai-panel-right">
+          <button class="ai-panel-btn" title="提示词模板">📋</button>
+        </div>
+      </div>
+
+      <!-- Mode Tabs -->
+      <div class="ai-mode-tabs">
+        <button class="ai-mode-tab" onclick="switchAiMode(this)">探索</button>
+        <button class="ai-mode-tab" onclick="switchAiMode(this)">规划</button>
+        <button class="ai-mode-tab active" onclick="switchAiMode(this)">写作</button>
+        <button class="ai-mode-tab" onclick="switchAiMode(this)">检查</button>
+      </div>
+
+      <!-- Context Bar -->
+      <div class="ai-context-bar">
+        <span class="ai-ctx-label">上下文</span>
+        <span class="ai-ctx-tag loaded">总纲</span>
+        <span class="ai-ctx-tag loaded">章纲</span>
+        <span class="ai-ctx-tag loaded">前章末尾</span>
+        <span class="ai-ctx-tag loaded">角色 2</span>
+        <span class="ai-ctx-tag loaded">规则 3</span>
+        <span class="ai-ctx-tag loaded">事实 5</span>
+      </div>
+
+      <!-- AI Body -->
+      <div class="ai-body" id="aiBody">
+        <!-- Draft Mode: 全文预览 -->
+        <div class="ai-draft-preview">
+          <div class="ai-draft-header">
+            <span class="ai-draft-title">第 3 章 · 梦境碎片</span>
+            <span class="ai-draft-meta">约 3,200 字 · 阅读 8 分钟</span>
+          </div>
+          <div class="ai-draft-body">
+            <div class="ai-draft-text">
+              <p>深夜十一点四十三分，城市边缘的路灯稀疏得像是被遗忘的星辰。</p>
+              <p>林夜把车停在路边，引擎的低鸣在寂静中格外清晰。他透过后视镜看了一眼后座——那个男人从上车到现在一直低着头，佝偻的身影几乎融进了车厢的暗影里。</p>
+              <p>"到了。"</p>
+              <p>男人突然开口，声音沙哑得像砂纸划过生锈的铁皮。林夜的手指不自觉地收紧了方向盘。他这才注意到计价器上的数字——一百二十块，红色的LED数字在黑暗中跳动，像某种不祥的倒计时。</p>
+              <p>他从没走过这么远的夜路。</p>
+              <p>男人递过来一张皱巴巴的纸条。林夜接过去的时候，指尖触到了男人的指腹——</p>
+              <p>冰凉。干燥。像是触碰到了陈年的纸页，而不是一个活人的皮肤。<span class="ai-typing-cursor"></span></p>
+            </div>
+          </div>
+          <div class="ai-draft-actions">
+            <button class="ai-act primary" style="flex:1">采纳全文</button>
+            <button class="ai-act">复制</button>
+            <button class="ai-act">重新生成</button>
+          </div>
+        </div>
+        <div class="ai-stats">
+          <span>模型 deepseek-chat · Token 1,280 / 3,420</span>
+          <span>耗时 18.3s</span>
+        </div>
+      </div>
+
+      <!-- Footer (Input) -->
+      <div class="ai-footer">
+        <textarea class="ai-input-wrap" rows="2" placeholder="补充写作要求（如：增加对话、调整节奏、改写结尾...）"></textarea>
+        <div class="ai-footer-actions">
+          <button class="ai-act" style="flex:1">重新生成</button>
+          <button class="ai-act primary" style="flex:1">继续对话</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <div class="footerbar">
+    <div class="fb-group">
+      <span class="fb-item"><span class="fb-dot ok"></span> AI 已配置</span>
+      <span class="fb-item">·</span>
+      <span class="fb-item">DeepSeek / deepseek-chat</span>
+    </div>
+    <div class="fb-group">
+      <span class="fb-item">3 卷 · 17 章 · 42,380 字</span>
+      <span class="fb-item">·</span>
+      <span class="fb-item">v0.1.0</span>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleVol(el) {
+  const arrow = el.querySelector('.vol-arrow');
+  const list = el.nextElementSibling;
+  list.style.display = list.style.display === 'none' ? 'block' : 'none';
+  arrow.classList.toggle('collapsed');
+}
+
+function selCh(el, num, title) {
+  document.querySelectorAll('.ch-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelector('.ch-title').textContent = title;
+}
+
+function setSt(el) {
+  el.parentElement.querySelectorAll('.et-pill').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function switchAiMode(el) {
+  document.querySelectorAll('.ai-mode-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  // Update mode tag
+  const modes = { 0: ['explore','探索'], 1: ['plan','规划'], 2: ['draft','写作'], 3: ['check','检查'] };
+  const idx = Array.from(el.parentElement.children).indexOf(el);
+  const [cls, label] = modes[idx];
+  const tag = document.querySelector('.ai-mode-tag');
+  tag.className = 'ai-mode-tag ' + cls;
+  tag.innerHTML = '<span class="dot"></span>' + label;
+  document.querySelector('.ai-panel-title').textContent = 'AI ' + label;
+}
+</script>
+</body>
+</html>
