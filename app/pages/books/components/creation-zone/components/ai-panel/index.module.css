@@ -141,6 +141,11 @@
   margin-bottom: 2px;
 }
 
+.resultFieldLabel {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 .resultActions {
   display: flex;
   gap: 6px;

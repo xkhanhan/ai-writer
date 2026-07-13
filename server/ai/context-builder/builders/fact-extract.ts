@@ -25,7 +25,7 @@ export async function buildBookInfoSuggestContext(
 
   const userPrompt = renderTemplate(template, variables);
   const systemPrompt =
-    "你是一位资深网络小说策划。请根据用户提供的概念，以 JSON 格式返回完整的书籍信息建议。只返回 JSON，不要包含其他内容。";
+    "只返回 JSON，不要包含其他内容。";
 
   const fullText = systemPrompt + "\n\n" + userPrompt;
   const estimatedTokens = estimateTokens(fullText);

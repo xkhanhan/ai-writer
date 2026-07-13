@@ -1,108 +1,156 @@
 "use client";
 
-import React, { useMemo, useEffect, useState } from "react";
-import type { PromptTemplate, Book } from "@/app/types";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import type { Book } from "@/app/types";
 import { resolvePreview, type PreviewResult } from "../../api/preview";
 import styles from "./prompt-preview.module.css";
-
-/**
- * Filter out system-only blocks from template text for preview display.
- * Removes JSON code blocks and "返回格式" sections that are internal
- * to the AI and should not be shown to the user.
- */
-function filterSystemBlocks(text: string): string {
-  // Remove ```json ... ``` code blocks (return format templates)
-  let result = text.replace(/```json\s*\{[\s\S]*?\}\s*```/g, "");
-  // Remove "## 返回格式" and "## 格式约束" sections up to next ## or end
-  result = result.replace(/## 返回格式[\s\S]*?(?=## |\n---|\n*$)/g, "");
-  result = result.replace(/## 格式约束[\s\S]*?(?=## |\n---|\n*$)/g, "");
-  // Remove "## 审查输出要求" and "## 检查输出要求" sections
-  result = result.replace(/## 审查输出要求[\s\S]*?(?=## |\n---|\n*$)/g, "");
-  result = result.replace(/## 检查输出要求[\s\S]*?(?=## |\n---|\n*$)/g, "");
-  // Remove "## 必须删除的模式" and "## 必须增加的元素" sections
-  result = result.replace(/## 必须删除的模式[\s\S]*?(?=## |\n---|\n*$)/g, "");
-  result = result.replace(/## 必须增加的元素[\s\S]*?(?=## |\n---|\n*$)/g, "");
-  // Remove "## 输出格式" and "## 输出要求" sections
-  result = result.replace(/## 输出格式[\s\S]*?(?=## |\n---|\n*$)/g, "");
-  result = result.replace(/## 输出要求[\s\S]*?(?=## |\n---|\n*$)/g, "");
-  // Clean up excessive blank lines
-  result = result.replace(/\n{3,}/g, "\n\n");
-  return result.trim();
-}
 
 // ============ Props ============
 
 interface PromptPreviewProps {
-  template: PromptTemplate | null;
-  editContent: string;
+  /** System prompt content */
+  systemPrompt: string;
+  /** User prompt content */
+  userPrompt: string;
+  /** Selected book for variable resolution */
   book: Book | null;
+  /** Function key for fetching variable definitions */
+  functionKey?: string;
+}
+
+// ============ Debounce hook ============
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setDebounced(value), delayMs);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [value, delayMs]);
+
+  return debounced;
 }
 
 // ============ Component ============
 
 const PromptPreview = React.memo(function PromptPreview({
-  template,
-  editContent,
+  systemPrompt,
+  userPrompt,
   book,
+  functionKey,
 }: PromptPreviewProps) {
   const [previewResult, setPreviewResult] = useState<PreviewResult | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
-  // Build the full template text (use editContent which now contains the full template)
-  const fullTemplate = useMemo(() => {
-    if (!template) return "";
-    // editContent is the full template content (editor shows full template)
-    return editContent;
-  }, [template, editContent]);
+  // Debounce both parts (500ms) to avoid excessive API calls
+  const debouncedSystem = useDebouncedValue(systemPrompt, 500);
+  const debouncedUser = useDebouncedValue(userPrompt, 500);
 
-  // Call backend preview API when template or book changes
+  // Build the full template for preview API
+  const fullTemplate = debouncedSystem
+    ? debouncedSystem + "\n---\n" + debouncedUser
+    : debouncedUser;
+
+  // Call backend preview API when debounced values change
+  const fetchPreview = useCallback(async (template: string, bookId: string, fk: string) => {
+    setPreviewLoading(true);
+    try {
+      const res = await resolvePreview(template, bookId, fk);
+      if (res.ok) {
+        setPreviewResult(res.data);
+      }
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!fullTemplate || !book) {
       setPreviewResult(null);
       return;
     }
+    void fetchPreview(fullTemplate, book.id, functionKey ?? "");
+  }, [fullTemplate, book, functionKey, fetchPreview]);
 
-    let cancelled = false;
-    setPreviewLoading(true);
+  // Split resolved preview into system / user parts
+  const resolvedSystem = previewResult?.resolved
+    ? splitResolved(previewResult.resolved).systemPrompt
+    : "";
+  const resolvedUser = previewResult?.resolved
+    ? splitResolved(previewResult.resolved).userPrompt
+    : "";
 
-    resolvePreview(fullTemplate, book.id, template?.functionKey ?? "")
-      .then((res) => {
-        if (!cancelled && res.ok) {
-          setPreviewResult(res.data);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setPreviewLoading(false);
-      });
-
-    return () => { cancelled = true; };
-  }, [fullTemplate, book, template?.functionKey]);
-
-  // Filter system blocks from resolved preview
-  const resolvedPreview = useMemo(() => {
-    const raw = previewResult?.resolved ?? "";
-    return raw ? filterSystemBlocks(raw) : "";
-  }, [previewResult]);
+  const noTemplate = !systemPrompt && !userPrompt;
 
   return (
     <div className={styles.previewPanel}>
-      <div className={styles.previewContent}>
-        {!template ? (
-          <div className={styles.previewEmpty}>
-            从左侧列表中选择一个功能查看预览
+      {noTemplate ? (
+        <div className={styles.previewEmpty}>
+          从左侧列表中选择一个功能查看预览
+        </div>
+      ) : !book ? (
+        <div className={styles.previewEmpty}>
+          请在顶部选择一本书以预览提示词
+        </div>
+      ) : (
+        <>
+          {/* System Prompt Preview */}
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionBadge}>System</span>
+              <span className={styles.sectionLabel}>格式约束 / 输出要求</span>
+            </div>
+            <div className={styles.sectionContent}>
+              {previewLoading && !resolvedSystem ? (
+                <span className={styles.loadingHint}>加载中...</span>
+              ) : resolvedSystem ? (
+                resolvedSystem
+              ) : (
+                <span className={styles.emptyHint}>（无 System Prompt）</span>
+              )}
+            </div>
           </div>
-        ) : !book ? (
-          <div className={styles.previewEmpty}>
-            请在顶部选择一本书以预览提示词
+
+          {/* Divider */}
+          <div className={styles.divider} />
+
+          {/* User Prompt Preview */}
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <span className={`${styles.sectionBadge} ${styles.sectionBadgeUser}`}>User</span>
+              <span className={styles.sectionLabel}>角色描述 + 数据上下文（变量已替换）</span>
+            </div>
+            <div className={styles.sectionContent}>
+              {previewLoading && !resolvedUser ? (
+                <span className={styles.loadingHint}>加载中...</span>
+              ) : resolvedUser ? (
+                resolvedUser
+              ) : (
+                <span className={styles.emptyHint}>（无 User Prompt）</span>
+              )}
+            </div>
           </div>
-        ) : previewLoading && !resolvedPreview ? (
-          <div className={styles.previewEmpty}>加载中...</div>
-        ) : (
-          resolvedPreview
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 });
+
+// ============ Helpers ============
+
+const RESOLVED_SEPARATOR = "\n---\n";
+
+function splitResolved(full: string): { systemPrompt: string; userPrompt: string } {
+  const idx = full.indexOf(RESOLVED_SEPARATOR);
+  if (idx === -1) return { systemPrompt: "", userPrompt: full };
+  return {
+    systemPrompt: full.slice(0, idx),
+    userPrompt: full.slice(idx + RESOLVED_SEPARATOR.length),
+  };
+}
 
 export default PromptPreview;

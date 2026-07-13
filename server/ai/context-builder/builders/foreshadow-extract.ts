@@ -38,7 +38,7 @@ export async function buildFactConsistencyContext(
 
   const userPrompt = renderTemplate(template, variables);
   const systemPrompt =
-    "你是一位小说事实一致性检查专家。请仔细比对所有记录，客观列出矛盾和不一致之处。";
+    "请仔细比对所有记录，客观列出矛盾和不一致之处。";
 
   const fullText = systemPrompt + "\n\n" + userPrompt;
   const estimatedTokens = estimateTokens(fullText);

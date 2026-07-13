@@ -31,6 +31,21 @@ import PromptEditor from "./prompt-editor";
 import PromptPreview from "./prompt-preview";
 import styles from "./index.module.css";
 
+// ============ Constants ============
+
+/** Separator between system prompt and user prompt in the template field */
+const SYSTEM_PROMPT_SEPARATOR = "\n---\n";
+
+/** Split a full template string into system / user parts */
+function splitTemplate(full: string): { systemPrompt: string; userPrompt: string } {
+  const idx = full.indexOf(SYSTEM_PROMPT_SEPARATOR);
+  if (idx === -1) return { systemPrompt: "", userPrompt: full };
+  return {
+    systemPrompt: full.slice(0, idx),
+    userPrompt: full.slice(idx + SYSTEM_PROMPT_SEPARATOR.length),
+  };
+}
+
 // ============ Helper: flatten all functionKeys ============
 
 const ALL_FUNCTION_KEYS: string[] = PANEL_GROUPS.flatMap((g) =>
@@ -53,8 +68,9 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Edit state
-  const [editTemplate, setEditTemplate] = useState("");
+  // Edit state — split into system / user parts
+  const [editSystemPrompt, setEditSystemPrompt] = useState("");
+  const [editUserPrompt, setEditUserPrompt] = useState("");
   const [dirty, setDirty] = useState(false);
 
   // Expanded groups (all expanded by default)
@@ -127,82 +143,7 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     return templates.find((t) => t.id === selectedId) ?? null;
   }, [selectedId, templates]);
 
-  // ===== Template split: user-editable part + system blocks =====
-  // System blocks (return format, JSON, constraints) are hidden from editor.
-  // User content (identity, instructions, variable sections) is preserved.
-  const SYSTEM_HEADING = /^##\s*(返回格式|格式约束|输出格式|输出要求|审查输出要求|检查输出要求|必须删除的模式|必须增加的元素)\s*$/m;
-  const SYSTEM_JSON = /^```json\s*$/m;
-
-  const { userContent, systemBlocks } = useMemo(() => {
-    if (!selectedTemplate) return { userContent: "", systemBlocks: "" };
-    const tpl = selectedTemplate.template;
-
-    // Find all system block start positions
-    const starts: number[] = [];
-    for (const p of [SYSTEM_HEADING, SYSTEM_JSON]) {
-      // Use global regex to find all matches
-      const regex = new RegExp(p.source, p.flags.includes("g") ? p.flags : p.flags + "g");
-      let m: RegExpExecArray | null;
-      while ((m = regex.exec(tpl)) !== null) {
-        starts.push(m.index);
-      }
-    }
-
-    if (starts.length === 0) {
-      // No system blocks — check for --- separator as fallback
-      const sep = tpl.match(/\n---\n/);
-      if (sep?.index !== undefined) {
-        return {
-          userContent: tpl.slice(0, sep.index).trim(),
-          systemBlocks: tpl.slice(sep.index),
-        };
-      }
-      return { userContent: tpl, systemBlocks: "" };
-    }
-
-    // For each system block start, find its end (next ## heading, ---, or end of string)
-    const removeRanges: Array<[number, number]> = [];
-    for (const start of starts) {
-      const after = tpl.slice(start + 1);
-      const endMatch = after.match(/\n##\s|\n---\n/);
-      const end = endMatch?.index !== undefined
-        ? start + 1 + endMatch.index
-        : tpl.length;
-      removeRanges.push([start, end]);
-    }
-
-    // Merge overlapping ranges
-    removeRanges.sort((a, b) => a[0] - b[0]);
-    const merged: Array<[number, number]> = [];
-    for (const range of removeRanges) {
-      if (merged.length > 0 && range[0] <= merged[merged.length - 1][1]) {
-        merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], range[1]);
-      } else {
-        merged.push([...range]);
-      }
-    }
-
-    // Extract user content (non-system-block parts)
-    const userParts: string[] = [];
-    let cursor = 0;
-    for (const [start, end] of merged) {
-      if (cursor < start) {
-        userParts.push(tpl.slice(cursor, start));
-      }
-      cursor = end;
-    }
-    if (cursor < tpl.length) {
-      userParts.push(tpl.slice(cursor));
-    }
-
-    // System blocks text
-    const sysParts = merged.map(([s, e]) => tpl.slice(s, e).trim()).filter(Boolean);
-
-    return {
-      userContent: userParts.join("").trim(),
-      systemBlocks: sysParts.join("\n\n"),
-    };
-  }, [selectedTemplate]);
+  // 编辑器分为 system prompt 和 user prompt 两块，完整展示所有内容
 
   const isSystemDefault =
     selectedTemplate?.isDefault === true && selectedTemplate?.bookId === null;
@@ -228,10 +169,12 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   /* eslint-disable react-hooks/set-state-in-effect -- resetting local edit state on selection change */
   useEffect(() => {
     if (selectedTemplate) {
-      setEditTemplate(userContent);
+      const { systemPrompt, userPrompt } = splitTemplate(selectedTemplate.template);
+      setEditSystemPrompt(systemPrompt);
+      setEditUserPrompt(userPrompt);
       setDirty(false);
     }
-  }, [selectedTemplate, userContent]);
+  }, [selectedTemplate]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // ===== Auto-select first function on mount =====
@@ -302,10 +245,15 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   const handleSave = useCallback(async (): Promise<boolean> => {
     if (!selectedTemplate || !dirty || isSystemDefault) return false;
 
+    // Merge system + user back into full template
+    const fullTemplate = editSystemPrompt
+      ? editSystemPrompt + SYSTEM_PROMPT_SEPARATOR + editUserPrompt
+      : editUserPrompt;
+
     // Sanitize user content (detect injection, warn)
     const sanitizeRes = await client.post<{ safe: boolean; warnings: string[]; cleaned: string }>(
       "/api/ai/sanitize",
-      { content: editTemplate },
+      { content: fullTemplate },
     );
     if (sanitizeRes.ok && !sanitizeRes.data.safe) {
       const ok = await new Promise<boolean>((resolve) => {
@@ -321,10 +269,10 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
       if (!ok) return false;
     }
 
-    // Rebuild full template: user content + original system blocks
-    const fullTemplate = editTemplate + systemBlocks;
-
-    const undefinedVars = validateTemplateVariables(fullTemplate);
+    const undefinedVars = validateTemplateVariables(
+      fullTemplate,
+      new Set(functionVariables.map((v) => v.name)),
+    );
     if (undefinedVars.length > 0) {
       return new Promise<boolean>((resolve) => {
         Modal.confirm({
@@ -373,8 +321,8 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
     selectedTemplate,
     dirty,
     isSystemDefault,
-    editTemplate,
-    systemBlocks,
+    editSystemPrompt,
+    editUserPrompt,
     loadTemplates,
   ]);
 
@@ -452,8 +400,13 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
   }, [selectedTemplate, loadTemplates]);
 
   // ===== Edit change =====
-  const handleEditChange = useCallback((value: string) => {
-    setEditTemplate(value);
+  const handleSystemChange = useCallback((value: string) => {
+    setEditSystemPrompt(value);
+    setDirty(true);
+  }, []);
+
+  const handleUserChange = useCallback((value: string) => {
+    setEditUserPrompt(value);
     setDirty(true);
   }, []);
 
@@ -667,15 +620,18 @@ export default function PromptLibrary({ book }: PromptLibraryProps) {
             <PromptEditor
               template={selectedTemplate}
               isSystemDefault={isSystemDefault}
-              editContent={editTemplate}
-              onEditChange={handleEditChange}
+              systemPrompt={editSystemPrompt}
+              userPrompt={editUserPrompt}
+              onSystemChange={handleSystemChange}
+              onUserChange={handleUserChange}
             />
           </div>
           <div className={styles.previewPane}>
             <PromptPreview
-              template={selectedTemplate}
-              editContent={userContent + systemBlocks}
+              systemPrompt={editSystemPrompt}
+              userPrompt={editUserPrompt}
               book={selectedBook}
+              functionKey={selectedTemplate?.functionKey}
             />
           </div>
         </div>

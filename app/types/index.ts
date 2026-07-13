@@ -64,7 +64,7 @@ export type { GenreTreeNode } from "@/shared/types";
 
 // ============ UI-only types (not used server-side) ============
 
-export type ActivePanel = "info" | "world-rules" | "settings" | "tag-library" | "creation" | "foreshadow" | "archive" | "fact-library";
+export type ActivePanel = "info" | "world-rules" | "settings" | "tag-library" | "creation" | "foreshadow" | "archive" | "fact-library" | "logs";
 
 // 各分类的状态字段模板
 export const STATUS_FIELD_TEMPLATES: Record<import("@/shared/types").SettingCategory, string[]> = {

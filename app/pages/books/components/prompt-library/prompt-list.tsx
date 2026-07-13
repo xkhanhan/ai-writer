@@ -149,12 +149,12 @@ const PromptList = React.memo(function PromptList({
                     if (!entry) return null;
 
                     // Collect renderable items: system default (if exists) + customs
-                    const items: { id: string; label: string; isSystem: boolean }[] = [];
+                    const items: { id: string; label: string; isSystem: boolean; isActive: boolean }[] = [];
                     if (entry.system) {
-                      items.push({ id: entry.system.id, label: fk.label, isSystem: true });
+                      items.push({ id: entry.system.id, label: fk.label, isSystem: true, isActive: entry.system.isActive });
                     }
                     for (const custom of entry.customs) {
-                      items.push({ id: custom.id, label: fk.label, isSystem: false });
+                      items.push({ id: custom.id, label: fk.label, isSystem: false, isActive: custom.isActive });
                     }
                     if (items.length === 0) return null;
 
@@ -168,6 +168,9 @@ const PromptList = React.memo(function PromptList({
                         >
                           <span className={styles.functionDot} />
                           {item.label}
+                          {item.isActive && (
+                            <span className={styles.tagActive}>已激活</span>
+                          )}
                           {item.isSystem ? (
                             <span className={styles.tagDefault}>
                               <GlobalOutlined style={{ fontSize: 8 }} />

@@ -20,8 +20,8 @@ export default function SettingsDetailPanel({
     <div className={styles.detailBody}>
       <div className={styles.detailMeta}>
         创建于{" "}
-        {new Date(activeEntity.createdAt).toLocaleString("zh-CN")} · 更新于{" "}
-        {new Date(activeEntity.updatedAt).toLocaleString("zh-CN")}
+        {new Date(activeEntity.createdAt.endsWith("Z") ? activeEntity.createdAt : activeEntity.createdAt + "Z").toLocaleString("zh-CN")} · 更新于{" "}
+        {new Date(activeEntity.updatedAt.endsWith("Z") ? activeEntity.updatedAt : activeEntity.updatedAt + "Z").toLocaleString("zh-CN")}
       </div>
 
       {/* 6 个通用信息字段 */}

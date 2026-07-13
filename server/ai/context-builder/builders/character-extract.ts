@@ -78,7 +78,7 @@ export async function buildCharacterAuditContext(
 
   const userPrompt = renderTemplate(template, variables);
   const systemPrompt =
-    "你是一位小说角色一致性审查专家。请根据角色设定客观分析，给出有据可查的审查结果。";
+    "请根据角色设定客观分析，给出有据可查的审查结果。";
 
   const fullText = systemPrompt + "\n\n" + userPrompt;
   const estimatedTokens = estimateTokens(fullText);

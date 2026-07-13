@@ -48,15 +48,20 @@ const BUILTIN_VAR_NAMES = new Set(PROMPT_VARIABLES.map((v) => v.name));
  * any that are NOT recognised built-in variables.
  *
  * @param template - The raw template string to validate
+ * @param additionalValidVars - Optional extra variable names to consider valid
+ *   (e.g. functionKey-specific variables fetched from the server)
  * @returns Array of undefined variable names (empty when all are valid)
  */
-export function validateTemplateVariables(template: string): string[] {
+export function validateTemplateVariables(template: string, additionalValidVars?: Set<string>): string[] {
+  const validNames = additionalValidVars
+    ? new Set([...BUILTIN_VAR_NAMES, ...additionalValidVars])
+    : BUILTIN_VAR_NAMES;
   const undefinedVars: string[] = [];
-  const regex = /\$\{(\w+)\}/g;
+  const regex = /\$\{?(\w+)\}?/g;
   let match: RegExpExecArray | null;
   while ((match = regex.exec(template)) !== null) {
     const varName = match[1];
-    if (!BUILTIN_VAR_NAMES.has(varName)) {
+    if (!validNames.has(varName)) {
       if (!undefinedVars.includes(varName)) {
         undefinedVars.push(varName);
       }

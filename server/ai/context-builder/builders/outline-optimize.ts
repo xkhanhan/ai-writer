@@ -13,7 +13,12 @@ export async function buildOutlineOptimizeContext(
   const activeTemplate = await deps.getActivePromptTemplate(
     input.functionKey,
   );
-  const template = activeTemplate?.template ?? "";
+  const fullTemplate = activeTemplate?.template ?? "";
+
+  // Split template into system / user parts by \n---\n separator
+  const sepIdx = fullTemplate.indexOf("\n---\n");
+  const templateSystemPart = sepIdx !== -1 ? fullTemplate.slice(0, sepIdx) : "";
+  const templateUserPart = sepIdx !== -1 ? fullTemplate.slice(sepIdx + 5) : fullTemplate;
 
   const extra = input.extraVariables ?? {};
 
@@ -28,9 +33,32 @@ export async function buildOutlineOptimizeContext(
     ...input.extraVariables,
   };
 
-  const userPrompt = renderTemplate(template, variables);
-  const systemPrompt =
-    "你是一位资深网络小说策划编辑，擅长优化故事总纲。请根据当前总纲内容和书籍信息，给出结构化的优化建议。";
+  const userPrompt = renderTemplate(templateUserPart, variables);
+  // System prompt: prefer template's own system part, fallback to hardcoded
+  const systemPrompt = templateSystemPart || `## 输出要求
+以 JSON 格式返回优化建议，不要包含其他内容：
+
+\`\`\`json
+{
+  "diagnosis": {
+    "direction": "对整体方向的诊断评价（1-2句话）",
+    "stages": "对阶段划分的诊断评价（1-2句话）",
+    "sellingPoints": "对核心卖点的诊断评价（1-2句话）"
+  },
+  "optimized": {
+    "direction": "优化后的整体方向",
+    "stages": "优化后的阶段划分",
+    "sellingPoints": "优化后的核心卖点"
+  },
+  "suggestions": ["建议1", "建议2", "建议3"]
+}
+\`\`\`
+
+## 格式约束
+- diagnosis 为诊断评价，指出当前内容的问题或亮点
+- optimized 为优化后的内容
+- suggestions 为 1-3 条额外建议
+- 如果某个字段当前为空（"尚未填写"），则由你根据书籍信息补全`;
 
   const fullText = systemPrompt + "\n\n" + userPrompt;
   const estimatedTokens = estimateTokens(fullText);

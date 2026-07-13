@@ -13,7 +13,12 @@ export async function buildVolumeGenerateContext(
   const activeTemplate = await deps.getActivePromptTemplate(
     input.functionKey,
   );
-  const template = activeTemplate?.template ?? "";
+  const fullTemplate = activeTemplate?.template ?? "";
+
+  // Split template into system / user parts by \n---\n separator
+  const sepIdx = fullTemplate.indexOf("\n---\n");
+  const templateSystemPart = sepIdx !== -1 ? fullTemplate.slice(0, sepIdx) : "";
+  const templateUserPart = sepIdx !== -1 ? fullTemplate.slice(sepIdx + 5) : fullTemplate;
 
   const extra = input.extraVariables ?? {};
 
@@ -56,9 +61,25 @@ export async function buildVolumeGenerateContext(
     ...input.extraVariables,
   };
 
-  const userPrompt = renderTemplate(template, variables);
-  const systemPrompt =
-    "你是一位资深网络小说策划编辑，擅长设计卷纲结构。请根据总纲和已有卷纲信息，为当前卷生成合理的核心冲突、发展弧线和看点。";
+  const userPrompt = renderTemplate(templateUserPart, variables);
+  // System prompt: prefer template's own system part, fallback to hardcoded
+  const systemPrompt = templateSystemPart || `## 输出要求
+以 JSON 格式返回，不要包含其他内容：
+
+\`\`\`json
+{
+  "coreConflict": "本卷的核心矛盾冲突（1-3句话）",
+  "developmentArc": "情节发展走向，从本卷起点到终点（3-5句话）",
+  "highlights": "本卷吸引读者继续阅读的钩子（2-3个要点）"
+}
+\`\`\`
+
+## 格式约束
+- coreConflict 是本卷的主要矛盾，要具体、有张力
+- developmentArc 描述情节起伏，要有节奏感
+- highlights 是读者读完本卷后会期待下一卷的理由
+- 必须与总纲方向一致，与前序卷纲衔接连贯
+- 如果用户指定了卷标题，围绕标题设计内容`;
 
   const fullText = systemPrompt + "\n\n" + userPrompt;
   const estimatedTokens = estimateTokens(fullText);

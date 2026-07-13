@@ -123,7 +123,7 @@ export async function buildContentGenerationContext(
 
   const userPrompt = renderTemplate(template, variables);
   const systemPrompt =
-    "你是一位专业的网络小说作家助手。严格按照用户提供的章纲和规则进行创作，不要自行添加章纲以外的情节。";
+    "严格按照用户提供的章纲和规则进行创作，不要自行添加章纲以外的情节。";
 
   const fullText = systemPrompt + "\n\n" + userPrompt;
   const estimatedTokens = estimateTokens(fullText);

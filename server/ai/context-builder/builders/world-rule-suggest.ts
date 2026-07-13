@@ -35,7 +35,7 @@ export async function buildWorldRuleSuggestContext(
 
   const userPrompt = renderTemplate(template, variables);
   const systemPrompt =
-    "你是一位资深网络小说世界观架构师。请根据书籍信息，以 JSON 格式返回世界规则建议。只返回 JSON，不要包含其他内容。";
+    "只返回 JSON，不要包含其他内容。";
 
   const fullText = systemPrompt + "\n\n" + userPrompt;
   const estimatedTokens = estimateTokens(fullText);

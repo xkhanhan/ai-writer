@@ -150,7 +150,8 @@ function FilterButton({ label, active, onClick }: { label: string; active: boole
 function LogItem({ log, expanded, onToggle }: { log: AiGenerationSession; expanded: boolean; onToggle: () => void }) {
   const label = FUNCTION_KEY_LABELS[log.functionKey] || log.functionKey;
   const color = FUNCTION_KEY_COLORS[log.functionKey] || "default";
-  const time = new Date(log.createdAt).toLocaleString("zh-CN", {
+  // SQLite datetime('now') stores UTC without timezone; append 'Z' so JS parses as UTC correctly
+  const time = new Date(log.createdAt.endsWith("Z") ? log.createdAt : log.createdAt + "Z").toLocaleString("zh-CN", {
     month: "numeric",
     day: "numeric",
     hour: "2-digit",

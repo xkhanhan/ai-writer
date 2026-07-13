@@ -45,7 +45,7 @@ export async function buildTextProcessingContext(
 
   const userPrompt = renderTemplate(template, variables);
   const systemPrompt =
-    "你是一位专业的网文编辑。请严格按照要求对文本进行处理，保持原文核心内容不变。";
+    "请严格按照要求对文本进行处理，保持原文核心内容不变。";
 
   const fullText = systemPrompt + "\n\n" + userPrompt;
   const estimatedTokens = estimateTokens(fullText);

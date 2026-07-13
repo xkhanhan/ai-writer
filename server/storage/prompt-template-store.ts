@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { getDb } from "@/server/storage/db";
 import { parseJsonSafe } from "@/server/utils/json";
 import { buildUpdateSet } from "@/server/utils/store-helpers";
-import { PROMPT_TEMPLATE_SEEDS } from "./prompt-template-seeds";
+import { logDataOp } from "@/server/logger";
 
 export type PromptTemplateRow = {
   id: string;
@@ -75,7 +75,6 @@ function mapRow(row: PromptTemplateRow): PromptTemplate {
 export async function getPromptTemplatesByBook(
   functionKey?: string,
 ): Promise<PromptTemplate[]> {
-  await ensureDefaultTemplates();
   const db = await getDb();
   if (functionKey) {
     const rows = db
@@ -132,6 +131,8 @@ export async function createPromptTemplate(
   const row = db
     .prepare(`SELECT * FROM prompt_templates WHERE id = ?`)
     .get(id) as PromptTemplateRow;
+
+  logDataOp("INSERT", "prompt_templates", { id, functionKey: data.functionKey, displayName: data.displayName });
   return mapRow(row);
 }
 
@@ -152,6 +153,13 @@ export async function updatePromptTemplate(
   if (!update) return getPromptTemplate(id);
 
   db.prepare(update.sql).run(...update.values, id);
+
+  logDataOp("UPDATE", "prompt_templates", {
+    id,
+    fields: Object.keys(fieldMap).filter((k) => fieldMap[k as keyof typeof fieldMap] !== undefined),
+    templateLen: data.template?.length,
+  });
+
   return getPromptTemplate(id);
 }
 
@@ -169,6 +177,11 @@ export async function deletePromptTemplate(id: string): Promise<boolean> {
   const result = db
     .prepare(`DELETE FROM prompt_templates WHERE id = ?`)
     .run(id);
+
+  if (result.changes > 0) {
+    logDataOp("DELETE", "prompt_templates", { id });
+  }
+
   return result.changes > 0;
 }
 
@@ -251,9 +264,6 @@ export async function activateTemplate(id: string): Promise<PromptTemplate | nul
 export async function getActivePromptTemplate(
   functionKey: string,
 ): Promise<PromptTemplate | null> {
-  // Lazy-seed: ensure system defaults exist on first call
-  await ensureDefaultTemplates();
-
   const db = await getDb();
 
   // Priority 1: user global custom active template (not a system default)
@@ -277,100 +287,4 @@ export async function getActivePromptTemplate(
     .get(functionKey) as PromptTemplateRow | undefined;
 
   return systemDefault ? mapRow(systemDefault) : null;
-}
-
-// ============================================================================
-// Seed: system-level default templates
-// ============================================================================
-
-/** Sync seed templates to DB on every call. Runs once per server start. */
-let _seedRan = false;
-
-async function ensureDefaultTemplates(): Promise<void> {
-  if (_seedRan) return;
-  _seedRan = true;
-  const db = await getDb();
-
-  const existing = db
-    .prepare(
-      `SELECT id, function_key, template FROM prompt_templates WHERE book_id IS NULL AND is_default = 1`,
-    )
-    .all() as Array<{ id: string; function_key: string; template: string }>;
-
-  const existingMap = new Map(existing.map((r) => [r.function_key, r]));
-
-  const now = new Date().toISOString();
-
-  const updateStmt = db.prepare(
-    `UPDATE prompt_templates SET template = ?, updated_at = ? WHERE id = ?`,
-  );
-  const insertStmt = db.prepare(
-    `INSERT INTO prompt_templates (id, book_id, function_key, display_name, description, template, variables, is_default, is_active, created_at, updated_at)
-     VALUES (?, NULL, ?, ?, ?, ?, ?, 1, 0, ?, ?)`,
-  );
-
-  const tx = db.transaction(() => {
-    let changed = false;
-    for (const s of PROMPT_TEMPLATE_SEEDS) {
-      const existingTemplate = existingMap.get(s.functionKey);
-      if (existingTemplate) {
-        if (existingTemplate.template !== s.template) {
-          updateStmt.run(s.template, now, existingTemplate.id);
-          changed = true;
-        }
-      } else {
-        insertStmt.run(
-          randomUUID(),
-          s.functionKey,
-          s.displayName,
-          s.description,
-          s.template,
-          s.variables,
-          now,
-          now,
-        );
-        changed = true;
-      }
-    }
-    if (changed) {
-      console.log("[prompt-template-store] 种子模板已同步更新");
-    }
-  });
-  tx();
-
-  // B-036: Migrate old $variable format to ${variable} in custom templates
-  migrateVariableSyntax(db);
-}
-
-/**
- * Fix old custom templates that use $varName instead of ${varName}.
- * Matches $word that is NOT preceded by { (i.e. not already ${...}).
- */
-function migrateVariableSyntax(db: Awaited<ReturnType<typeof getDb>>): void {
-  const rows = db
-    .prepare(
-      `SELECT id, template FROM prompt_templates WHERE is_default = 0`,
-    )
-    .all() as Array<{ id: string; template: string }>;
-
-  const stmt = db.prepare(
-    `UPDATE prompt_templates SET template = ?, updated_at = datetime('now') WHERE id = ?`,
-  );
-
-  // Match $varName but NOT ${varName} — negative lookbehind for {
-  const oldVarRegex = /(?<!\$)\$(\w+)/g;
-
-  let migrated = 0;
-  for (const row of rows) {
-    const fixed = row.template.replace(oldVarRegex, (_match, name: string) => {
-      return `\${${name}}`;
-    });
-    if (fixed !== row.template) {
-      stmt.run(fixed, row.id);
-      migrated++;
-    }
-  }
-  if (migrated > 0) {
-    console.log(`[prompt-template-store] 迁移 ${migrated} 个模板的变量格式 $variable → \${variable}`);
-  }
 }

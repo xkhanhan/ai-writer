@@ -8,6 +8,7 @@ import {
   PushpinOutlined,
   BookOutlined,
   AuditOutlined,
+  ContainerOutlined,
 } from "@ant-design/icons";
 import type { ActivePanel, Book } from "@/app/types";
 import BookInfoDashboard from "../components/book-info-form";
@@ -18,6 +19,7 @@ import ForeshadowLibrary from "../components/foreshadow-library";
 import { CreationZone } from "../components/creation-zone";
 import ContentLibrary from "../components/content-library";
 import FactLibrary from "../components/fact-library";
+import { LogLibrary } from "../components/log-library";
 import { WorkspacePanel } from "../components/workspace-panel";
 
 export interface WorkspacePanelProps {
@@ -116,5 +118,15 @@ export const workspacePanels: WorkspacePanelConfig[] = [
     title: "事实库",
     icon: <AuditOutlined />,
     component: ({ book }) => <FactLibrary key={book.id} book={book} />,
+  },
+  {
+    key: "logs",
+    title: "日志",
+    icon: <ContainerOutlined />,
+    component: ({ book }) => (
+      <WorkspacePanel key={book.id} mode="content">
+        <LogLibrary bookId={book.id} />
+      </WorkspacePanel>
+    ),
   },
 ];

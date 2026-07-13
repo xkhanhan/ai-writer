@@ -1,6 +1,6 @@
 import { jsonSuccess, jsonError } from "@/app/api/utils";
 import { getBookById } from "@/server/storage/book-store";
-import { getVolumesByBookId, getChaptersByVolumeId } from "@/server/storage/outline-store";
+import { getVolumesByBookId, getChaptersByVolumeId, getBookOutline } from "@/server/storage/outline-store";
 import { getSettingEntitiesByBookId } from "@/server/storage/setting-entity-store";
 import { getWorldRulesByBookId } from "@/server/storage/world-rule-store";
 import { getStoryFactsByBookId } from "@/server/storage/fact-store";
@@ -32,8 +32,9 @@ export async function POST(request: Request) {
   if (!bookId) return jsonError("bookId is required.");
 
   // 1. Query all data sources in parallel
-  const [book, volumes, characters, worldRules, facts, foreshadows] = await Promise.all([
+  const [book, bookOutline, volumes, characters, worldRules, facts, foreshadows] = await Promise.all([
     getBookById(bookId),
+    getBookOutline(bookId).catch(() => null),
     getVolumesByBookId(bookId).catch(() => []),
     getSettingEntitiesByBookId(bookId, "character").catch(() => []),
     getWorldRulesByBookId(bookId).catch(() => []),
@@ -148,8 +149,51 @@ export async function POST(request: Request) {
   variableMap["targetWords"] = "3000";
   variableMap["userConcept"] = "[用户补充]";
 
-  // 4. Resolve variables in template
-  const resolved = template.replace(/\$\{(\w+)\}/g, (_match, varName: string) => {
+  // Outline variables (总纲)
+  if (bookOutline) {
+    variableMap["currentDirection"] = bookOutline.direction || "[未填写]";
+    variableMap["currentStages"] = bookOutline.stages || "[未填写]";
+    variableMap["currentSellingPoints"] = bookOutline.sellingPoints || "[未填写]";
+    variableMap["outlineDirection"] = bookOutline.direction || "[未填写]";
+    variableMap["outlineStages"] = bookOutline.stages || "[未填写]";
+    variableMap["outlineSellingPoints"] = bookOutline.sellingPoints || "[未填写]";
+  } else {
+    variableMap["currentDirection"] = "[未填写]";
+    variableMap["currentStages"] = "[未填写]";
+    variableMap["currentSellingPoints"] = "[未填写]";
+    variableMap["outlineDirection"] = "[未填写]";
+    variableMap["outlineStages"] = "[未填写]";
+    variableMap["outlineSellingPoints"] = "[未填写]";
+  }
+
+  // Volume variables (卷纲)
+  if (volumes.length > 0) {
+    const lastVol = volumes[volumes.length - 1];
+    variableMap["previousVolumes"] = volumes.map((v, i) => {
+      const parts = [`第${i + 1}卷：${v.title}`];
+      if (v.coreConflict) parts.push(`  核心冲突：${v.coreConflict}`);
+      if (v.developmentArc) parts.push(`  发展弧线：${v.developmentArc}`);
+      if (v.highlights) parts.push(`  看点：${v.highlights}`);
+      return parts.join("\n");
+    }).join("\n\n");
+    variableMap["currentVolumeTitle"] = lastVol.title || `[第${volumes.length}卷]`;
+    variableMap["currentVolumeConflict"] = lastVol.coreConflict || "[未填写]";
+    variableMap["currentVolumeArc"] = lastVol.developmentArc || "[未填写]";
+    variableMap["currentVolumeHighlights"] = lastVol.highlights || "[未填写]";
+  } else {
+    variableMap["previousVolumes"] = "[暂无卷纲]";
+    variableMap["currentVolumeTitle"] = "[第1卷]";
+    variableMap["currentVolumeConflict"] = "[未填写]";
+    variableMap["currentVolumeArc"] = "[未填写]";
+    variableMap["currentVolumeHighlights"] = "[未填写]";
+  }
+
+  // User-input variables (预览时显示占位符)
+  variableMap["userInstruction"] = "[用户补充说明]";
+  variableMap["selectedText"] = "[用户选中文本]";
+
+  // 4. Resolve variables in template (supports both $var and ${var} formats)
+  const resolved = template.replace(/\$\{?(\w+)\}?/g, (_match, varName: string) => {
     if (varName in variableMap) return variableMap[varName];
     return `[${varName}]`;
   });

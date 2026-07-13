@@ -66,7 +66,7 @@ export async function buildReviewContext(
 
   const userPrompt = renderTemplate(template, variables);
   const systemPrompt =
-    "你是一位小说数据提取专家。只输出 JSON，不要添加任何解释文字。";
+    "只返回 JSON，不要包含其他内容。";
 
   const fullText = systemPrompt + "\n\n" + userPrompt;
   const estimatedTokens = estimateTokens(fullText);

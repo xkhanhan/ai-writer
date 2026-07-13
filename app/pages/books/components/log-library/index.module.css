@@ -1,0 +1,307 @@
+/* ===== Container ===== */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 16px;
+  background: var(--bg);
+}
+
+/* ===== Filter Bar ===== */
+.filterBar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  width: 120px;
+}
+
+.filterInput {
+  flex: 1;
+  min-width: 160px;
+  max-width: 280px;
+}
+
+.filterDatePicker {
+  flex-shrink: 0;
+}
+
+.filterActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.autoRefresh {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.autoRefreshLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ===== Stats ===== */
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 8px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.liveTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: var(--color-success-bg, #e6f7ed);
+  color: var(--color-success, #2eaa55);
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===== Center / Empty ===== */
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+}
+
+.emptyIcon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.2;
+}
+
+.emptyText {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* ===== List ===== */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ===== Log Item ===== */
+.logItem {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.logItemExpanded {
+  border-color: var(--color-primary-border, var(--accent));
+}
+
+.logItemError {
+  border-left: 3px solid var(--color-error, #e74c3c);
+}
+
+.logHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.logHeader:hover {
+  background: var(--bg-muted);
+}
+
+.logLevel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  width: 44px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.logSource {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 18px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+  background: var(--bg-muted);
+  color: var(--text-tertiary);
+}
+
+.logCategory {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  height: 18px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--bg-muted);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.logMessage {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logTime {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-light);
+  flex-shrink: 0;
+}
+
+.logArrow {
+  font-size: 10px;
+  color: var(--text-light);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.logArrowOpen {
+  transform: rotate(180deg);
+}
+
+/* ===== Log Body ===== */
+.logBody {
+  padding: 0 12px 10px;
+  border-top: 1px solid var(--border-light);
+}
+
+.logMeta {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--text-tertiary);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* ===== Pagination ===== */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.pageInfo {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+
+  .filterBar {
+    padding: 8px;
+  }
+
+  .filterRow {
+    gap: 6px;
+  }
+
+  .filterSelect {
+    width: 100px;
+  }
+
+  .filterInput {
+    min-width: 120px;
+  }
+
+  .filterActions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .logHeader {
+    padding: 6px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .logLevel {
+    width: 36px;
+    font-size: 10px;
+  }
+
+  .logCategory,
+  .logSource {
+    display: none;
+  }
+
+  .logTime {
+    font-size: 10px;
+  }
+}

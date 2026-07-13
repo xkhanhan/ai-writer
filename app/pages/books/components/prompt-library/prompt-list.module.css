@@ -133,6 +133,17 @@
   letter-spacing: 0.3px;
 }
 
+.tagActive {
+  font-size: 9px;
+  color: var(--color-success, #52c41a);
+  background: var(--color-success-bg, rgba(82, 196, 26, 0.1));
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
 .tagCustom {
   font-size: 9px;
   color: var(--color-warning);

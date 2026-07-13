@@ -8,6 +8,7 @@ import {
   createGenerationSession,
   updateGenerationSession,
 } from "@/server/storage/ai-generation-store";
+import { logAiOp, logger } from "@/server/logger";
 
 /** Helper to extract a string from the parsed body. */
 function str(value: unknown): string | undefined {
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
             : undefined,
       });
 
-      console.log(`[AI Chat] functionKey=${functionKey}, bookId=${bookId}`);
+      logAiOp("AI 调用开始", { functionKey, bookId, stream: payload.stream === true });
 
       // 2. Call AI — streaming or non-streaming
       const input: AiTextTaskInput = {
@@ -90,7 +91,13 @@ export async function POST(request: Request) {
 
       const wantStream = payload.stream === true;
 
-      console.log(`[AI Chat] stream=${wantStream}, systemPrompt(${builtContext.systemPrompt.length} chars)=${builtContext.systemPrompt.slice(0, 80)}..., userPrompt(${builtContext.userPrompt.length} chars)=${builtContext.userPrompt.slice(0, 80)}...`);
+      logAiOp("AI 上下文构建完成", {
+        functionKey,
+        stream: wantStream,
+        systemPromptLen: builtContext.systemPrompt.length,
+        userPromptLen: builtContext.userPrompt.length,
+        estimatedTokens: builtContext.estimatedTokens,
+      });
 
       if (wantStream) {
         // --- Streaming mode: pipe upstream SSE through to the client ---
@@ -109,7 +116,9 @@ export async function POST(request: Request) {
           });
           sessionId = session.id;
         } catch (e) {
-          console.error("[AI Chat] Failed to create generation session (streaming):", e);
+          logger.error("ai", "创建生成会话失败（流式）", {
+            error: e instanceof Error ? e.message : String(e),
+          });
         }
 
         const encoder = new TextEncoder();
@@ -210,7 +219,9 @@ export async function POST(request: Request) {
           latencyMs,
         });
       } catch (e) {
-        console.error("[AI Chat] Failed to create generation session (non-streaming):", e);
+        logger.error("ai", "创建生成会话失败（非流式）", {
+          error: e instanceof Error ? e.message : String(e),
+        });
       }
 
       return NextResponse.json({

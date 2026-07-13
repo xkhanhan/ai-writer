@@ -2,10 +2,11 @@
 
 import { useCallback, useState, useRef } from "react";
 import { Button, Spin, message } from "antd";
-import { ThunderboltOutlined, EditOutlined, DeleteOutlined, ExpandOutlined, FileTextOutlined } from "@ant-design/icons";
+import { ThunderboltOutlined, EditOutlined, DeleteOutlined, ExpandOutlined, FileTextOutlined, BugOutlined } from "@ant-design/icons";
 import { parseAiJson } from "@/shared/utils/parse-ai-json";
 import type { CreationZoneState } from "@/app/pages/books/hooks/use-creation-zone";
 import { AiLogDrawer } from "../ai-log-drawer";
+import { SystemLogDrawer } from "../system-log-drawer";
 import styles from "./index.module.css";
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 export function AiPanel({ bookId, zone }: Props) {
   const { view } = zone;
   const [logOpen, setLogOpen] = useState(false);
+  const [sysLogOpen, setSysLogOpen] = useState(false);
   const [logRefreshKey, setLogRefreshKey] = useState(0);
 
   // Determine current context
@@ -27,9 +29,14 @@ export function AiPanel({ bookId, zone }: Props) {
     <div className={styles.container}>
       <div className={styles.header}>
         <span className={styles.headerTitle}>AI</span>
-        <button className={styles.logBtn} onClick={() => setLogOpen(true)} title="AI 日志">
-          <FileTextOutlined />
-        </button>
+        <div style={{ display: "flex", gap: 4 }}>
+          <button className={styles.logBtn} onClick={() => setLogOpen(true)} title="AI 日志">
+            <FileTextOutlined />
+          </button>
+          <button className={styles.logBtn} onClick={() => setSysLogOpen(true)} title="系统日志">
+            <BugOutlined />
+          </button>
+        </div>
       </div>
       <div className={styles.body}>
         {contextType === "outline" && (
@@ -39,6 +46,7 @@ export function AiPanel({ bookId, zone }: Props) {
         {contextType === "empty" && <EmptyHint />}
       </div>
       <AiLogDrawer open={logOpen} bookId={bookId} refreshKey={logRefreshKey} onClose={() => setLogOpen(false)} />
+      <SystemLogDrawer open={sysLogOpen} onClose={() => setSysLogOpen(false)} />
     </div>
   );
 }
@@ -162,9 +170,41 @@ function OutlineAiActions({ bookId, zone, onAiComplete }: { bookId: string; zone
           {result.diagnosis && Object.keys(result.diagnosis).length > 0 && (
             <div className={styles.resultSection}>
               <div className={styles.resultLabel}>诊断</div>
-              {Object.entries(result.diagnosis).map(([k, v]) => (
-                <div key={k} className={styles.resultItem}>{v}</div>
-              ))}
+              {result.diagnosis.direction && (
+                <div className={styles.resultItem}>
+                  <span className={styles.resultFieldLabel}>方向：</span>{result.diagnosis.direction}
+                </div>
+              )}
+              {result.diagnosis.stages && (
+                <div className={styles.resultItem}>
+                  <span className={styles.resultFieldLabel}>阶段：</span>{result.diagnosis.stages}
+                </div>
+              )}
+              {result.diagnosis.sellingPoints && (
+                <div className={styles.resultItem}>
+                  <span className={styles.resultFieldLabel}>卖点：</span>{result.diagnosis.sellingPoints}
+                </div>
+              )}
+            </div>
+          )}
+          {result.optimized && Object.keys(result.optimized).length > 0 && (
+            <div className={styles.resultSection}>
+              <div className={styles.resultLabel}>优化预览</div>
+              {result.optimized.direction && (
+                <div className={styles.resultItem}>
+                  <span className={styles.resultFieldLabel}>方向：</span>{result.optimized.direction}
+                </div>
+              )}
+              {result.optimized.stages && (
+                <div className={styles.resultItem}>
+                  <span className={styles.resultFieldLabel}>阶段：</span>{result.optimized.stages}
+                </div>
+              )}
+              {result.optimized.sellingPoints && (
+                <div className={styles.resultItem}>
+                  <span className={styles.resultFieldLabel}>卖点：</span>{result.optimized.sellingPoints}
+                </div>
+              )}
             </div>
           )}
           {result.suggestions?.length > 0 && (
