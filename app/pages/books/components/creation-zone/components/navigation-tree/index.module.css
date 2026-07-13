@@ -1,300 +1,270 @@
 .container {
+  width: 210px;
+  min-width: 180px;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
-  height: 100%;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--line);
 }
 
 .title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  color: var(--text);
-  font-size: 14px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.modeBtn {
-  font-size: 11px;
-  padding: 2px 8px;
-  border: 1px solid var(--line);
+.addWrapper {
+  position: relative;
+}
+
+.addBtn {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
   border-radius: var(--radius-sm);
-  background: var(--panel-soft);
-  color: var(--ink-secondary);
+  color: var(--text-light);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
   transition: all 0.15s;
 }
 
-.modeBtn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+.addBtn:hover {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
 }
 
-.modeBtnActive {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--text-inverse);
+.addMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 100px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(24, 28, 34, 0.12);
+  z-index: 100;
+  background: var(--bg-elevated);
 }
 
-.modeBtnActive:hover {
-  background: var(--accent);
-  color: var(--text-inverse);
+.addMenuItem {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.addMenuItem:hover {
+  background: var(--bg-muted);
 }
 
 .body {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 6px;
 }
 
-.batchBar {
-  padding: 6px 16px;
-  border-bottom: 1px solid var(--line);
+/* ── Nav Item (总纲) ── */
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.12s;
   font-size: 12px;
-  color: var(--ink-secondary);
+  color: var(--text-secondary);
 }
 
-.itemCheckbox {
-  margin-right: 6px;
+.navItem:hover {
+  background: var(--bg-muted);
+}
+
+.navItemActive {
+  color: var(--color-primary);
+  font-weight: 500;
+  background: var(--color-primary-bg);
+  position: relative;
+}
+
+.navItemActive::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--color-primary);
+  border-radius: 0 1px 1px 0;
+}
+
+.navItemIcon {
+  font-size: 12px;
+}
+
+.navItemLabel {
+  flex: 1;
+}
+
+/* ── Volume Group ── */
+.volumeGroup {
+  margin-bottom: 2px;
+}
+
+.volumeHeader {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: background 0.12s;
+}
+
+.volumeHeader:hover {
+  background: var(--bg-muted);
+}
+
+.volumeHeaderActive {
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+.volumeArrow {
+  font-size: 8px;
+  color: var(--text-light);
+  transition: transform 0.2s;
+  width: 10px;
+  text-align: center;
   flex-shrink: 0;
+  display: inline-flex;
+}
+
+.volumeArrowCollapsed {
+  transform: rotate(-90deg);
+}
+
+.volumeTitle {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.volumeBadge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  background: var(--bg-muted);
+  color: var(--text-light);
+  font-family: var(--font-mono);
+}
+
+/* ── Chapter List ── */
+.chapterList {
+  padding-left: 16px;
+}
+
+.chapterItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: background 0.12s;
+}
+
+.chapterItem:hover {
+  background: var(--bg-muted);
+}
+
+.chapterItemActive {
+  color: var(--color-primary);
+  font-weight: 500;
+  background: var(--color-primary-bg);
+  position: relative;
+}
+
+.chapterItemActive::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--color-primary);
+  border-radius: 0 1px 1px 0;
+}
+
+.chapterNum {
+  color: var(--text-light);
+  font-size: 10px;
+  width: 16px;
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.chapterTitle {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .deleteBtn {
-  font-size: 12px;
-  color: var(--ink-tertiary);
+  font-size: 11px;
+  color: var(--text-light);
   opacity: 0;
   transition: opacity 0.15s;
   flex-shrink: 0;
   padding: 2px;
 }
 
-.volumeBar:hover .deleteBtn,
 .chapterItem:hover .deleteBtn {
   opacity: 1;
 }
 
-.volumeBar:hover .deleteBtn:hover,
 .chapterItem:hover .deleteBtn:hover {
   color: var(--color-error, #ba1a1a);
 }
 
-.floatingBar {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  background: var(--panel-strong);
-  border-top: 1px solid var(--line);
-  z-index: 10;
-}
-
-.floatingInfo {
-  font-size: 12px;
-  color: var(--ink-secondary);
-  font-weight: 500;
-}
-
-.floatingDeleteBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  padding: 4px 12px;
-  border: 1px solid var(--color-error, #ba1a1a);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-error, #ba1a1a);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.floatingDeleteBtn:hover {
-  background: var(--color-error, #ba1a1a);
-  color: var(--text-inverse);
-}
-
-/* 总纲 */
-.outlineItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
-  cursor: pointer;
-  background: var(--panel-soft);
-  border-left: 3px solid var(--accent);
-}
-
-.outlineItem:hover {
-  background: var(--panel-strong);
-}
-
-.outlineActive {
-  background: var(--panel-strong);
-}
-
-.outlineIcon {
-  color: var(--accent);
-  font-size: 14px;
-}
-
-.outlineTitle {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--accent);
-}
-
-.outlineSub {
-  font-size: 10px;
-  color: var(--ink-tertiary);
-  margin-top: 2px;
-}
-
-/* 卷 */
-.volumeGroup {
-  margin-bottom: 8px;
-}
-
-.volumeBar {
-  display: flex;
-  align-items: center;
-  padding: 10px 12px;
-  background: var(--panel-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  border: 1px solid var(--line);
-}
-
-.volumeBar:hover {
-  background: var(--panel-strong);
-}
-
-.volumeActive {
-  background: var(--accent);
-  color: var(--text-inverse);
-  border-color: var(--accent);
-}
-
-.volumeActive .volumeTitle,
-.volumeActive .volumeCount {
-  color: var(--text-inverse);
-}
-
-.arrow {
-  font-size: 10px;
-  margin-right: 6px;
-  color: var(--ink-tertiary);
-}
-
-.volumeTitle {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink-secondary);
-}
-
-.volumeCount {
-  font-size: 10px;
-  color: var(--ink-tertiary);
-}
-
-/* 章纲列表 */
-.chapterList {
-  padding: 4px 0 0 12px;
-  margin-left: 10px;
-  margin-top: 4px;
-  border-left: 1px solid var(--line);
-}
-
-.chapterItem {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 4px;
-  cursor: pointer;
-  font-size: 11px;
-  background: var(--panel-soft);
-  border-left: 2px solid var(--ink-light);
-}
-
-.chapterItem:hover {
-  background: var(--panel-strong);
-}
-
-.chapterActive {
-  background: var(--panel-strong);
-  box-shadow: 0 0 0 2px var(--color-primary-bg-hover);
-}
-
-.statusDone {
-  border-left-color: var(--jade);
-}
-
-.statusWriting {
-  border-left-color: var(--gold);
-}
-
-.statusPlanned {
-  border-left-color: var(--ink-light);
-}
-
-.chapterTitle {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--ink-secondary);
-}
-
-.chapterStatus {
-  font-size: 10px;
-  color: var(--ink-tertiary);
-}
-
-/* 添加按钮 */
+/* ── Add Chapter ── */
 .addChapter {
-  padding: 6px 10px;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 11px;
-  color: var(--ink-tertiary);
-  border: 1px dashed var(--line-strong);
-  text-align: center;
-  background: var(--panel-soft);
+  color: var(--text-light);
+  transition: all 0.12s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .addChapter:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-.addVolume {
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--ink-tertiary);
-  border: 1px dashed var(--line-strong);
-  text-align: center;
-  background: var(--panel-soft);
-}
-
-.addVolume:hover {
-  color: var(--accent);
-  border-color: var(--accent);
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
 }

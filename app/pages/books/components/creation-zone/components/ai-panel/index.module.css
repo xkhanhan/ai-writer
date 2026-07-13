@@ -1,0 +1,180 @@
+.container {
+  width: 280px;
+  min-width: 240px;
+  border-left: 1px solid var(--border-light);
+  background: var(--bg-elevated);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.headerTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+
+.logBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.logBtn:hover {
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ─── Action Card ─── */
+.actionCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.actionCard:hover {
+  border-color: var(--color-primary-border);
+  background: var(--color-primary-bg);
+}
+
+.actionIcon {
+  font-size: 16px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.actionTitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.actionDesc {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 1px;
+}
+
+/* ─── Loading State ─── */
+.loadingState {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ─── Raw Output ─── */
+.rawOutput {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+}
+
+/* ─── Result Card ─── */
+.resultCard {
+  background: var(--bg-muted);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.resultSection {
+  margin-bottom: 8px;
+}
+
+.resultLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.resultItem {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 2px;
+}
+
+.resultActions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* ─── Empty Hint ─── */
+.emptyHint {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-light);
+  gap: 8px;
+}
+
+.emptyIcon {
+  font-size: 24px;
+  opacity: 0.2;
+  color: var(--text-light);
+}
+
+.emptyTitle {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.emptyDesc {
+  font-size: 11.5px;
+  color: var(--text-light);
+  line-height: 1.6;
+}

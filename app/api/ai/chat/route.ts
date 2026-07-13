@@ -4,7 +4,10 @@ import type { AiTextTaskInput } from "@/shared/ai/contracts";
 import { generateAiText } from "@/server/ai/generate-ai-text";
 import { generateAiTextStream } from "@/server/ai/generate-ai-text-stream";
 import { buildContext, type AiFunctionKey } from "@/server/ai/context-builder";
-import { createGenerationSession } from "@/server/storage/ai-generation-store";
+import {
+  createGenerationSession,
+  updateGenerationSession,
+} from "@/server/storage/ai-generation-store";
 
 /** Helper to extract a string from the parsed body. */
 function str(value: unknown): string | undefined {
@@ -47,6 +50,8 @@ export async function POST(request: Request) {
       "book_synopsis_expand",
       "book_info_suggest",
       "world_rule_suggest",
+      "outline_optimize",
+      "volume_generate",
     ];
 
     if (!allowedKeys.includes(functionKey as AiFunctionKey)) {
@@ -70,6 +75,8 @@ export async function POST(request: Request) {
             : undefined,
       });
 
+      console.log(`[AI Chat] functionKey=${functionKey}, bookId=${bookId}`);
+
       // 2. Call AI — streaming or non-streaming
       const input: AiTextTaskInput = {
         prompt: builtContext.userPrompt,
@@ -83,11 +90,32 @@ export async function POST(request: Request) {
 
       const wantStream = payload.stream === true;
 
+      console.log(`[AI Chat] stream=${wantStream}, systemPrompt(${builtContext.systemPrompt.length} chars)=${builtContext.systemPrompt.slice(0, 80)}..., userPrompt(${builtContext.userPrompt.length} chars)=${builtContext.userPrompt.slice(0, 80)}...`);
+
       if (wantStream) {
         // --- Streaming mode: pipe upstream SSE through to the client ---
         const upstream = await generateAiTextStream(input);
 
+        // Create session first so we have an ID to update later
+        let sessionId = "";
+        try {
+          const session = await createGenerationSession({
+            bookId,
+            functionKey,
+            chapterId: str(payload.chapterId),
+            inputContext: builtContext.systemPrompt,
+            model: input.model ?? "",
+            userInput: builtContext.userPrompt,
+          });
+          sessionId = session.id;
+        } catch (e) {
+          console.error("[AI Chat] Failed to create generation session (streaming):", e);
+        }
+
         const encoder = new TextEncoder();
+        let accumulatedOutput = "";
+        let streamFinished = false;
+
         const stream = new TransformStream({
           transform(chunk: Uint8Array, controller) {
             const text = new TextDecoder().decode(chunk, { stream: true });
@@ -108,6 +136,7 @@ export async function POST(request: Request) {
                 };
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
+                  accumulatedOutput += content;
                   controller.enqueue(
                     encoder.encode(`data: ${JSON.stringify({ content })}\n\n`),
                   );
@@ -117,19 +146,43 @@ export async function POST(request: Request) {
               }
             }
           },
+          flush() {
+            streamFinished = true;
+          },
         });
 
-        // Fire-and-forget session recording
-        void createGenerationSession({
-          bookId,
-          functionKey,
-          chapterId: str(payload.chapterId),
-          inputContext: builtContext.userPrompt,
-          model: input.model ?? "",
-          userInput: builtContext.userPrompt,
-        }).catch(() => {});
+        const transformed = upstream.body?.pipeThrough(stream);
+        if (!transformed) {
+          return new Response("No upstream body", { status: 500 });
+        }
 
-        return new Response(upstream.body?.pipeThrough(stream), {
+        // Tee the stream: one for client, one for logging
+        const [clientStream, logStream] = transformed.tee();
+
+        // Fire-and-forget: consume logStream to update session after completion
+        if (sessionId) {
+          const reader = logStream.getReader();
+          const consumeForLog = async () => {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+              while (true) {
+                const { done } = await reader.read();
+                if (done) break;
+              }
+            } catch {
+              // client disconnected — still update
+            }
+            if (streamFinished && accumulatedOutput) {
+              void updateGenerationSession(sessionId, {
+                rawOutput: accumulatedOutput,
+                latencyMs: Date.now() - startTime,
+              }).catch(() => {});
+            }
+          };
+          void consumeForLog();
+        }
+
+        return new Response(clientStream, {
           status: 200,
           headers: {
             "Content-Type": "text/event-stream",
@@ -150,12 +203,14 @@ export async function POST(request: Request) {
           bookId,
           functionKey,
           chapterId: str(payload.chapterId),
-          inputContext: builtContext.userPrompt,
+          inputContext: builtContext.systemPrompt,
           model: input.model ?? "",
           userInput: builtContext.userPrompt,
+          rawOutput: content,
+          latencyMs,
         });
-      } catch {
-        // session recording is best-effort
+      } catch (e) {
+        console.error("[AI Chat] Failed to create generation session (non-streaming):", e);
       }
 
       return NextResponse.json({

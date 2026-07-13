@@ -25,6 +25,14 @@ export const PANEL_GROUPS: PanelGroup_[] = [
     functionKeys: [{ key: "book_info_suggest", label: "书籍信息建议" }],
   },
   {
+    panelKey: "outline",
+    label: "大纲",
+    functionKeys: [
+      { key: "outline_optimize", label: "总纲优化" },
+      { key: "volume_generate", label: "卷纲生成" },
+    ],
+  },
+  {
     panelKey: "world-rules",
     label: "世界规则",
     functionKeys: [{ key: "world_rule_suggest", label: "世界规则建议" }],

@@ -45,4 +45,6 @@ export interface CreateGenerationSessionDTO {
   inputContext?: string;
   userInput?: string;
   model?: string;
+  rawOutput?: string;
+  latencyMs?: number;
 }

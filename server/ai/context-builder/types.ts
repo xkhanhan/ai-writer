@@ -20,7 +20,9 @@ export type AiFunctionKey =
   | "fact_consistency"
   | "book_synopsis_expand"
   | "book_info_suggest"
-  | "world_rule_suggest";
+  | "world_rule_suggest"
+  | "outline_optimize"
+  | "volume_generate";
 
 export interface ContextInput {
   bookId: string;

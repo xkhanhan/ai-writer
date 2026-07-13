@@ -37,12 +37,12 @@ export function renderTemplate(
   template: string,
   variables: Record<string, string>,
 ): string {
-  return template.replace(/\$(\w+)/g, (_match, name: string) => {
+  return template.replace(/\$\{?(\w+)\}?/g, (_match, name: string) => {
     if (name in variables) {
       return variables[name];
     }
     // Leave unrecognized placeholders as-is
-    return `$${name}`;
+    return _match;
   });
 }
 

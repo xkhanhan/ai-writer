@@ -7,7 +7,7 @@ export interface VariableDef {
   name: string;
   displayName: string;
   description: string;
-  source: "book" | "chapter" | "character" | "foreshadow" | "fact" | "rule" | "user" | "constant";
+  source: "book" | "chapter" | "character" | "foreshadow" | "fact" | "rule" | "user" | "constant" | "outline" | "volume";
   required: boolean;
 }
 
@@ -93,6 +93,29 @@ export const FUNCTION_VARIABLES: Record<string, VariableDef[]> = {
     { name: "sellingPoint", displayName: "核心卖点", description: "书籍的核心吸引力", source: "book", required: false },
     { name: "targetWords", displayName: "目标字数", description: "期望的简介字数", source: "constant", required: false },
     { name: "writingRules", displayName: "写作规则", description: "写作规范和约束", source: "rule", required: false },
+  ],
+  outline_optimize: [
+    { name: "bookTitle", displayName: "书籍名称", description: "当前书籍的标题", source: "book", required: true },
+    { name: "bookGenre", displayName: "题材类型", description: "书籍的题材/类型", source: "book", required: false },
+    { name: "bookStyle", displayName: "写作风格", description: "书籍的写作风格", source: "book", required: false },
+    { name: "currentDirection", displayName: "当前方向", description: "总纲当前的整体方向", source: "book", required: false },
+    { name: "currentStages", displayName: "当前阶段", description: "总纲当前的阶段划分", source: "book", required: false },
+    { name: "currentSellingPoints", displayName: "当前卖点", description: "总纲当前的核心卖点", source: "book", required: false },
+    { name: "userInstruction", displayName: "补充说明", description: "用户的额外说明或要求", source: "user", required: false },
+  ],
+  volume_generate: [
+    { name: "bookTitle", displayName: "书籍名称", description: "当前书籍的标题", source: "book", required: true },
+    { name: "bookGenre", displayName: "题材类型", description: "书籍的题材/类型", source: "book", required: false },
+    { name: "bookStyle", displayName: "写作风格", description: "书籍的写作风格", source: "book", required: false },
+    { name: "outlineDirection", displayName: "总纲方向", description: "总纲的整体方向", source: "outline", required: false },
+    { name: "outlineStages", displayName: "总纲阶段", description: "总纲的阶段划分", source: "outline", required: false },
+    { name: "outlineSellingPoints", displayName: "总纲卖点", description: "总纲的核心卖点", source: "outline", required: false },
+    { name: "previousVolumes", displayName: "前序卷纲", description: "已有卷纲的摘要，保持连贯性", source: "volume", required: false },
+    { name: "currentVolumeTitle", displayName: "当前卷标题", description: "正在编辑的卷的标题", source: "volume", required: false },
+    { name: "currentVolumeConflict", displayName: "当前卷冲突", description: "当前卷已填的核心冲突", source: "volume", required: false },
+    { name: "currentVolumeArc", displayName: "当前卷弧线", description: "当前卷已填的发展弧线", source: "volume", required: false },
+    { name: "currentVolumeHighlights", displayName: "当前卷看点", description: "当前卷已填的看点", source: "volume", required: false },
+    { name: "userInstruction", displayName: "补充说明", description: "用户的额外说明或要求", source: "user", required: false },
   ],
 };
 

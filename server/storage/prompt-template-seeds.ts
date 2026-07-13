@@ -424,4 +424,122 @@ export const PROMPT_TEMPLATE_SEEDS: PromptTemplateSeed[] = [
       { name: "existingRules", description: "已有规则", source: "world_rules", required: false },
     ]),
   },
+  {
+    functionKey: "outline_optimize",
+    displayName: "总纲优化",
+    description: "优化故事总纲的方向、阶段划分和核心卖点",
+    template: `你是一位资深网络小说策划编辑。请根据当前总纲内容和书籍信息，对总纲进行诊断和优化。
+
+## 输出要求
+以 JSON 格式返回优化建议，不要包含其他内容：
+
+\`\`\`json
+{
+  "diagnosis": {
+    "direction": "对整体方向的诊断评价（1-2句话）",
+    "stages": "对阶段划分的诊断评价（1-2句话）",
+    "sellingPoints": "对核心卖点的诊断评价（1-2句话）"
+  },
+  "optimized": {
+    "direction": "优化后的整体方向",
+    "stages": "优化后的阶段划分",
+    "sellingPoints": "优化后的核心卖点"
+  },
+  "suggestions": ["建议1", "建议2", "建议3"]
+}
+\`\`\`
+
+## 格式约束
+- diagnosis 为诊断评价，指出当前内容的问题或亮点
+- optimized 为优化后的内容
+- suggestions 为 1-3 条额外建议
+- 如果某个字段当前为空（"尚未填写"），则由你根据书籍信息补全
+
+---
+
+## 书籍信息
+书名：\${bookTitle}
+题材：\${bookGenre}
+风格：\${bookStyle}
+
+## 当前总纲
+整体方向：\${currentDirection}
+阶段划分：\${currentStages}
+核心卖点：\${currentSellingPoints}
+
+## 补充说明
+\${userInstruction}`,
+    variables: JSON.stringify([
+      { name: "bookTitle", description: "书名", source: "book", required: true },
+      { name: "bookGenre", description: "题材", source: "book", required: false },
+      { name: "bookStyle", description: "写作风格", source: "book", required: false },
+      { name: "currentDirection", description: "当前整体方向", source: "outline", required: false },
+      { name: "currentStages", description: "当前阶段划分", source: "outline", required: false },
+      { name: "currentSellingPoints", description: "当前核心卖点", source: "outline", required: false },
+      { name: "userInstruction", description: "用户补充说明", source: "user_input", required: false },
+    ]),
+  },
+  {
+    functionKey: "volume_generate",
+    displayName: "卷纲生成",
+    description: "根据总纲和已有卷纲，为当前卷生成核心冲突、发展弧线和看点",
+    template: `你是一位资深网络小说策划编辑。请根据总纲和已有卷纲信息，为当前卷生成卷纲。
+
+## 输出要求
+以 JSON 格式返回，不要包含其他内容：
+
+\`\`\`json
+{
+  "coreConflict": "本卷的核心矛盾冲突（1-3句话）",
+  "developmentArc": "情节发展走向，从本卷起点到终点（3-5句话）",
+  "highlights": "本卷吸引读者继续阅读的钩子（2-3个要点）"
+}
+\`\`\`
+
+## 格式约束
+- coreConflict 是本卷的主要矛盾，要具体、有张力
+- developmentArc 描述情节起伏，要有节奏感
+- highlights 是读者读完本卷后会期待下一卷的理由
+- 必须与总纲方向一致，与前序卷纲衔接连贯
+- 如果用户指定了卷标题，围绕标题设计内容
+
+---
+
+## 书籍信息
+书名：\${bookTitle}
+题材：\${bookGenre}
+风格：\${bookStyle}
+
+## 总纲
+整体方向：\${outlineDirection}
+阶段划分：\${outlineStages}
+核心卖点：\${outlineSellingPoints}
+
+## 已有卷纲（保持连贯）
+\${previousVolumes}
+
+## 当前卷信息
+卷标题：\${currentVolumeTitle}
+用户已填内容：
+核心冲突：\${currentVolumeConflict}
+发展弧线：\${currentVolumeArc}
+看点：\${currentVolumeHighlights}
+
+## 补充说明
+\${userInstruction}`,
+    variables: JSON.stringify([
+      { name: "bookTitle", description: "书名", source: "book", required: true },
+      { name: "bookGenre", description: "题材", source: "book", required: false },
+      { name: "bookStyle", description: "写作风格", source: "book", required: false },
+      { name: "outlineDirection", description: "总纲-整体方向", source: "outline", required: false },
+      { name: "outlineStages", description: "总纲-阶段划分", source: "outline", required: false },
+      { name: "outlineSellingPoints", description: "总纲-核心卖点", source: "outline", required: false },
+      { name: "previousVolumes", description: "前序卷纲摘要", source: "volumes", required: false },
+      { name: "currentVolumeTitle", description: "当前卷标题", source: "volume", required: false },
+      { name: "currentVolumeConflict", description: "当前卷核心冲突（已填）", source: "volume", required: false },
+      { name: "currentVolumeArc", description: "当前卷发展弧线（已填）", source: "volume", required: false },
+      { name: "currentVolumeHighlights", description: "当前卷看点（已填）", source: "volume", required: false },
+      { name: "userInstruction", description: "用户补充说明", source: "user_input", required: false },
+    ]),
+  },
 ];

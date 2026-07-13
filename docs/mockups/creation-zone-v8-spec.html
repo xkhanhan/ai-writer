@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>创作区 v8 — 需求规格稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cp:#2F5D50;--cp-h:#1e4438;
+  --cp-bg:rgba(47,93,80,0.05);--cp-bg-h:rgba(47,93,80,0.10);--cp-bd:rgba(47,93,80,0.20);
+  --cs:#2E8B57;--cw:#964400;--ce:#ba1a1a;--ci:#465f88;
+  --bg:#f5f2ec;--bg2:#faf8f4;--bg3:#f0ece4;--bg4:#e8e4dc;
+  --t1:#1a1814;--t2:#4a4640;--t3:#807b74;--tl:#b5b0a8;--tw:#fff;
+  --bd:#ddd8d0;--bl:#ebe7e0;--bs:#c0bbb3;
+  --fd:'Noto Serif SC',serif;--fb:'Noto Sans SC','Noto Sans',sans-serif;--fm:'JetBrains Mono','Consolas',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--fb);font-size:13px;line-height:1.7;color:var(--t1);background:var(--bg3);-webkit-font-smoothing:antialiased}
+
+/* ════════ Page Shell ════════ */
+.page{max-width:1100px;margin:0 auto;padding:48px 40px 80px}
+h1{font-family:var(--fd);font-size:28px;font-weight:700;color:var(--t1);margin-bottom:4px;letter-spacing:.02em}
+h2{font-family:var(--fd);font-size:20px;font-weight:600;color:var(--t1);margin:48px 0 16px;padding-bottom:8px;border-bottom:2px solid var(--cp);display:inline-block}
+h3{font-size:14px;font-weight:600;color:var(--t2);margin:24px 0 10px}
+h4{font-size:13px;font-weight:500;color:var(--t3);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.05em}
+p{margin:6px 0;color:var(--t2);font-size:13px}
+.sub{font-size:13px;color:var(--t3);margin-bottom:32px}
+code{font-family:var(--fm);font-size:12px;background:var(--bg4);padding:1px 5px;border-radius:3px;color:var(--cp)}
+
+/* ════════ Spec Cards ════════ */
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:20px 24px;margin:12px 0 20px;box-shadow:0 1px 3px rgba(24,28,34,0.06)}
+.card-label{display:inline-block;font-size:10px;font-weight:600;color:var(--tw);background:var(--cp);padding:2px 8px;border-radius:3px;margin-bottom:10px;letter-spacing:.03em}
+.card-label.cs{background:var(--cs)}.card-label.cw{background:var(--cw)}.card-label.ci{background:var(--ci)}.card-label.cb{background:var(--bs)}
+
+/* ════════ Tables ════════ */
+table{width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:12.5px}
+th{text-align:left;padding:8px 10px;background:var(--bg4);color:var(--t3);font-weight:500;font-size:11px;letter-spacing:.03em;border-bottom:1px solid var(--bd)}
+td{padding:7px 10px;border-bottom:1px solid var(--bl);color:var(--t2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+
+/* ════════ Layout Diagram ════════ */
+.diagram{display:flex;height:420px;border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin:12px 0;background:var(--bg2);box-shadow:0 1px 3px rgba(24,28,34,0.06)}
+.d-ab{width:42px;min-width:42px;background:var(--bg4);border-right:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px}
+.d-ab-i{width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--tl);cursor:default}
+.d-ab-i.act{color:var(--cp);background:var(--cp-bg)}
+.d-ab-sp{flex:1}
+.d-nav{width:200px;min-width:180px;background:var(--bg2);border-right:1px solid var(--bl);display:flex;flex-direction:column;overflow:hidden}
+.d-nav-hd{padding:8px 12px;border-bottom:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between}
+.d-nav-t{font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.04em;text-transform:uppercase}
+.d-nav-a{font-size:13px;color:var(--tl);cursor:default}
+.d-nav-bd{flex:1;overflow-y:auto;padding:6px}
+.d-ni{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:4px;font-size:12px;color:var(--t2)}
+.d-ni.act{color:var(--cp);font-weight:500;background:var(--cp-bg);position:relative}
+.d-ni.act::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:2px;background:var(--cp);border-radius:0 1px 1px 0}
+.d-nl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-nb{font-size:9px;padding:1px 5px;border-radius:9999px;background:var(--bg4);color:var(--tl);font-family:var(--fm)}
+.d-vg{margin-bottom:2px}
+.d-vg-h{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:4px;font-size:12px;color:var(--t2)}
+.d-vg-a{font-size:7px;color:var(--tl);width:10px;text-align:center}
+.d-cl{padding-left:16px}
+.d-ci{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;font-size:12px;color:var(--t2)}
+.d-ci.act{color:var(--cp);font-weight:500;background:var(--cp-bg)}
+.d-cn{color:var(--tl);font-size:10px;width:16px;text-align:right;font-family:var(--fm)}
+
+.d-ct{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.d-tb{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:38px;border-bottom:1px solid var(--bl);background:var(--bg2)}
+.d-tb-l{display:flex;align-items:center;gap:8px}
+.d-tb-bc{font-size:12px;color:var(--t3)}.d-tb-bc b{color:var(--t1);font-weight:500}
+.d-tb-dot{width:3px;height:3px;border-radius:50%;background:var(--tl)}
+.d-tb-st{font-size:11px;color:var(--cp);padding:2px 7px;border:1px solid var(--cp-bd);border-radius:4px;background:var(--cp-bg)}
+.d-tb-r{display:flex;align-items:center;gap:8px}
+.d-tb-ct{font-size:11px;color:var(--tl);font-family:var(--fm)}
+.d-tb-ai{height:26px;padding:0 10px;border:none;border-radius:4px;font-size:11px;font-weight:500;background:var(--cp);color:var(--tw);cursor:default;display:inline-flex;align-items:center;gap:4px;font-family:var(--fb)}
+
+.d-tabs{display:flex;border-bottom:1px solid var(--bl);padding:0 20px;background:var(--bg2)}
+.d-tab{padding:8px 14px;font-size:12.5px;font-weight:500;color:var(--t3);position:relative;cursor:default}
+.d-tab.act{color:var(--cp)}
+.d-tab.act::after{content:'';position:absolute;bottom:0;left:14px;right:14px;height:2px;background:var(--cp);border-radius:1px 1px 0 0}
+.d-tab-b{font-size:10px;color:var(--tl);margin-left:4px;font-family:var(--fm)}
+
+.d-bp{padding:6px 20px;background:var(--bg4);border-bottom:1px solid var(--bl);display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--t3);overflow:hidden}
+.d-bp-tg{font-size:10px;color:var(--tl);padding:1px 5px;border-radius:4px;background:var(--bg3)}
+.d-bp-tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-bp-s{color:var(--bd);margin:0 2px}
+.d-bp-m{margin-left:auto;font-size:10px;color:var(--tl);padding:2px 6px;border:1px solid var(--bl);border-radius:4px;cursor:default}
+
+.d-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.d-form{max-width:600px;margin:0 auto;padding:16px 24px;overflow-y:auto;flex:1}
+.d-fg{margin-bottom:14px}
+.d-fl{font-size:11px;font-weight:500;color:var(--t3);margin-bottom:4px;letter-spacing:.03em}
+.d-fi{width:100%;padding:6px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;font-family:var(--fb)}
+.d-fta{width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;font-family:var(--fb);line-height:1.8;resize:none}
+.d-frow{display:flex;gap:12px}.d-frow>div{flex:1}
+.d-fdiv{height:1px;background:var(--bl);margin:14px 0}
+.d-tags{display:flex;flex-wrap:wrap;gap:5px}
+.d-tag{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:4px;font-size:11.5px;color:var(--t2);background:var(--bg4)}
+.d-tag-a{border:1px dashed var(--bd);background:transparent;color:var(--tl)}
+
+.d-ai{border-left:2px solid var(--cp-bd);padding:10px 12px;background:var(--cp-bg);margin-top:8px;border-radius:0 6px 6px 0}
+.d-ai-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.d-ai-lb{font-size:10px;font-weight:500;color:var(--cp)}
+.d-ai-acts{display:flex;gap:5px}
+.d-ai-b{height:22px;padding:0 7px;border:1px solid var(--bl);border-radius:4px;font-size:10px;background:var(--bg2);color:var(--t3);cursor:default;font-family:var(--fb)}
+.d-ai-b.p{background:var(--cp);color:var(--tw);border-color:var(--cp)}
+.d-ai-ct{font-size:12.5px;line-height:1.7;color:var(--t2)}
+
+.d-ai-ph{width:280px;min-width:240px;border-left:1px solid var(--bl);background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--tl);text-align:center;padding:24px}
+.d-ai-ph-t{font-size:13px;color:var(--t3);font-weight:500}
+.d-ai-ph-h{font-size:11.5px;color:var(--tl);line-height:1.6}
+
+/* ════════ Annotation ════════ */
+.anno{position:relative}
+.anno-box{position:absolute;background:var(--cp);color:var(--tw);font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;white-space:nowrap;pointer-events:none;z-index:10}
+.anno-line{position:absolute;border:1px dashed var(--cp);pointer-events:none;z-index:9;opacity:.5}
+
+/* ════════ State Tags ════════ */
+.stag{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:4px;font-size:11px;font-weight:500;margin:2px 4px 2px 0}
+.stag-prim{background:var(--cp-bg);color:var(--cp);border:1px solid var(--cp-bd)}
+.stag-succ{background:rgba(46,139,87,0.08);color:var(--cs);border:1px solid rgba(46,139,87,0.15)}
+.stag-warn{background:rgba(150,68,0,0.08);color:var(--cw);border:1px solid rgba(150,68,0,0.12)}
+.stag-info{background:rgba(70,95,136,0.08);color:var(--ci);border:1px solid rgba(70,95,136,0.15)}
+.stag-muted{background:var(--bg4);color:var(--t3);border:1px solid var(--bl)}
+
+/* ════════ Flow ════════ */
+.flow{display:flex;align-items:center;gap:8px;margin:10px 0 16px;flex-wrap:wrap}
+.flow-node{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid var(--bd);background:var(--bg2);color:var(--t2)}
+.flow-node.act{background:var(--cp);color:var(--tw);border-color:var(--cp)}
+.flow-arrow{color:var(--tl);font-size:14px}
+
+/* ════════ Mockup inline ════════ */
+.mu{border:1px solid var(--bd);border-radius:6px;overflow:hidden;margin:8px 0;background:var(--bg2);box-shadow:0 1px 2px rgba(24,28,34,0.04)}
+.mu-bar{padding:4px 12px;background:var(--bg4);border-bottom:1px solid var(--bl);font-size:10px;color:var(--tl);display:flex;align-items:center;gap:6px}
+.mu-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.mu-dot.r{background:#e8604c}.mu-dot.y{background:#f5c542}.mu-dot.g{background:#62c554}
+.mu-body{padding:14px 16px}
+
+/* ════════ Collapsible ════════ */
+.colp{margin:8px 0}
+.colp-hd{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:500;color:var(--cp);background:var(--cp-bg);cursor:pointer;border:1px solid var(--cp-bd)}
+.colp-hd:hover{background:var(--cp-bg-h)}
+.colp-arr{font-size:8px;transition:transform .2s}
+.colp-body{display:none;padding:12px 16px;border:1px solid var(--bl);border-top:none;border-radius:0 0 6px 6px;background:var(--bg2);font-size:12.5px;color:var(--t2);line-height:1.7}
+.colp-body.vis{display:block}
+
+/* ════════ Callout ════════ */
+.callout{padding:12px 16px;border-radius:6px;margin:10px 0;font-size:12.5px;line-height:1.7}
+.callout-info{background:rgba(70,95,136,0.06);border-left:3px solid var(--ci);color:var(--ci)}
+.callout-warn{background:rgba(150,68,0,0.06);border-left:3px solid var(--cw);color:var(--cw)}
+.callout-ok{background:rgba(46,139,87,0.06);border-left:3px solid var(--cs);color:var(--cs)}
+.callout strong{font-weight:600}
+
+/* ════════ Spec list ════════ */
+.specl{list-style:none;padding:0}
+.specl li{padding:6px 0 6px 18px;position:relative;font-size:12.5px;color:var(--t2);line-height:1.7}
+.specl li::before{content:'';position:absolute;left:0;top:12px;width:6px;height:6px;border-radius:50%;background:var(--cp);opacity:.4}
+
+/* ════════ Divider ════════ */
+.sep{height:1px;background:var(--bl);margin:32px 0}
+
+/* ════════ State Demo ════════ */
+.state-row{display:flex;gap:16px;margin:10px 0 16px;flex-wrap:wrap;align-items:flex-start}
+.state-box{flex:1;min-width:200px;border:1px solid var(--bd);border-radius:6px;overflow:hidden;background:var(--bg2)}
+.state-box-hd{padding:5px 10px;background:var(--bg4);border-bottom:1px solid var(--bl);font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.04em}
+.state-box-bd{padding:12px 14px}
+
+/* ════════ Two-col compare ════════ */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:10px 0 16px}
+.compare>div{border:1px solid var(--bd);border-radius:6px;overflow:hidden;background:var(--bg2)}
+.compare-hd{padding:5px 10px;background:var(--bg4);border-bottom:1px solid var(--bl);font-size:10px;font-weight:500;color:var(--t3)}
+
+/* ════════ Inline field spec ════════ */
+.fspec{display:flex;align-items:baseline;gap:8px;padding:4px 0;font-size:12px}
+.fspec-k{color:var(--t3);min-width:80px;flex-shrink:0}
+.fspec-v{color:var(--t2)}
+
+/* ════════ Step list ════════ */
+.steps{counter-reset:step;padding:0;list-style:none;margin:10px 0}
+.steps li{counter-increment:step;padding:8px 0 8px 36px;position:relative;font-size:12.5px;color:var(--t2);line-height:1.7;border-left:2px solid var(--bl);margin-left:12px}
+.steps li::before{content:counter(step);position:absolute;left:-11px;top:7px;width:20px;height:20px;border-radius:50%;background:var(--cp);color:var(--tw);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.steps li:last-child{border-left:2px solid transparent}
+
+/* ════════ Inline mockup components ══════ */
+.im-input{display:inline-block;padding:5px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;min-width:160px;font-family:var(--fb)}
+.im-input.focus{border-color:var(--cp);box-shadow:0 0 0 2px var(--cp-bg)}
+.im-input.plc{color:var(--tl)}
+.im-tag{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:4px;font-size:11.5px;color:var(--t2);background:var(--bg4);margin:2px}
+.im-tag.del{position:relative}
+.im-tag.del::after{content:'×';margin-left:4px;color:var(--tl);cursor:pointer;font-size:12px}
+.im-tag-add{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:4px;font-size:11.5px;border:1px dashed var(--bd);color:var(--tl);margin:2px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- Header -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h1>创作区 v8 — 需求规格稿</h1>
+<p class="sub">版本 v8 · 精简版 · 最后更新 2026-07-12</p>
+
+<div class="card">
+  <span class="card-label">设计定位</span>
+  <p>创作区是 AI 辅助小说创作系统的<strong>核心工作台</strong>。采用「章纲驱动」的交互方向——<strong>章纲是主编辑区</strong>，正文仅供阅读回顾，总纲和卷纲作为蓝图参考始终可见。右侧 AI 面板预留空位，后续单独设计。</p>
+  <div class="flow">
+    <span class="flow-node act">总纲（方向）</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node act">卷纲（本卷）</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node act">章纲（滚动规划）</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node">正文（实时写作）</span>
+  </div>
+  <p style="font-size:11.5px;color:var(--t3)">蓝色节点 = 创作者主动编辑的内容 · 灰色节点 = AI 生成后供阅读</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 1. 整体布局 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>1. 整体布局</h2>
+
+<h3>1.1 区域划分</h3>
+<p>四栏横向布局，从左到右依次为：</p>
+
+<table>
+  <tr><th>区域</th><th>宽度</th><th>职责</th><th>背景</th></tr>
+  <tr><td><strong>Activity Bar</strong></td><td>42px 固定</td><td>全局模块切换入口（书籍信息/世界规则/设定库/标签库/创作区/伏笔库/正文库/事实库）</td><td><code>--bg-strong</code></td></tr>
+  <tr><td><strong>导航树</strong></td><td>210px（min 180px）</td><td>大纲树形结构：总纲入口 + 卷折叠 + 章节列表</td><td><code>--bg-elevated</code></td></tr>
+  <tr><td><strong>中心编辑区</strong></td><td>flex: 1（自适应）</td><td>工具栏 → Tab 切换 → 蓝图条 → 章纲/正文内容</td><td><code>--bg-elevated</code></td></tr>
+  <tr><td><strong>AI 面板</strong></td><td>280px（min 240px）</td><td>AI 写作助手（当前为空占位，后续单独设计）</td><td><code>--bg-elevated</code></td></tr>
+</table>
+
+<h3>1.2 布局示意</h3>
+<div class="diagram">
+  <!-- AB -->
+  <div class="d-ab">
+    <div class="d-ab-i">📊</div>
+    <div class="d-ab-i">🌐</div>
+    <div class="d-ab-i">📖</div>
+    <div class="d-ab-i">🏷</div>
+    <div class="d-ab-i act">✏</div>
+    <div class="d-ab-i">📌</div>
+    <div class="d-ab-i">📚</div>
+    <div class="d-ab-i">📋</div>
+    <div class="d-ab-sp"></div>
+    <div class="d-ab-i" style="font-size:10px">◀</div>
+  </div>
+  <!-- Nav -->
+  <div class="d-nav">
+    <div class="d-nav-hd"><span class="d-nav-t">大纲</span><span class="d-nav-a">+</span></div>
+    <div class="d-nav-bd">
+      <div class="d-ni"><span class="d-nl">总纲</span></div>
+      <div class="d-vg">
+        <div class="d-vg-h"><span class="d-vg-a">▼</span><span class="d-nl">第一卷 · 迷雾觉醒</span><span class="d-nb">5</span></div>
+        <div class="d-cl">
+          <div class="d-ci"><span class="d-cn">01</span><span class="d-nl">深夜的乘客</span></div>
+          <div class="d-ci"><span class="d-cn">02</span><span class="d-nl">消失的地址</span></div>
+          <div class="d-ci act"><span class="d-cn">03</span><span class="d-nl">梦境碎片</span></div>
+          <div class="d-ci"><span class="d-cn">04</span><span class="d-nl">镜中人</span></div>
+          <div class="d-ci"><span class="d-cn">05</span><span class="d-nl">废弃医院</span></div>
+        </div>
+      </div>
+      <div class="d-vg">
+        <div class="d-vg-h"><span class="d-vg-a" style="transform:rotate(-90deg);display:inline-block">▼</span><span class="d-nl">第二卷 · 暗流涌动</span><span class="d-nb">12</span></div>
+      </div>
+    </div>
+  </div>
+  <!-- Center -->
+  <div class="d-ct">
+    <div class="d-tb">
+      <div class="d-tb-l">
+        <div class="d-tb-bc">第一卷 <span style="margin:0 2px;opacity:.5">›</span> <b>第3章 梦境碎片</b></div>
+        <span class="d-tb-dot"></span>
+        <span class="d-tb-st">撰写中</span>
+      </div>
+      <div class="d-tb-r">
+        <span class="d-tb-ct">1,247 字</span>
+        <button class="d-tb-ai">✦ AI</button>
+      </div>
+    </div>
+    <div class="d-tabs">
+      <span class="d-tab act">章纲</span>
+      <span class="d-tab">正文<span class="d-tab-b">1247</span></span>
+    </div>
+    <div class="d-bp">
+      <span class="d-bp-tg">蓝图</span>
+      <span class="d-bp-tx">身份的迷失与重建</span>
+      <span class="d-bp-s">·</span>
+      <span class="d-bp-tx">记忆被篡改 → 追查真相 → 发现组织</span>
+      <span class="d-bp-s">·</span>
+      <span class="d-bp-tx">线索追踪阶段</span>
+      <span class="d-bp-m">展开</span>
+    </div>
+    <div class="d-body">
+      <div class="d-form">
+        <div class="d-fg"><div class="d-fl">章标题</div><div class="d-fi">第三章 · 梦境碎片</div></div>
+        <div class="d-fg"><div class="d-fl">情节概要</div><div class="d-fta">主角在梦中看到了一段不属于自己的记忆，记忆中出现了一个和他长相一样的人，站在一栋废弃的建筑前。醒来后发现枕边多了一张从未见过的照片。</div></div>
+        <div class="d-frow">
+          <div class="d-fg"><div class="d-fl">前文衔接</div><div class="d-fi" style="font-size:12px">上一章结尾：出租车后座发现写着地址的纸条</div></div>
+          <div class="d-fg"><div class="d-fl">后文悬念</div><div class="d-fi" style="font-size:12px;color:var(--tl)">留给读者的悬念？</div></div>
+        </div>
+        <div class="d-fdiv"></div>
+        <div class="d-fg"><div class="d-fl">出场人物</div><div class="d-tags"><span class="d-tag">林夜</span><span class="d-tag">神秘乘客</span><span class="d-tag d-tag-a">+</span></div></div>
+        <div class="d-fg"><div class="d-fl">场景</div><div class="d-tags"><span class="d-tag">出租车内</span><span class="d-tag">主角卧室</span><span class="d-tag">梦境·废弃建筑</span><span class="d-tag d-tag-a">+</span></div></div>
+      </div>
+    </div>
+  </div>
+  <!-- AI PH -->
+  <div class="d-ai-ph">
+    <div style="font-size:24px;opacity:.2">✦</div>
+    <div class="d-ai-ph-t">AI 写作助手</div>
+    <div class="d-ai-ph-h">点击工具栏「AI」按钮<br>开始 AI 辅助创作</div>
+  </div>
+</div>
+
+<h3>1.3 垂直结构</h3>
+<p>整个应用从上到下分为三层：</p>
+<table>
+  <tr><th>层</th><th>高度</th><th>内容</th></tr>
+  <tr><td>Topbar</td><td>56px 固定</td><td>品牌标识 · 书名 · 搜索 · 设置</td></tr>
+  <tr><td>Main</td><td>flex: 1（填满剩余）</td><td>四栏横向布局（AB + Nav + Center + AI）</td></tr>
+  <tr><td>Footer</td><td>32px 固定</td><td>AI 模型状态 · 统计数据 · 版本号</td></tr>
+</table>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 2. Activity Bar -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>2. Activity Bar（活动栏）</h2>
+
+<h3>2.1 功能定义</h3>
+<p>左侧 42px 宽的窄条，承载全局模块切换。图标为 SVG 线条风格，统一 16×16px。</p>
+
+<h3>2.2 图标清单</h3>
+<table>
+  <tr><th>序号</th><th>图标</th><th>模块</th><th>说明</th></tr>
+  <tr><td>1</td><td>文稿</td><td>书籍信息</td><td>题材/风格/受众等元数据</td></tr>
+  <tr><td>2</td><td>地球</td><td>世界规则</td><td>全局规则/设定规则/文笔规则</td></tr>
+  <tr><td>3</td><td>堆叠</td><td>设定库</td><td>角色/物品/地点/势力</td></tr>
+  <tr><td>4</td><td>标签</td><td>标签库</td><td>自定义标签管理</td></tr>
+  <tr><td>5</td><td>画笔</td><td>创作区</td><td>当前工作区（默认激活）</td></tr>
+  <tr><td>6</td><td>图钉</td><td>伏笔库</td><td>埋/收/过期状态追踪</td></tr>
+  <tr><td>7</td><td>网格</td><td>正文库</td><td>过审存稿列表</td></tr>
+  <tr><td>8</td><td>清单</td><td>事实库</td><td>已发生情节事实记录</td></tr>
+</table>
+
+<h3>2.3 状态与交互</h3>
+<table>
+  <tr><th>状态</th><th>视觉</th><th>触发</th></tr>
+  <tr><td>默认</td><td>颜色 <code>--text-light</code>，无背景</td><td>未选中</td></tr>
+  <tr><td>悬停</td><td>背景 <code>--bg-muted</code>，颜色 <code>--text-secondary</code></td><td>鼠标 hover</td></tr>
+  <tr><td>激活</td><td>颜色 <code>--color-primary</code>，背景 <code>--color-primary-bg</code>，左侧 2px 竖线</td><td>点击切换</td></tr>
+</table>
+
+<h3>2.4 操作逻辑</h3>
+<ul class="specl">
+  <li>点击图标切换对应模块，<strong>单选互斥</strong>（同时只有一个激活）</li>
+  <li>切换模块 = 替换整个中心区域内容（创作区 / 设定库 / 伏笔库...）</li>
+  <li>底部「收起」箭头点击后折叠 Activity Bar 为 0px 宽度（后续迭代）</li>
+</ul>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 3. 导航树 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>3. 导航树（左侧面板）</h2>
+
+<h3>3.1 结构层级</h3>
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>导航树结构</div>
+  <div class="mu-body" style="padding:0">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.04em;text-transform:uppercase">大纲</span>
+      <span style="font-size:13px;color:var(--tl)">+</span>
+    </div>
+    <div style="padding:6px">
+      <div style="padding:5px 10px;font-size:12px;color:var(--t2)">📂 总纲</div>
+      <div style="padding:5px 10px;font-size:12px;color:var(--t2);display:flex;align-items:center;gap:5px">▾ 第一卷 · 迷雾觉醒 <span style="font-size:9px;padding:1px 5px;border-radius:99px;background:var(--bg4);color:var(--tl);font-family:var(--fm)">5</span></div>
+      <div style="padding-left:16px">
+        <div style="padding:4px 10px;font-size:12px;color:var(--t2)">01 深夜的乘客</div>
+        <div style="padding:4px 10px;font-size:12px;color:var(--t2)">02 消失的地址</div>
+        <div style="padding:4px 10px;font-size:12px;color:var(--cp);font-weight:500;background:var(--cp-bg);border-radius:4px;position:relative"><span style="position:absolute;left:0;top:6px;bottom:6px;width:2px;background:var(--cp);border-radius:0 1px 1px 0"></span>&nbsp;03 梦境碎片</div>
+        <div style="padding:4px 10px;font-size:12px;color:var(--t2)">04 镜中人</div>
+        <div style="padding:4px 10px;font-size:12px;color:var(--t2)">05 废弃医院</div>
+      </div>
+      <div style="padding:5px 10px;font-size:12px;color:var(--t2);display:flex;align-items:center;gap:5px">▸ 第二卷 · 暗流涌动 <span style="font-size:9px;padding:1px 5px;border-radius:99px;background:var(--bg4);color:var(--tl);font-family:var(--fm)">12</span></div>
+    </div>
+  </div>
+</div>
+
+<h3>3.2 节点类型详细规格</h3>
+
+<h4>总纲节点</h4>
+<div class="state-row">
+  <div class="state-box" style="flex:3">
+    <div class="state-box-hd">视觉结构</div>
+    <div class="state-box-bd">
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:4px;font-size:12px;color:var(--t2)">
+        <span style="flex:1">总纲</span>
+      </div>
+      <div class="fspec" style="margin-top:6px"><span class="fspec-k">padding</span><span class="fspec-v">5px 10px</span></div>
+      <div class="fspec"><span class="fspec-k">font-size</span><span class="fspec-v">12px</span></div>
+      <div class="fspec"><span class="fspec-k">无序号、无箭头</span><span class="fspec-v"></span></div>
+    </div>
+  </div>
+  <div class="state-box" style="flex:2">
+    <div class="state-box-hd">点击行为</div>
+    <div class="state-box-bd" style="font-size:12px;color:var(--t2)">中心区切换到总纲编辑视图<br><span style="font-size:11px;color:var(--tl)">隐藏 Tab 栏和蓝图条</span></div>
+  </div>
+</div>
+
+<h4>卷标题节点</h4>
+<div class="state-row">
+  <div class="state-box" style="flex:3">
+    <div class="state-box-hd">视觉结构</div>
+    <div class="state-box-bd">
+      <div style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:4px;font-size:12px;color:var(--t2)">
+        <span style="font-size:8px;color:var(--tl);width:10px;text-align:center">▼</span>
+        <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">第一卷 · 迷雾觉醒</span>
+        <span style="font-size:9px;padding:1px 5px;border-radius:9999px;background:var(--bg4);color:var(--tl);font-family:var(--fm)">5</span>
+      </div>
+      <div class="fspec" style="margin-top:6px"><span class="fspec-k">箭头</span><span class="fspec-v">8px，<code>--text-light</code>，CSS transition transform 0.2s</span></div>
+      <div class="fspec"><span class="fspec-k">徽章</span><span class="fspec-v">monospace，9px，<code>--bg-muted</code> 圆角药丸</span></div>
+    </div>
+  </div>
+  <div class="state-box" style="flex:2">
+    <div class="state-box-hd">点击行为</div>
+    <div class="state-box-bd" style="font-size:12px;color:var(--t2)"><strong>仅切换展开/折叠</strong><br><span style="font-size:11px;color:var(--tl)">不改变中心区内容<br>不改变选中态</span></div>
+  </div>
+</div>
+
+<h4>章节节点</h4>
+<div class="state-row">
+  <div class="state-box" style="flex:3">
+    <div class="state-box-hd">视觉结构</div>
+    <div class="state-box-bd">
+      <div style="display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;font-size:12px;color:var(--t2)">
+        <span style="color:var(--tl);font-size:10px;width:16px;text-align:right;font-family:var(--fm)">03</span>
+        <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">梦境碎片</span>
+      </div>
+      <div class="fspec" style="margin-top:6px"><span class="fspec-k">序号</span><span class="fspec-v">monospace，10px，<code>--text-light</code>，width: 16px，右对齐</span></div>
+      <div class="fspec"><span class="fspec-k">标题</span><span class="fspec-v">flex: 1，溢出省略号</span></div>
+      <div class="fspec"><span class="fspec-k">padding-left</span><span class="fspec-v">16px（缩进层级）</span></div>
+    </div>
+  </div>
+  <div class="state-box" style="flex:2">
+    <div class="state-box-hd">点击行为</div>
+    <div class="state-box-bd" style="font-size:12px;color:var(--t2)">中心区切换到该章<br><span style="font-size:11px;color:var(--tl)">显示 Tab 栏 + 蓝图条<br>默认激活章纲 Tab</span></div>
+  </div>
+</div>
+
+<h3>3.3 节点三态详细规格</h3>
+<div class="state-row">
+  <div class="state-box">
+    <div class="state-box-hd">默认态</div>
+    <div class="state-box-bd">
+      <div style="padding:4px 10px;font-size:12px;color:var(--t2)">02 消失的地址</div>
+      <div class="fspec" style="margin-top:6px"><span class="fspec-k">color</span><span class="fspec-v"><code>--text-secondary</code></span></div>
+      <div class="fspec"><span class="fspec-k">background</span><span class="fspec-v">transparent</span></div>
+    </div>
+  </div>
+  <div class="state-box">
+    <div class="state-box-hd">悬停态</div>
+    <div class="state-box-bd">
+      <div style="padding:4px 10px;font-size:12px;color:var(--t2);background:var(--bg4);border-radius:4px">02 消失的地址</div>
+      <div class="fspec" style="margin-top:6px"><span class="fspec-k">background</span><span class="fspec-v"><code>--bg-muted</code></span></div>
+      <div class="fspec"><span class="fspec-k">cursor</span><span class="fspec-v">pointer</span></div>
+    </div>
+  </div>
+  <div class="state-box">
+    <div class="state-box-hd">选中态</div>
+    <div class="state-box-bd">
+      <div style="padding:4px 10px;font-size:12px;color:var(--cp);font-weight:500;background:var(--cp-bg);border-radius:4px;position:relative"><span style="position:absolute;left:0;top:6px;bottom:6px;width:2px;background:var(--cp);border-radius:0 1px 1px 0"></span>&nbsp;03 梦境碎片</div>
+      <div class="fspec" style="margin-top:6px"><span class="fspec-k">color</span><span class="fspec-v"><code>--color-primary</code></span></div>
+      <div class="fspec"><span class="fspec-k">background</span><span class="fspec-v"><code>--color-primary-bg</code></span></div>
+      <div class="fspec"><span class="fspec-k">::before</span><span class="fspec-v">左侧 2px 竖线，top/bottom: 6px</span></div>
+      <div class="fspec"><span class="fspec-k">font-weight</span><span class="fspec-v">500</span></div>
+    </div>
+  </div>
+</div>
+
+<h3>3.4 卷折叠交互详细</h3>
+<table>
+  <tr><th>状态</th><th>箭头</th><th>子列表</th><th>过渡动画</th></tr>
+  <tr><td>展开</td><td>▾（向下），无旋转</td><td><code>display: block</code></td><td>箭头 <code>transform: rotate(0deg)</code> 0.2s ease</td></tr>
+  <tr><td>折叠</td><td>▸（向右），<code>rotate(-90deg)</code></td><td><code>display: none</code></td><td>箭头 <code>transform: rotate(-90deg)</code> 0.2s ease</td></tr>
+</table>
+<ul class="specl">
+  <li><strong>默认行为</strong>：当前选中章节所在的卷<strong>自动展开</strong>，其余卷默认折叠</li>
+  <li><strong>点击卷标题行</strong> = 仅切换展开/折叠，<strong>不改变</strong>中心区内容和选中态</li>
+  <li><strong>切换章节时</strong>：如果目标章节在已折叠的卷中，自动展开该卷</li>
+</ul>
+
+<h3>3.5 右键菜单</h3>
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>右键菜单</div>
+  <div class="mu-body" style="padding:8px">
+    <div style="max-width:180px;border:1px solid var(--bd);border-radius:6px;overflow:hidden;box-shadow:0 4px 12px rgba(24,28,34,0.12);font-size:12px">
+      <div style="padding:6px 12px;color:var(--t2);cursor:default">重命名</div>
+      <div style="padding:6px 12px;color:var(--t2);cursor:default">在前方插入</div>
+      <div style="padding:6px 12px;color:var(--t2);cursor:default">在后方插入</div>
+      <div style="height:1px;background:var(--bl);margin:2px 0"></div>
+      <div style="padding:6px 12px;color:var(--ce);cursor:default">删除</div>
+    </div>
+  </div>
+</div>
+<table>
+  <tr><th>菜单项</th><th>适用节点</th><th>行为</th></tr>
+  <tr><td>重命名</td><td>卷、章</td><td>节点文字变为内联输入框，回车确认，ESC 取消</td></tr>
+  <tr><td>在前方插入</td><td>卷、章</td><td>在当前节点前插入同类型新节点，自动选中</td></tr>
+  <tr><td>在后方插入</td><td>卷、章</td><td>在当前节点后插入同类型新节点，自动选中</td></tr>
+  <tr><td>删除</td><td>卷、章</td><td>弹出确认弹窗（卷删除为级联删除，章删除为单章删除）</td></tr>
+</table>
+
+<h3>3.6 新建操作详细</h3>
+<div class="compare">
+  <div>
+    <div class="compare-hd">新建按钮（+）</div>
+    <div style="padding:12px;text-align:center">
+      <div style="display:inline-flex;flex-direction:column;border:1px solid var(--bd);border-radius:6px;overflow:hidden;box-shadow:0 4px 12px rgba(24,28,34,0.12);font-size:12px;text-align:left;min-width:120px">
+        <div style="padding:8px 14px;color:var(--t2);cursor:default;border-bottom:1px solid var(--bl)">新建卷</div>
+        <div style="padding:8px 14px;color:var(--t2);cursor:default">新建章</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="compare-hd">行为规则</div>
+    <div style="padding:12px 14px;font-size:12px;color:var(--t2);line-height:1.8">
+      <strong>新建卷</strong>：在列表末尾追加「新卷 X」，自动展开，卷标题进入编辑模式<br>
+      <strong>新建章</strong>：在当前卷末尾追加「新章节」，自动选中，中心区切换到章纲编辑<br>
+      <strong>空书</strong>：新书无卷时，点击 + 只显示「新建卷」（章必须归属于卷）
+    </div>
+  </div>
+</div>
+
+<h3>3.7 拖拽排序（后续迭代）</h3>
+<div class="callout callout-info">
+  <strong>Phase 2 计划：</strong>支持章节在同卷内拖拽排序、跨卷拖拽。卷支持整体拖拽排序。拖拽时显示半透明预览和插入线指示器。
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4. 工具栏 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>4. 工具栏（中心区顶部）</h2>
+
+<h3>4.1 布局</h3>
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>工具栏</div>
+  <div class="mu-body">
+    <div style="display:flex;align-items:center;justify-content:space-between;height:38px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--t3)">第一卷 <span style="opacity:.5;margin:0 2px">›</span> <b style="color:var(--t1);font-weight:500">第3章 梦境碎片</b></span>
+        <span style="width:3px;height:3px;border-radius:50%;background:var(--tl)"></span>
+        <span class="stag stag-prim">撰写中</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--tl);font-family:var(--fm)">1,247 字</span>
+        <button style="height:26px;padding:0 10px;border:none;border-radius:4px;font-size:11px;font-weight:500;background:var(--cp);color:var(--tw);cursor:default;font-family:var(--fb);display:inline-flex;align-items:center;gap:4px">✦ AI</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>4.2 左侧：面包屑 + 状态</h3>
+<table>
+  <tr><th>元素</th><th>说明</th></tr>
+  <tr><td>面包屑</td><td><code>卷名 › 章名</code>，卷名灰色，章名加粗黑色。点击卷名 → 导航到卷纲视图</td></tr>
+  <tr><td>分隔点</td><td>3px 圆点，<code>--text-light</code> 色</td></tr>
+  <tr><td>状态标签</td><td>显示当前章状态（见下方状态机）</td></tr>
+</table>
+
+<h3>4.3 右侧：字数 + AI 按钮</h3>
+<table>
+  <tr><th>元素</th><th>说明</th></tr>
+  <tr><td>字数统计</td><td>monospace 字体，<code>--text-light</code> 色，显示当前章正文字数</td></tr>
+  <tr><td>AI 按钮</td><td>实心主色按钮，点击打开右侧面板（AI 面板交互后续单独设计）</td></tr>
+</table>
+
+<h3>4.4 章节状态机</h3>
+<div class="flow">
+  <span class="flow-node">待规划</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node act">撰写中</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node">待审核</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node">已通过</span>
+</div>
+<table>
+  <tr><th>状态</th><th>标签色</th><th>含义</th></tr>
+  <tr><td>待规划</td><td><span class="stag stag-muted">待规划</span></td><td>章纲尚未填写</td></tr>
+  <tr><td>撰写中</td><td><span class="stag stag-prim">撰写中</span></td><td>章纲已填写，正在写正文</td></tr>
+  <tr><td>待审核</td><td><span class="stag stag-warn">待审核</span></td><td>正文写完，等待 AI 过审</td></tr>
+  <tr><td>已通过</td><td><span class="stag stag-succ">已通过</span></td><td>过审通过，正文归档到正文库</td></tr>
+</table>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 5. Tab 切换 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>5. Tab 切换（章纲 / 正文）</h2>
+
+<h3>5.1 Tab 定义</h3>
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>Tab 栏</div>
+  <div class="mu-body" style="padding:0">
+    <div style="display:flex;border-bottom:1px solid var(--bl);padding:0 20px;background:var(--bg2)">
+      <span style="padding:8px 14px;font-size:12.5px;font-weight:500;color:var(--cp);position:relative;cursor:default">章纲<span style="position:absolute;bottom:0;left:14px;right:14px;height:2px;background:var(--cp);border-radius:1px 1px 0 0"></span></span>
+      <span style="padding:8px 14px;font-size:12.5px;font-weight:500;color:var(--t3);position:relative;cursor:default">正文 <span style="font-size:10px;color:var(--tl);margin-left:4px;font-family:var(--fm)">1247</span></span>
+    </div>
+  </div>
+</div>
+
+<table>
+  <tr><th>Tab</th><th>内容</th><th>编辑能力</th><th>说明</th></tr>
+  <tr><td><strong>章纲</strong>（默认）</td><td>章纲表单</td><td>可编辑</td><td>创作者的核心工作区，AI 建议嵌入其中</td></tr>
+  <tr><td><strong>正文</strong></td><td>正文阅读视图</td><td>仅阅读 + 编辑按钮</td><td>显示上次保存的正文，未生成时为空态。字数 badge 实时显示</td></tr>
+</table>
+
+<h3>5.2 切换交互</h3>
+<ul class="specl">
+  <li>点击 Tab 切换视图，<strong>无网络请求</strong>（数据已预加载）</li>
+  <li>切换时保留各自滚动位置（章纲滚到哪、正文滚到哪独立记忆）</li>
+  <li>Tab 下方有 2px 主色指示条，从旧 Tab 动画滑到新 Tab</li>
+</ul>
+
+<div class="callout callout-info">
+  <strong>核心设计决策：</strong>正文 Tab 默认不可编辑。用户需点击「编辑」按钮进入编辑模式。这体现了「正文是正式产出物，章纲是核心工作区」的设计理念。
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 6. 蓝图参考条 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>6. 蓝图参考条（Blueprint Bar）</h2>
+
+<h3>6.1 设计目的</h3>
+<p>总纲和卷纲是「蓝图」——不可偏离的参考蓝本。蓝图条将当前卷的核心信息浓缩为一行，<strong>始终显示</strong>在 Tab 栏下方，无论章纲还是正文视图都可见。</p>
+
+<h3>6.2 视觉</h3>
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>蓝图参考条</div>
+  <div class="mu-body" style="padding:6px 16px;background:var(--bg4)">
+    <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--t3)">
+      <span style="font-size:10px;color:var(--tl);padding:1px 5px;border-radius:4px;background:var(--bg3)">蓝图</span>
+      <span>身份的迷失与重建</span>
+      <span style="color:var(--bd)">·</span>
+      <span>记忆被篡改 → 追查真相 → 发现组织</span>
+      <span style="color:var(--bd)">·</span>
+      <span>线索追踪阶段</span>
+      <span style="margin-left:auto;font-size:10px;color:var(--tl);padding:2px 6px;border:1px solid var(--bl);border-radius:4px">展开</span>
+    </div>
+  </div>
+</div>
+
+<h3>6.3 内容来源</h3>
+<table>
+  <tr><th>片段</th><th>数据来源</th></tr>
+  <tr><td>第一个片段</td><td>卷纲 <code>coreConflict</code>（核心冲突）</td></tr>
+  <tr><td>第二个片段</td><td>卷纲 <code>developmentArc</code>（发展弧线）</td></tr>
+  <tr><td>第三个片段</td><td>卷纲 <code>highlights</code>（预计看点 / 阶段标签）</td></tr>
+</table>
+
+<h3>6.4 交互状态</h3>
+<table>
+  <tr><th>状态</th><th>视觉</th><th>触发</th></tr>
+  <tr><td>收起（默认）</td><td>一行文本，溢出省略号截断</td><td>初始状态</td></tr>
+  <tr><td>展开</td><td>高度自动扩展，显示卷纲完整摘要卡片（含核心冲突、发展弧线、重要节点列表）</td><td>点击「展开」按钮</td></tr>
+</table>
+
+<h3>6.5 展开态（蓝图详情面板）</h3>
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>蓝图展开态</div>
+  <div class="mu-body" style="padding:14px 16px;background:var(--bg4)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:12px;font-weight:600;color:var(--t1)">第一卷 · 迷雾觉醒 — 蓝图</span>
+      <span style="font-size:10px;color:var(--tl);padding:2px 6px;border:1px solid var(--bl);border-radius:4px;cursor:default">收起</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+      <div><span style="color:var(--t3);font-size:11px">核心冲突</span><div style="margin-top:2px;color:var(--t2)">身份的迷失与重建</div></div>
+      <div><span style="color:var(--t3);font-size:11px">发展弧线</span><div style="margin-top:2px;color:var(--t2)">记忆被篡改 → 追查真相 → 发现组织</div></div>
+      <div><span style="color:var(--t3);font-size:11px">重要节点</span><div style="margin-top:2px;color:var(--t2)">1. 发现照片<br>2. 遭遇跟踪<br>3. 秘密基地</div></div>
+      <div><span style="color:var(--t3);font-size:11px">预计看点</span><div style="margin-top:2px;color:var(--t2)">线索追踪阶段，主角逐步发现自身异常</div></div>
+    </div>
+    <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bl);font-size:11px;color:var(--t3)">总纲方向：一个普通人发现自己的记忆被篡改，在追查真相的过程中卷入超自然组织的阴谋</div>
+  </div>
+</div>
+
+<div class="callout callout-warn">
+  <strong>蓝图约束规则：</strong>章纲内容不应偏离蓝图设定。AI 生成章纲时会自动注入蓝图作为约束条件。如果创作方向需要偏离蓝图，应先修改卷纲/总纲。
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 7. 章纲编辑视图 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>7. 章纲编辑视图（核心工作区）</h2>
+
+<h3>7.1 布局</h3>
+<p>居中单栏表单，最大宽度 640px，两侧留白（padding: <code>0 var(--space-6)</code>）。表单字段分为<strong>核心字段</strong>（始终可见）和<strong>次要字段</strong>（折叠区域）。</p>
+
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>章纲编辑 — 完整视图</div>
+  <div class="mu-body" style="padding:16px 24px">
+    <div style="margin-bottom:14px"><span style="font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.03em;display:block;margin-bottom:4px">章标题</span><div class="im-input">第三章 · 梦境碎片</div></div>
+    <div style="margin-bottom:14px"><span style="font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.03em;display:block;margin-bottom:4px">情节概要</span><div style="width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;color:var(--t1);background:#fff;line-height:1.8">主角在梦中看到了一段不属于自己的记忆，记忆中出现了一个和他长相一样的人，站在一栋废弃的建筑前。醒来后发现枕边多了一张从未见过的照片。</div>
+      <div style="border-left:2px solid var(--cp-bd);padding:10px 12px;background:var(--cp-bg);margin-top:8px;border-radius:0 6px 6px 0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:10px;font-weight:500;color:var(--cp)">AI 建议</span><div style="display:flex;gap:5px"><span style="height:22px;padding:0 7px;border:1px solid var(--bl);border-radius:4px;font-size:10px;display:inline-flex;align-items:center;color:var(--t3);font-family:var(--fb)">重新生成</span><span style="height:22px;padding:0 7px;border:none;border-radius:4px;font-size:10px;display:inline-flex;align-items:center;color:var(--tw);background:var(--cp);font-family:var(--fb)">采纳</span></div></div>
+        <div style="font-size:12.5px;line-height:1.7;color:var(--t2)">主角在出租车上接到神秘乘客，到达目的地后乘客消失，座位上留有纸条和照片。当晚做了一个不属于自己的噩梦，梦中一栋废弃建筑反复出现。</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:14px">
+      <div style="flex:1"><span style="font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.03em;display:block;margin-bottom:4px">前文衔接</span><div class="im-input" style="font-size:12px">上一章结尾：出租车后座发现写着地址的纸条</div></div>
+      <div style="flex:1"><span style="font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.03em;display:block;margin-bottom:4px">后文悬念</span><div class="im-input plc" style="font-size:12px">留给读者的悬念？</div></div>
+    </div>
+    <div style="height:1px;background:var(--bl);margin:14px 0"></div>
+    <div style="margin-bottom:14px"><span style="font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.03em;display:block;margin-bottom:4px">出场人物</span><span class="im-tag del">林夜</span><span class="im-tag del">神秘乘客</span><span class="im-tag-add">+</span></div>
+    <div style="margin-bottom:14px"><span style="font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.03em;display:block;margin-bottom:4px">场景</span><span class="im-tag del">出租车内</span><span class="im-tag del">主角卧室</span><span class="im-tag del">梦境·废弃建筑</span><span class="im-tag-add">+</span></div>
+    <div style="margin-bottom:14px"><span style="font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.03em;display:block;margin-bottom:4px">关键事件</span><span class="im-tag del">发现照片</span><span class="im-tag del">梦境闪回</span><span class="im-tag-add">+</span></div>
+    <div style="margin-bottom:14px"><span style="font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.03em;display:block;margin-bottom:4px">伏笔</span><span class="im-tag del">废弃建筑的真实身份</span><span class="im-tag-add">+</span></div>
+    <div style="text-align:center;padding:8px;font-size:11px;color:var(--tl)">▾ 更多细节</div>
+  </div>
+</div>
+
+<h3>7.2 核心字段详细规格</h3>
+<table>
+  <tr><th>字段</th><th>类型</th><th>必填</th><th>字号</th><th>行高</th><th>宽度</th><th>最大高度</th><th>说明</th></tr>
+  <tr><td><strong>章标题</strong></td><td>单行 input</td><td>是</td><td>13px</td><td>1.5</td><td>100%</td><td>—</td><td>placeholder: 「第X章 · 标题」</td></tr>
+  <tr><td><strong>情节概要</strong></td><td>多行 textarea</td><td>是</td><td>13px</td><td>1.8</td><td>100%</td><td>不限（自动扩展）</td><td>核心字段，AI建议嵌入在此下方</td></tr>
+  <tr><td><strong>前文衔接</strong></td><td>单行 input</td><td>否</td><td>13px</td><td>1.5</td><td>50%</td><td>—</td><td>与前文的逻辑衔接点</td></tr>
+  <tr><td><strong>后文悬念</strong></td><td>单行 input</td><td>否</td><td>13px</td><td>1.5</td><td>50%</td><td>—</td><td>留给读者的钩子</td></tr>
+  <tr><td><strong>出场人物</strong></td><td>标签列表</td><td>否</td><td>11.5px</td><td>—</td><td>100%</td><td>不限（自动换行）</td><td>关联设定库角色 ID</td></tr>
+  <tr><td><strong>场景</strong></td><td>标签列表</td><td>否</td><td>11.5px</td><td>—</td><td>100%</td><td>不限（自动换行）</td><td>自由文本标签</td></tr>
+  <tr><td><strong>关键事件</strong></td><td>标签列表</td><td>否</td><td>11.5px</td><td>—</td><td>100%</td><td>不限（自动换行）</td><td>本章关键情节点</td></tr>
+  <tr><td><strong>伏笔</strong></td><td>标签列表</td><td>否</td><td>11.5px</td><td>—</td><td>100%</td><td>不限（自动换行）</td><td>关联伏笔库 ID</td></tr>
+</table>
+
+<h3>7.3 输入框四态详细规格</h3>
+<div class="state-row">
+  <div class="state-box">
+    <div class="state-box-hd">默认态</div>
+    <div class="state-box-bd">
+      <div class="im-input">第三章 · 梦境碎片</div>
+      <div class="fspec" style="margin-top:8px"><span class="fspec-k">border</span><span class="fspec-v"><code>--border</code> #ddd8d0</span></div>
+      <div class="fspec"><span class="fspec-k">background</span><span class="fspec-v">#fff</span></div>
+      <div class="fspec"><span class="fspec-k">border-radius</span><span class="fspec-v"><code>--radius-md</code> 0.375rem</span></div>
+    </div>
+  </div>
+  <div class="state-box">
+    <div class="state-box-hd">聚焦态</div>
+    <div class="state-box-bd">
+      <div class="im-input focus">第三章 · 梦境碎片</div>
+      <div class="fspec" style="margin-top:8px"><span class="fspec-k">border</span><span class="fspec-v"><code>--color-primary</code> #2F5D50</span></div>
+      <div class="fspec"><span class="fspec-k">box-shadow</span><span class="fspec-v">0 0 0 2px <code>--color-primary-bg</code></span></div>
+    </div>
+  </div>
+  <div class="state-box">
+    <div class="state-box-hd">占位符</div>
+    <div class="state-box-bd">
+      <div class="im-input plc">留给读者的悬念？</div>
+      <div class="fspec" style="margin-top:8px"><span class="fspec-k">color</span><span class="fspec-v"><code>--text-light</code> #b5b0a8</span></div>
+    </div>
+  </div>
+  <div class="state-box">
+    <div class="state-box-hd">禁用态</div>
+    <div class="state-box-bd">
+      <div class="im-input" style="background:var(--bg4);color:var(--tl);cursor:not-allowed">不可编辑</div>
+      <div class="fspec" style="margin-top:8px"><span class="fspec-k">background</span><span class="fspec-v"><code>--bg-strong</code> #e8e4dc</span></div>
+      <div class="fspec"><span class="fspec-k">cursor</span><span class="fspec-v">not-allowed</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="callout callout-info">
+  <strong>自动保存规则：</strong>所有输入框失焦时触发保存，debounce 500ms。保存成功后无 toast 提示（静默保存）。如果保存失败，在输入框下方显示红色错误文字，3 秒后消失。
+</div>
+
+<h3>7.4 次要字段（折叠区域）</h3>
+<p>点击「更多细节」展开/收起。收起时仅显示一行居中文字 + 箭头图标。</p>
+
+<div class="compare">
+  <div>
+    <div class="compare-hd">收起态</div>
+    <div style="padding:10px;text-align:center;font-size:11px;color:var(--tl);cursor:default">▾ 更多细节</div>
+  </div>
+  <div>
+    <div class="compare-hd">展开态</div>
+    <div style="padding:12px 14px">
+      <div style="display:flex;gap:12px">
+        <div style="flex:1"><span style="font-size:11px;font-weight:500;color:var(--t3);display:block;margin-bottom:4px">预计字数</span><div class="im-input" style="font-family:var(--fm);font-size:13px">3000</div></div>
+        <div style="flex:1"><span style="font-size:11px;font-weight:500;color:var(--t3);display:block;margin-bottom:4px">时间</span><div class="im-input">深夜</div></div>
+        <div style="flex:1"><span style="font-size:11px;font-weight:500;color:var(--t3);display:block;margin-bottom:4px">氛围</span><div class="im-input">紧张、悬疑</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<table>
+  <tr><th>字段</th><th>类型</th><th>字体</th><th>placeholder</th></tr>
+  <tr><td>预计字数</td><td>number input</td><td><code>--font-mono</code></td><td>「3000」</td></tr>
+  <tr><td>时间</td><td>单行 input</td><td><code>--font-body</code></td><td>「深夜 / 清晨 / 黄昏」</td></tr>
+  <tr><td>氛围</td><td>单行 input</td><td><code>--font-body</code></td><td>「紧张、温馨、悲伤」</td></tr>
+</table>
+
+<h3>7.5 标签列表详细交互</h3>
+
+<h4>标签视觉规格</h4>
+<div class="fspec"><span class="fspec-k">高度</span><span class="fspec-v">24px</span></div>
+<div class="fspec"><span class="fspec-k">padding</span><span class="fspec-v">0 8px</span></div>
+<div class="fspec"><span class="fspec-k">border-radius</span><span class="fspec-v"><code>--radius-sm</code> 0.25rem</span></div>
+<div class="fspec"><span class="fspec-k">background</span><span class="fspec-v"><code>--bg-muted</code> #f5f2ec</span></div>
+<div class="fspec"><span class="fspec-k">color</span><span class="fspec-v"><code>--text-secondary</code> #4a4640</span></div>
+<div class="fspec"><span class="fspec-k">font-size</span><span class="fspec-v">11.5px</span></div>
+<div class="fspec"><span class="fspec-k">gap</span><span class="fspec-v">5px（标签间距）</span></div>
+
+<h4>标签四种状态</h4>
+<div class="state-row">
+  <div class="state-box">
+    <div class="state-box-hd">默认</div>
+    <div class="state-box-bd"><span class="im-tag">林夜</span></div>
+  </div>
+  <div class="state-box">
+    <div class="state-box-hd">Hover</div>
+    <div class="state-box-bd"><span class="im-tag" style="background:var(--bg3)">林夜 <span style="margin-left:4px;color:var(--tl);font-size:12px">×</span></span></div>
+  </div>
+  <div class="state-box">
+    <div class="state-box-hd">添加按钮</div>
+    <div class="state-box-bd"><span class="im-tag-add">+</span></div>
+  </div>
+  <div class="state-box">
+    <div class="state-box-hd">添加按钮 Hover</div>
+    <div class="state-box-bd"><span class="im-tag-add" style="border-color:var(--cp);color:var(--cp);background:var(--cp-bg)">+</span></div>
+  </div>
+</div>
+
+<h4>标签添加流程</h4>
+<ol class="steps">
+  <li><strong>点击「+」按钮</strong> → 在标签列表末尾出现一个内联输入框（auto-focus）</li>
+  <li><strong>输入文字</strong> → 实时过滤关联库中的匹配项（人物标签过滤设定库，伏笔标签过滤伏笔库）</li>
+  <li><strong>选择或回车</strong> → 从下拉列表选择已有项（关联 ID），或直接回车创建新标签（自由文本）</li>
+  <li><strong>确认添加</strong> → 输入框消失，新标签出现在列表末尾，<strong>立即持久化到数据库</strong></li>
+  <li><strong>ESC 或失焦</strong> → 取消添加，输入框消失</li>
+</ol>
+
+<h4>标签删除流程</h4>
+<ol class="steps">
+  <li><strong>Hover 标签</strong> → 标签背景变深（<code>--bg-page</code>），右侧出现 × 图标</li>
+  <li><strong>点击 ×</strong> → 标签立即移除（乐观更新），后台异步删除关联</li>
+  <li><strong>关联影响</strong>：人物标签删除仅移除章纲关联，不删除设定库中的角色。伏笔标签同理。</li>
+</ol>
+
+<h4>人物标签特殊行为</h4>
+<ul class="specl">
+  <li>人物标签关联设定库角色 ID（<code>characterId</code>），非自由文本</li>
+  <li>点击人物标签 → 弹出角色详情抽屉（显示角色设定）</li>
+  <li>设定库修改角色名字后，章纲中的人物标签<strong>实时同步更新显示名</strong></li>
+  <li>如果设定库删除了角色，章纲标签显示为灰色 + 删除线，提示「角色已删除」</li>
+</ul>
+
+<h4>伏笔标签特殊行为</h4>
+<ul class="specl">
+  <li>伏笔标签关联伏笔库 ID（<code>foreshadowingId</code>）</li>
+  <li>标签右侧显示伏笔状态小圆点：<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--cs)"></span> 已揭示 · <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--cw)"></span> 隐藏中 · <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--tl)"></span> 已过期</li>
+  <li>点击伏笔标签 → 弹出伏笔详情抽屉</li>
+</ul>
+
+<h3>7.6 AI 建议嵌入详细规格</h3>
+
+<h4>位置与触发</h4>
+<ul class="specl">
+  <li>位置：<strong>情节概要 textarea 正下方</strong>，间距 <code>var(--space-2)</code> 8px</li>
+  <li>触发条件：AI 为当前章生成了情节概要建议</li>
+  <li>初始状态：无建议时不显示该区域（不是隐藏，是不存在）</li>
+</ul>
+
+<h4>视觉规格</h4>
+<div class="fspec"><span class="fspec-k">左边框</span><span class="fspec-v">2px solid <code>--color-primary-border</code></span></div>
+<div class="fspec"><span class="fspec-k">background</span><span class="fspec-v"><code>--color-primary-bg</code></span></div>
+<div class="fspec"><span class="fspec-k">padding</span><span class="fspec-v">10px 12px</span></div>
+<div class="fspec"><span class="fspec-k">border-radius</span><span class="fspec-v">0 <code>--radius-md</code> <code>--radius-md</code> 0</span></div>
+
+<h4>三种状态</h4>
+<div class="state-row">
+  <div class="state-box" style="flex:2">
+    <div class="state-box-hd">就绪态</div>
+    <div class="state-box-bd">
+      <div style="border-left:2px solid var(--cp-bd);padding:10px 12px;background:var(--cp-bg);border-radius:0 6px 6px 0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:10px;font-weight:500;color:var(--cp)">AI 建议</span><div style="display:flex;gap:5px"><span style="height:22px;padding:0 7px;border:1px solid var(--bl);border-radius:4px;font-size:10px;display:inline-flex;align-items:center;color:var(--t3);font-family:var(--fb)">重新生成</span><span style="height:22px;padding:0 7px;border:none;border-radius:4px;font-size:10px;display:inline-flex;align-items:center;color:var(--tw);background:var(--cp);font-family:var(--fb)">采纳</span></div></div>
+        <div style="font-size:12.5px;line-height:1.7;color:var(--t2)">主角在出租车上接到神秘乘客，到达目的地后乘客消失...</div>
+      </div>
+    </div>
+  </div>
+  <div class="state-box" style="flex:1.5">
+    <div class="state-box-hd">生成中</div>
+    <div class="state-box-bd">
+      <div style="border-left:2px solid var(--cp-bd);padding:10px 12px;background:var(--cp-bg);border-radius:0 6px 6px 0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:10px;font-weight:500;color:var(--cp)">AI 建议</span><span style="font-size:10px;color:var(--tl)">生成中...</span></div>
+        <div style="font-size:12.5px;line-height:1.7;color:var(--tl)">主角在出租车上接到神秘乘客，到达目的地后乘客消失，座位上留有纸条和<span style="border-right:1px solid var(--cp);animation:blink 1s infinite">&nbsp;</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h4>按钮行为</h4>
+<table>
+  <tr><th>按钮</th><th>样式</th><th>行为</th><th>loading 态</th></tr>
+  <tr><td><strong>重新生成</strong></td><td>描边按钮，<code>--border-light</code> 边框</td><td>调用 AI 重新生成，替换当前建议内容</td><td>按钮文字变为「生成中...」，disabled</td></tr>
+  <tr><td><strong>采纳</strong></td><td>实心主色按钮</td><td>将建议内容填入情节概要 textarea（弹窗选择：替换 / 追加到末尾）</td><td>—</td></tr>
+</table>
+
+<h4>采纳弹窗</h4>
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>采纳确认弹窗</div>
+  <div class="mu-body" style="padding:16px">
+    <div style="max-width:300px;margin:0 auto;border:1px solid var(--bd);border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(24,28,34,0.12)">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--bl)"><div style="font-size:13px;font-weight:600;color:var(--t1)">采纳 AI 建议</div></div>
+      <div style="padding:14px 16px;font-size:12.5px;color:var(--t2)">如何将建议内容填入情节概要？</div>
+      <div style="padding:0 16px 14px;display:flex;gap:8px;justify-content:flex-end">
+        <span style="height:28px;padding:0 12px;border:1px solid var(--bd);border-radius:6px;font-size:12px;display:inline-flex;align-items:center;color:var(--t2);font-family:var(--fb);cursor:default">替换</span>
+        <span style="height:28px;padding:0 12px;border:none;border-radius:6px;font-size:12px;display:inline-flex;align-items:center;color:var(--tw);background:var(--cp);font-family:var(--fb);cursor:default">追加</span>
+        <span style="height:28px;padding:0 12px;border:none;border-radius:6px;font-size:12px;display:inline-flex;align-items:center;color:var(--t3);font-family:var(--fb);cursor:default">取消</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h4>AI 建议错误态</h4>
+<div class="state-box" style="max-width:400px;margin:10px 0">
+  <div class="state-box-hd">生成失败</div>
+  <div class="state-box-bd">
+    <div style="border-left:2px solid var(--ce);padding:10px 12px;background:rgba(186,26,26,0.04);border-radius:0 6px 6px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-size:10px;font-weight:500;color:var(--ce)">生成失败</span><span style="height:22px;padding:0 7px;border:1px solid var(--bl);border-radius:4px;font-size:10px;display:inline-flex;align-items:center;color:var(--t3);font-family:var(--fb)">重试</span></div>
+      <div style="font-size:12px;color:var(--ce)">请求超时，请检查网络后重试</div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 8. 正文阅读视图 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>8. 正文阅读视图</h2>
+
+<h3>8.1 设计理念</h3>
+<p>正文 Tab 默认是<strong>只读阅读模式</strong>，模拟纸质阅读体验。用户需主动点击「编辑」按钮进入编辑模式。这是因为正文是正式产出物，不应被随意修改。</p>
+
+<h3>8.2 两种模式对比</h3>
+<div class="compare">
+  <div>
+    <div class="compare-hd">阅读模式（默认）</div>
+    <div style="padding:16px 20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--bl)">
+        <span style="font-size:11px;color:var(--tl)">上次保存 2 分钟前 · 1,247 字</span>
+        <span style="font-size:11px;color:var(--cp);border:1px solid var(--cp-bd);border-radius:4px;padding:3px 8px;cursor:default">编辑</span>
+      </div>
+      <div style="font-size:14px;line-height:2.1;color:var(--t1);letter-spacing:.02em">
+        <p style="text-indent:2em;margin-bottom:.8em">深夜十一点四十三分。</p>
+        <p style="text-indent:2em;margin-bottom:.8em">林夜把车停在路边，透过后视镜看了一眼后座。那个男人从上车到现在一直低着头...</p>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="compare-hd">编辑模式</div>
+    <div style="padding:16px 20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--bl)">
+        <span style="font-size:11px;color:var(--tl)">编辑中 · 1,247 字 · 未保存</span>
+        <div style="display:flex;gap:6px">
+          <span style="height:24px;padding:0 10px;border:1px solid var(--bd);border-radius:4px;font-size:11px;font-weight:500;display:inline-flex;align-items:center;color:var(--t2);font-family:var(--fb);cursor:default">取消</span>
+          <span style="height:24px;padding:0 10px;border:none;border-radius:4px;font-size:11px;font-weight:500;display:inline-flex;align-items:center;color:var(--tw);background:var(--cp);font-family:var(--fb);cursor:default">保存</span>
+        </div>
+      </div>
+      <div style="font-size:14px;line-height:2.1;color:var(--t1);min-height:120px;padding:4px;border:1px solid var(--cp);border-radius:4px;box-shadow:0 0 0 2px var(--cp-bg)">深夜十一点四十三分。<br><br>林夜把车停在路边，透过后视镜看了一眼后座...<span style="border-right:1px solid var(--cp)">&nbsp;</span></div>
+    </div>
+  </div>
+</div>
+
+<h3>8.3 模式切换详细交互</h3>
+<table>
+  <tr><th>操作</th><th>阅读模式 → 编辑模式</th><th>编辑模式 → 阅读模式</th></tr>
+  <tr><td>触发</td><td>点击「编辑」按钮</td><td>点击「保存」或「取消」</td></tr>
+  <tr><td>UI 变化</td><td>正文区域变为 TextArea，border 变为 <code>--color-primary</code>，元信息栏按钮组变为「取消」+「保存」</td><td>TextArea 变回 div 阅读排版，按钮恢复为「编辑」</td></tr>
+  <tr><td>未保存提示</td><td>—</td><td>如果内容已修改但未保存，点击「取消」弹出确认弹窗：「放弃修改？」</td></tr>
+  <tr><td>保存</td><td>—</td><td>点击「保存」→ PUT API → 成功后切换回阅读模式，更新字数和保存时间</td></tr>
+  <tr><td>快捷键</td><td>—</td><td><code>Ctrl+S</code> = 保存，<code>ESC</code> = 取消</td></tr>
+</table>
+
+<h3>8.4 阅读排版详细规格</h3>
+<table>
+  <tr><th>属性</th><th>值</th><th>CSS 变量</th></tr>
+  <tr><td>字号</td><td>14px</td><td>—</td></tr>
+  <tr><td>行高</td><td>2.1</td><td>—</td></tr>
+  <tr><td>首行缩进</td><td>2em</td><td>—</td></tr>
+  <tr><td>段落间距</td><td>0.8em</td><td>—</td></tr>
+  <tr><td>字间距</td><td>0.02em</td><td>—</td></tr>
+  <tr><td>文字颜色</td><td>#1a1814</td><td><code>--text-primary</code></td></tr>
+  <tr><td>最大宽度</td><td>640px</td><td>—</td></tr>
+  <tr><td>左右 padding</td><td>24px</td><td><code>--space-6</code></td></tr>
+</table>
+
+<h3>8.5 元信息栏详细规格</h3>
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>元信息栏 — 三种状态</div>
+  <div class="mu-body" style="padding:0 16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bl)">
+      <span style="font-size:11px;color:var(--tl)">上次保存 2 分钟前 · 1,247 字</span>
+      <span style="font-size:11px;color:var(--cp);border:1px solid var(--cp-bd);border-radius:4px;padding:3px 8px;cursor:default">编辑</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bl)">
+      <span style="font-size:11px;color:var(--tl)">编辑中 · 未保存 · 1,247 字</span>
+      <div style="display:flex;gap:6px"><span style="height:22px;padding:0 8px;border:1px solid var(--bd);border-radius:4px;font-size:11px;display:inline-flex;align-items:center;color:var(--t2);font-family:var(--fb);cursor:default">取消</span><span style="height:22px;padding:0 8px;border:none;border-radius:4px;font-size:11px;font-weight:500;display:inline-flex;align-items:center;color:var(--tw);background:var(--cp);font-family:var(--fb);cursor:default">保存 Ctrl+S</span></div>
+    </div>
+    <div style="padding:12px 0;text-align:center">
+      <span style="font-size:12px;color:var(--cs)">✓ 已保存</span>
+    </div>
+  </div>
+</div>
+
+<h3>8.6 空态设计</h3>
+<div class="compare">
+  <div>
+    <div class="compare-hd">正文完全为空（未生成）</div>
+    <div style="padding:48px 16px;text-align:center">
+      <div style="width:48px;height:48px;margin:0 auto 12px;border:2px dashed var(--bl);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--tl)">📄</div>
+      <div style="font-size:13px;color:var(--t3);font-weight:500">正文尚未生成</div>
+      <div style="font-size:12px;color:var(--tl);margin-top:4px;line-height:1.6">点击工具栏「AI」按钮生成正文<br>或切换到章纲 Tab 完善情节概要</div>
+      <div style="margin-top:14px"><span style="height:28px;padding:0 14px;border:none;border-radius:6px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:6px;color:var(--tw);background:var(--cp);font-family:var(--fb);cursor:default">✦ 生成正文</span></div>
+    </div>
+  </div>
+  <div>
+    <div class="compare-hd">AI 正在生成中</div>
+    <div style="padding:48px 16px;text-align:center">
+      <div style="width:48px;height:48px;margin:0 auto 12px;border:2px solid var(--cp-bd);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--cp);animation:pulse 2s infinite">✦</div>
+      <div style="font-size:13px;color:var(--cp);font-weight:500">AI 正在生成正文</div>
+      <div style="font-size:12px;color:var(--tl);margin-top:4px;line-height:1.6">预计需要 30-60 秒<br>生成过程中可以继续编辑章纲</div>
+      <div style="margin-top:14px"><span style="height:28px;padding:0 14px;border:1px solid var(--ce);border-radius:6px;font-size:12px;display:inline-flex;align-items:center;color:var(--ce);font-family:var(--fb);cursor:default">取消生成</span></div>
+    </div>
+  </div>
+</div>
+
+<h3>8.7 正文字数统计</h3>
+<ul class="specl">
+  <li>字数 = 正文中实际汉字数 + 标点 + 数字（不含空格和换行）</li>
+  <li>实时统计，编辑模式下字数随输入变化</li>
+  <li>Tab badge 上的数字与元信息栏的字数保持同步</li>
+  <li>工具栏右侧的字数也同步更新</li>
+</ul>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 9. AI 面板 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>9. AI 面板（占位）</h2>
+
+<h3>9.1 当前状态</h3>
+<p>右侧 280px 面板，当前仅显示占位提示。后续单独设计四种交互模式（explore / plan / draft / check），详见 <code>docs/mockups/ai-panels.html</code>。</p>
+
+<div class="mu">
+  <div class="mu-bar"><span class="mu-dot r"></span><span class="mu-dot y"></span><span class="mu-dot g"></span>AI 面板占位</div>
+  <div class="mu-body" style="padding:60px 24px;text-align:center">
+    <div style="font-size:24px;opacity:.2;margin-bottom:8px">✦</div>
+    <div style="font-size:13px;color:var(--t3);font-weight:500">AI 写作助手</div>
+    <div style="font-size:11.5px;color:var(--tl);margin-top:6px;line-height:1.6">点击工具栏「AI」按钮<br>开始 AI 辅助创作</div>
+  </div>
+</div>
+
+<h3>9.2 后续设计方向</h3>
+<table>
+  <tr><th>模式</th><th>触发</th><th>功能</th></tr>
+  <tr><td><span class="stag stag-prim">explore</span></td><td>探索按钮</td><td>AI 对当前章纲/正文做分析、提出改进方向</td></tr>
+  <tr><td><span class="stag stag-succ">plan</span></td><td>规划按钮</td><td>AI 基于蓝图生成/优化章纲</td></tr>
+  <tr><td><span class="stag stag-warn">draft</span></td><td>写作按钮</td><td>AI 基于章纲生成正文</td></tr>
+  <tr><td><span class="stag stag-info">check</span></td><td>审核按钮</td><td>AI 过审正文，提取事实/伏笔变更</td></tr>
+</table>
+
+<div class="callout callout-info">
+  <strong>AI 面板 vs 正文 Tab：</strong>AI 面板中显示的是<strong>当前正在生成的内容</strong>（草稿态），正文 Tab 中显示的是<strong>上一次保存的正式版本</strong>。用户确认 AI 生成后，内容才写入正文。
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 10. 蓝图编辑 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>10. 总纲与卷纲的编辑</h2>
+
+<h3>10.1 总纲编辑</h3>
+<div class="flow">
+  <span class="flow-node">导航树点击「总纲」</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node act">中心区切换到总纲编辑视图</span>
+</div>
+
+<p>总纲编辑视图为独立全屏表单，包含以下字段：</p>
+<table>
+  <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+  <tr><td><strong>整体方向</strong></td><td>多行文本</td><td>这本书要讲什么故事，核心卖点是什么</td></tr>
+  <tr><td><strong>阶段划分</strong></td><td>多行文本</td><td>大阶段规划（如：觉醒期 → 追查期 → 对决期）</td></tr>
+  <tr><td><strong>核心卖点</strong></td><td>多行文本</td><td>吸引读者的关键元素</td></tr>
+</table>
+
+<div class="callout callout-ok">
+  <strong>总纲 → AI 上下文：</strong>总纲内容会自动注入到所有 AI 请求的 context 中，确保 AI 理解全书方向，不会生成偏离主线的内容。
+</div>
+
+<h3>10.2 卷纲编辑</h3>
+<div class="flow">
+  <span class="flow-node">导航树点击卷标题</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node act">中心区切换到卷纲编辑视图</span>
+</div>
+
+<p>卷纲编辑视图包含以下字段：</p>
+<table>
+  <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+  <tr><td><strong>卷标题</strong></td><td>单行输入</td><td>如「第一卷 · 迷雾觉醒」</td></tr>
+  <tr><td><strong>核心冲突</strong></td><td>多行文本</td><td>本卷的核心矛盾（蓝图关键字段）</td></tr>
+  <tr><td><strong>发展弧线</strong></td><td>多行文本</td><td>本卷情节发展走向（蓝图关键字段）</td></tr>
+  <tr><td><strong>重要节点</strong></td><td>列表</td><td>本卷的关键转折点列表，可增删</td></tr>
+  <tr><td><strong>预计看点</strong></td><td>多行文本</td><td>吸引读者继续阅读的钩子</td></tr>
+</table>
+
+<h3>10.3 卷纲如何约束章纲</h3>
+
+<div class="callout callout-warn">
+  <strong>约束机制：</strong>卷纲是蓝图，章纲是蓝图的具体执行。AI 在生成章纲时，会自动将卷纲的「核心冲突」「发展弧线」「重要节点」作为约束条件注入 prompt。章纲不应偏离卷纲设定的方向。
+</div>
+
+<div class="card">
+  <span class="card-label cb">约束链路</span>
+  <div class="flow" style="margin:8px 0">
+    <span class="flow-node">卷纲 coreConflict</span>
+    <span class="flow-arrow">+</span>
+    <span class="flow-node">卷纲 developmentArc</span>
+    <span class="flow-arrow">+</span>
+    <span class="flow-node">卷纲 keyPoints</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node act">注入 AI prompt</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node">生成章纲</span>
+  </div>
+  <ul class="specl">
+    <li>AI 生成章纲时，程序自动从卷纲提取蓝图字段，组装为约束条件</li>
+    <li>蓝图参考条始终可见，创作者写章纲时可随时参照</li>
+    <li>如果章纲需要偏离卷纲 → 应先修改卷纲，再重新生成/调整章纲</li>
+    <li>卷纲修改后，已存在的章纲不会自动更新（需用户手动触发重新规划）</li>
+  </ul>
+</div>
+
+<h3>10.4 导航树 vs 中心区的联动</h3>
+<table>
+  <tr><th>点击目标</th><th>中心区显示</th><th>工具栏变化</th></tr>
+  <tr><td>导航树「总纲」</td><td>总纲编辑表单</td><td>面包屑变为「总纲」，隐藏状态标签和字数</td></tr>
+  <tr><td>导航树卷标题</td><td>卷纲编辑表单</td><td>面包屑变为「第一卷 · 迷雾觉醒」，隐藏章状态</td></tr>
+  <tr><td>导航树章节行</td><td>章纲/正文（Tab 切换）</td><td>面包屑变为「卷名 › 章名」，显示状态+字数+AI按钮</td></tr>
+</table>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 11. 交互状态机 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>11. 全局交互状态</h2>
+
+<h3>11.1 中心区视图状态</h3>
+<table>
+  <tr><th>视图</th><th>触发</th><th>Tab 可见</th><th>蓝图条可见</th></tr>
+  <tr><td>总纲编辑</td><td>导航树点击「总纲」</td><td>否</td><td>否</td></tr>
+  <tr><td>卷纲编辑</td><td>导航树点击卷标题</td><td>否</td><td>否</td></tr>
+  <tr><td>章纲编辑</td><td>导航树点击章节行</td><td>是（章纲 Tab 激活）</td><td>是</td></tr>
+  <tr><td>正文阅读</td><td>Tab 切换到正文</td><td>是（正文 Tab 激活）</td><td>是</td></tr>
+</table>
+
+<h3>11.2 数据保存策略</h3>
+<table>
+  <tr><th>操作</th><th>保存方式</th><th>说明</th></tr>
+  <tr><td>章纲字段编辑</td><td>失焦自动保存（debounce 500ms）</td><td>无需手动保存按钮</td></tr>
+  <tr><td>卷纲字段编辑</td><td>失焦自动保存</td><td>同上</td></tr>
+  <tr><td>总纲字段编辑</td><td>失焦自动保存</td><td>同上</td></tr>
+  <tr><td>正文编辑</td><td>手动保存（Ctrl+S / 按钮）</td><td>正文是正式产出物，需显式确认</td></tr>
+  <tr><td>标签增删</td><td>即时保存</td><td>每次增删立即持久化</td></tr>
+</table>
+
+<h3>11.3 键盘快捷键</h3>
+<table>
+  <tr><th>快捷键</th><th>行为</th></tr>
+  <tr><td><code>Ctrl + S</code></td><td>保存当前编辑内容（正文模式）</td></tr>
+  <tr><td><code>Ctrl + Z</code></td><td>撤销</td></tr>
+  <tr><td><code>Ctrl + Shift + Z</code></td><td>重做</td></tr>
+  <tr><td><code>Tab</code></td><td>在章纲和正文 Tab 间切换</td></tr>
+  <tr><td><code>↑ / ↓</code></td><td>导航树上下移动选中</td></tr>
+  <tr><td><code>Enter</code></td><td>进入选中项的编辑视图</td></tr>
+  <tr><td><code>Ctrl + Enter</code></td><td>触发 AI 生成（打开 AI 面板）</td></tr>
+</table>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 12. 数据流 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>12. 数据流与 AI 上下文</h2>
+
+<h3>12.1 AI 请求的上下文组装</h3>
+<p>当用户触发 AI 生成时，程序自动从各层组装上下文：</p>
+
+<div class="card">
+  <span class="card-label ci">Context Pipeline</span>
+  <table style="margin-top:8px">
+    <tr><th>顺序</th><th>数据源</th><th>注入方式</th></tr>
+    <tr><td>1</td><td>书籍元数据（题材/风格）</td><td>system prompt 前缀</td></tr>
+    <tr><td>2</td><td>总纲（整体方向）</td><td>system prompt 约束</td></tr>
+    <tr><td>3</td><td>卷纲（核心冲突/弧线/节点）</td><td>user prompt 约束条件</td></tr>
+    <tr><td>4</td><td>前 2 章正文</td><td>user prompt 上下文</td></tr>
+    <tr><td>5</td><td>当前章纲</td><td>user prompt 主体</td></tr>
+    <tr><td>6</td><td>相关角色设定</td><td>user prompt 补充</td></tr>
+    <tr><td>7</td><td>活跃伏笔</td><td>user prompt 补充</td></tr>
+  </table>
+</div>
+
+<h3>12.2 完整创作流程</h3>
+<div class="flow" style="flex-wrap:wrap">
+  <span class="flow-node">编写总纲</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node">编写卷纲</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node act">规划章纲（滚动 3-5 章）</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node">AI 生成正文</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node">人工审阅修改</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node">AI 过审</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node">正文归档</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-node">补充下一章章纲</span>
+</div>
+
+<div class="callout callout-ok">
+  <strong>核心循环：</strong>章纲 → 正文 → 过审 → 归档 → 下一章。写完 3-5 章后再规划下一批章纲，这就是「滚动规划」。
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 13. 技术约束 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>13. 技术约束与实现要点</h2>
+
+<table>
+  <tr><th>约束</th><th>说明</th></tr>
+  <tr><td>组件库</td><td>Ant Design v6，图标用 <code>@ant-design/icons</code> Outlined 风格</td></tr>
+  <tr><td>样式方案</td><td>CSS Modules，禁止内联样式，禁止 <code>:global(.ant-xxx)</code></td></tr>
+  <tr><td>Design Token</td><td>所有颜色/间距/圆角/字体严格使用 CSS 变量（<code>app/globals.css</code>）</td></tr>
+  <tr><td>状态管理</td><td>React Hook（<code>use-creation-zone</code> facade → data + actions）</td></tr>
+  <tr><td>数据层</td><td>SQLite + better-sqlite3，API Route Handler</td></tr>
+  <tr><td>AI 调用</td><td>SSE 流式输出，ContextBuilder 管线组装 prompt</td></tr>
+  <tr><td>自动保存</td><td>章纲/卷纲/总纲失焦 debounce 500ms，正文手动保存</td></tr>
+  <tr><td>级联删除</td><td>books → volumes → chapters 级联，删除章自动清理关联</td></tr>
+</table>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 14. 变更日志 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>14. 从当前实现的变更清单</h2>
+
+<table>
+  <tr><th>#</th><th>变更项</th><th>当前状态</th><th>目标状态</th><th>优先级</th></tr>
+  <tr><td>1</td><td>布局结构</td><td>两栏（导航+内容）</td><td>四栏（AB+导航+中心+AI）</td><td><span class="stag stag-prim">P0</span></td></tr>
+  <tr><td>2</td><td>Tab 切换</td><td>无 Tab，单视图</td><td>章纲/正文 Tab 切换</td><td><span class="stag stag-prim">P0</span></td></tr>
+  <tr><td>3</td><td>蓝图参考条</td><td>无</td><td>Tab 下方始终可见</td><td><span class="stag stag-prim">P0</span></td></tr>
+  <tr><td>4</td><td>工具栏</td><td>面包屑+状态药丸+操作按钮</td><td>面包屑+状态标签+字数+AI按钮</td><td><span class="stag stag-prim">P0</span></td></tr>
+  <tr><td>5</td><td>AI 面板</td><td>底部弹出</td><td>右侧 280px 占位</td><td><span class="stag stag-warn">P1</span></td></tr>
+  <tr><td>6</td><td>AI 建议嵌入</td><td>底部弹出面板</td><td>章纲表单内左侧边线块</td><td><span class="stag stag-prim">P0</span></td></tr>
+  <tr><td>7</td><td>正文默认态</td><td>可直接编辑</td><td>只读 + 编辑按钮</td><td><span class="stag stag-warn">P1</span></td></tr>
+  <tr><td>8</td><td>自动保存</td><td>无</td><td>章纲/卷纲/总纲失焦自动保存</td><td><span class="stag stag-prim">P0</span></td></tr>
+  <tr><td>9</td><td>VolumeForm 字段</td><td>缺少 developmentArc/keyPoints</td><td>补齐卷纲所有字段</td><td><span class="stag stag-prim">P0</span></td></tr>
+  <tr><td>10</td><td>导航树图标</td><td>emoji</td><td>SVG 线条图标（@ant-design/icons）</td><td><span class="stag stag-muted">P2</span></td></tr>
+  <tr><td>11</td><td>Design Token</td><td>80+ 内联样式</td><td>全部迁移到 CSS Modules + 变量</td><td><span class="stag stag-prim">P0</span></td></tr>
+  <tr><td>12</td><td>AI 过审落库</td><td>TODO（F-002）</td><td>过审确认后自动归档正文库</td><td><span class="stag stag-warn">P1</span></td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 15. 响应式与自适应 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>15. 响应式与自适应</h2>
+
+<h3>15.1 最小宽度约束</h3>
+<table>
+  <tr><th>区域</th><th>最小宽度</th><th>溢出处理</th></tr>
+  <tr><td>Activity Bar</td><td>42px 固定</td><td>不压缩</td></tr>
+  <tr><td>导航树</td><td>180px</td><td>标题文字省略号截断</td></tr>
+  <tr><td>中心编辑区</td><td>flex: 1（填满剩余）</td><td>表单最大宽度 640px 居中，两侧留白</td></tr>
+  <tr><td>AI 面板</td><td>240px</td><td>占位文字换行</td></tr>
+</table>
+
+<h3>15.2 窄屏断点</h3>
+<div class="callout callout-info">
+  <strong>设计模式：</strong>创作区为桌面端专用工具，最低支持 1024px 宽度。低于 1024px 时 AI 面板自动折叠为图标栏（宽度 42px），中心区获得更多空间。
+</div>
+
+<table>
+  <tr><th>屏幕宽度</th><th>布局调整</th></tr>
+  <tr><td>≥ 1280px</td><td>四栏完整显示</td></tr>
+  <tr><td>1024px - 1279px</td><td>AI 面板折叠为 42px 图标栏，导航树最小宽度 180px</td></tr>
+  <tr><td>&lt; 1024px</td><td>不保证布局完整性，建议使用全屏模式（隐藏 Topbar 和 Activity Bar）</td></tr>
+</table>
+
+<h3>15.3 全屏模式</h3>
+<p>双击 Tab 栏区域或按 <code>F11</code> 进入全屏模式：隐藏 Topbar 和 Activity Bar，导航树可折叠，最大化编辑区域。</p>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 16. 动画与过渡 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>16. 动画与过渡规范</h2>
+
+<table>
+  <tr><th>动画</th><th>属性</th><th>时长</th><th>缓动函数</th><th>触发</th></tr>
+  <tr><td>Tab 指示条滑动</td><td><code>left</code> / <code>width</code></td><td>0.2s</td><td>ease</td><td>切换章纲/正文 Tab</td></tr>
+  <tr><td>卷折叠箭头旋转</td><td><code>transform: rotate()</code></td><td>0.2s</td><td>ease</td><td>展开/折叠卷</td></tr>
+  <tr><td>导航节点选中</td><td><code>background</code> / <code>color</code></td><td>0.12s</td><td>ease</td><td>点击切换章节</td></tr>
+  <tr><td>输入框聚焦光晕</td><td><code>border-color</code> / <code>box-shadow</code></td><td>0.15s</td><td>ease</td><td>输入框 focus</td></tr>
+  <tr><td>按钮悬停</td><td><code>background</code> / <code>border-color</code> / <code>color</code></td><td>0.15s</td><td>ease</td><td>鼠标 hover</td></tr>
+  <tr><td>标签添加/移除</td><td><code>opacity</code> / <code>transform: scale()</code></td><td>0.15s</td><td>ease</td><td>增删标签</td></tr>
+  <tr><td>蓝图条展开</td><td><code>height</code> / <code>opacity</code></td><td>0.25s</td><td>ease</td><td>点击展开/收起</td></tr>
+  <tr><td>折叠区域</td><td><code>height</code> / <code>opacity</code></td><td>0.2s</td><td>ease</td><td>更多细节展开/收起</td></tr>
+  <tr><td>右键菜单弹出</td><td><code>opacity</code> / <code>transform: scale(0.95→1)</code></td><td>0.12s</td><td>ease-out</td><td>右键触发</td></tr>
+  <tr><td>保存成功反馈</td><td><code>opacity</code></td><td>0.3s → 2s 后淡出</td><td>ease</td><td>自动保存成功</td></tr>
+</table>
+
+<div class="callout callout-info">
+  <strong>性能约束：</strong>所有动画使用 <code>transform</code> 和 <code>opacity</code>（GPU 加速层），避免触发 layout。禁止动画 <code>width</code>/<code>height</code>（使用 <code>max-height</code> 或 <code>transform: scaleY()</code> 替代）。
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 17. 无障碍 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>17. 无障碍与可访问性</h2>
+
+<table>
+  <tr><th>要求</th><th>实现方式</th></tr>
+  <tr><td>键盘导航</td><td>所有可交互元素可通过 <code>Tab</code> 聚焦，<code>Enter</code> 激活，<code>ESC</code> 关闭弹出层</td></tr>
+  <tr><td>焦点可见</td><td>聚焦态显示 2px <code>--color-primary</code> 光晕（与输入框聚焦一致）</td></tr>
+  <tr><td>屏幕阅读器</td><td>所有图标按钮带 <code>aria-label</code>，导航树使用 <code>role="tree"</code> / <code>role="treeitem"</code></td></tr>
+  <tr><td>颜色对比度</td><td>正文文字 ≥ 7:1（<code>--text-primary</code> on <code>#fff</code>），次要文字 ≥ 4.5:1</td></tr>
+  <tr><td>ARIA 状态</td><td>折叠节点带 <code>aria-expanded</code>，Tab 带 <code>aria-selected</code>，导航带 <code>aria-current</code></td></tr>
+  <tr><td>减少动画</td><td>尊重 <code>prefers-reduced-motion</code>，禁用所有过渡动画</td></tr>
+</table>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 18. 错误与边界情况 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>18. 错误处理与边界情况</h2>
+
+<h3>18.1 网络错误</h3>
+<table>
+  <tr><th>场景</th><th>表现</th><th>恢复</th></tr>
+  <tr><td>自动保存失败</td><td>输入框下方显示红色文字「保存失败，点击重试」（3s 后消失）</td><td>点击重试 / 失焦再次触发</td></tr>
+  <tr><td>AI 生成超时</td><td>AI 建议块变为红色错误态，显示「请求超时」</td><td>点击「重试」按钮</td></tr>
+  <tr><td>AI 生成网络断开</td><td>同上，提示「网络连接中断」</td><td>恢复网络后点击重试</td></tr>
+  <tr><td>加载章纲数据失败</td><td>中心区显示错误占位（⚠ 图标 + 错误信息 + 重试按钮）</td><td>点击重试重新加载</td></tr>
+</table>
+
+<h3>18.2 空数据</h3>
+<table>
+  <tr><th>场景</th><th>表现</th></tr>
+  <tr><td>新书无卷无章</td><td>导航树仅显示「总纲」+ 空状态提示「点击 + 创建第一卷」</td></tr>
+  <tr><td>卷下无章节</td><td>展开后显示「暂无章节，点击 + 添加」</td></tr>
+  <tr><td>章纲未填写</td><td>所有字段显示 placeholder，工具栏状态显示「待规划」</td></tr>
+  <tr><td>正文未生成</td><td>正文 Tab 显示空态占位（见 8.6 节）</td></tr>
+</table>
+
+<h3>18.3 并发冲突</h3>
+<div class="callout callout-warn">
+  <strong>多端编辑：</strong>当前版本为单用户单设备工具，不处理并发冲突。如果未来支持多端同步，需要引入乐观锁（版本号）和冲突合并 UI。
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 19. 术语表 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>19. 术语表</h2>
+
+<table>
+  <tr><th>术语</th><th>说明</th></tr>
+  <tr><td><strong>总纲</strong></td><td>全书的整体方向、核心卖点、阶段划分。是所有 AI 生成的最高层约束。</td></tr>
+  <tr><td><strong>卷纲</strong></td><td>单卷的核心冲突、发展弧线、重要节点、预计看点。是本卷章纲的蓝图约束。</td></tr>
+  <tr><td><strong>章纲</strong></td><td>单章的详细规划：情节概要、前后衔接、出场人物、场景、事件、伏笔。创作者的核心工作区。</td></tr>
+  <tr><td><strong>正文</strong></td><td>AI 生成的小说正文，是最终产出物。默认只读，需显式编辑。</td></tr>
+  <tr><td><strong>蓝图</strong></td><td>总纲 + 卷纲的统称。是不可偏离的参考蓝本。蓝图条将其浓缩为一行始终可见。</td></tr>
+  <tr><td><strong>蓝图条</strong></td><td>Tab 栏下方的一行参考信息，始终显示当前卷的核心冲突 + 弧线 + 阶段。</td></tr>
+  <tr><td><strong>滚动规划</strong></td><td>每次只规划 3-5 章的章纲，写完后再规划下一批。避免过早锁定远期内容。</td></tr>
+  <tr><td><strong>过审</strong></td><td>AI 对正文进行事实一致性检查，提取事实变更和伏笔变更。</td></tr>
+  <tr><td><strong>ContextBuilder</strong></td><td>根据 functionKey 路由到不同 builder，组装 AI prompt 的管线。</td></tr>
+  <tr><td><strong>Design Token</strong></td><td>CSS 变量系统，定义在 <code>app/globals.css</code>，4 套主题（暖纸色/冷灰/纯白/深色）。</td></tr>
+</table>
+
+<p style="margin-top:40px;font-size:11px;color:var(--tl);text-align:center">— 创作区 v8 需求规格稿 · 完 —</p>
+
+</div>
+</body>
+</html>

@@ -23,6 +23,8 @@ import { buildBookInfoSuggestContext } from "./builders/fact-extract";
 import { buildFactConsistencyContext } from "./builders/foreshadow-extract";
 import { buildCharacterAuditContext } from "./builders/character-extract";
 import { buildWorldRuleSuggestContext } from "./builders/world-rule-suggest";
+import { buildOutlineOptimizeContext } from "./builders/outline-optimize";
+import { buildVolumeGenerateContext } from "./builders/volume-generate";
 
 export type { AiFunctionKey, ContextInput, BuiltContext, StoreDeps } from "./types";
 
@@ -79,6 +81,12 @@ export async function buildContext(
 
     case "world_rule_suggest":
       return buildWorldRuleSuggestContext(input, deps);
+
+    case "outline_optimize":
+      return buildOutlineOptimizeContext(input, deps);
+
+    case "volume_generate":
+      return buildVolumeGenerateContext(input, deps);
 
     default:
       throw new Error(

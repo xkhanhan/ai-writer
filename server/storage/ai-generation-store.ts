@@ -55,8 +55,8 @@ export async function createGenerationSession(
   const id = randomUUID();
 
   db.prepare(
-    `INSERT INTO ai_generation_sessions (id, book_id, function_key, chapter_id, prompt_template_id, input_context, user_input, model)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO ai_generation_sessions (id, book_id, function_key, chapter_id, prompt_template_id, input_context, user_input, raw_output, model, latency_ms)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id,
     data.bookId,
@@ -65,7 +65,9 @@ export async function createGenerationSession(
     data.promptTemplateId ?? null,
     data.inputContext ?? "",
     data.userInput ?? "",
-    data.model ?? ""
+    data.rawOutput ?? "",
+    data.model ?? "",
+    data.latencyMs ?? 0,
   );
 
   const row = db
@@ -112,6 +114,35 @@ export async function updateGenerationSession(
 }
 
 // ============ 查询 ============
+
+export async function getGenerationSessionsPaginated(
+  bookId: string,
+  options: { limit?: number; offset?: number; functionKey?: string } = {},
+): Promise<{ items: AiGenerationSession[]; total: number }> {
+  const db = await getDb();
+  const limit = options.limit ?? 20;
+  const offset = options.offset ?? 0;
+
+  let whereSql = "WHERE book_id = ?";
+  const params: (string | number)[] = [bookId];
+
+  if (options.functionKey) {
+    whereSql += " AND function_key = ?";
+    params.push(options.functionKey);
+  }
+
+  const countRow = db
+    .prepare(`SELECT COUNT(*) AS total FROM ai_generation_sessions ${whereSql}`)
+    .get(...params) as { total: number };
+
+  const rows = db
+    .prepare(
+      `SELECT * FROM ai_generation_sessions ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    )
+    .all(...params, limit, offset) as AiGenerationSessionRow[];
+
+  return { items: rows.map(mapSession), total: countRow.total };
+}
 
 export async function getGenerationSessionsByBook(
   bookId: string,
