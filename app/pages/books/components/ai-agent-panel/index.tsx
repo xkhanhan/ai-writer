@@ -27,6 +27,13 @@ import {
   ToolOutlined,
 } from "@ant-design/icons";
 import { useAiContext } from "../../context/ai-context";
+import {
+  AGENT_UI_TEXT,
+  SCORE_THRESHOLD_EXCELLENT,
+  SCORE_THRESHOLD_GOOD,
+  PRIORITY_COLORS,
+  PRIORITY_LABELS,
+} from "@/shared/constants/agent-ui";
 import styles from "./index.module.css";
 
 const { Text, Paragraph } = Typography;
@@ -88,7 +95,7 @@ export function AiAgentPanel() {
     },
     onError: (err: Error) => {
       setIsLoading(false);
-      message.error(err.message || "对话出错");
+      message.error(err.message || AGENT_UI_TEXT.CHAT_ERROR);
     },
   });
 
@@ -233,9 +240,9 @@ export function AiAgentPanel() {
         setMessages([]);
       }
       loadConversations();
-      message.success("对话已删除");
+      message.success(AGENT_UI_TEXT.CONVERSATION_DELETED);
     } catch (err) {
-      message.error("删除失败");
+      message.error(AGENT_UI_TEXT.DELETE_FAILED);
     }
   };
 
@@ -244,8 +251,8 @@ export function AiAgentPanel() {
     return (
       <div className={styles.emptyState}>
         <RobotOutlined className={styles.emptyIcon} />
-        <div className={styles.emptyTitle}>AI 写作助手</div>
-        <div className={styles.emptyDesc}>加载中...</div>
+        <div className={styles.emptyTitle}>{AGENT_UI_TEXT.PANEL_TITLE}</div>
+        <div className={styles.emptyDesc}>{AGENT_UI_TEXT.LOADING}</div>
       </div>
     );
   }
@@ -264,14 +271,14 @@ export function AiAgentPanel() {
           }))}
         />
         <Space>
-          <Tooltip title="历史对话">
+          <Tooltip title={AGENT_UI_TEXT.HISTORY}>
             <Button
               type="text"
               icon={<HistoryOutlined />}
               onClick={() => setShowHistory(!showHistory)}
             />
           </Tooltip>
-          <Tooltip title="新对话">
+          <Tooltip title={AGENT_UI_TEXT.NEW_CONVERSATION}>
             <Button
               type="text"
               icon={<ReloadOutlined />}
@@ -302,18 +309,18 @@ export function AiAgentPanel() {
       {showHistory && (
         <div className={styles.historyPanel}>
           <div className={styles.historyHeader}>
-            <Text strong>历史对话</Text>
+            <Text strong>{AGENT_UI_TEXT.HISTORY}</Text>
             <Button
               type="text"
               size="small"
               onClick={() => setShowHistory(false)}
             >
-              关闭
+              {AGENT_UI_TEXT.CLOSE}
             </Button>
           </div>
           <div className={styles.historyList}>
             {conversations.length === 0 ? (
-              <div className={styles.historyEmpty}>暂无历史对话</div>
+              <div className={styles.historyEmpty}>{AGENT_UI_TEXT.NO_CONVERSATIONS}</div>
             ) : (
               conversations.map((conv) => (
                 <div
@@ -357,7 +364,7 @@ export function AiAgentPanel() {
               {activeScene?.description}
             </div>
             <div className={styles.welcomeHint}>
-              请描述你的需求，或点击上方快捷按钮开始
+              {AGENT_UI_TEXT.WELCOME_HINT}
             </div>
           </div>
         )}
@@ -374,12 +381,12 @@ export function AiAgentPanel() {
             </div>
             <div className={styles.messageContent}>
               <div className={styles.messageRole}>
-                {msg.role === "user" ? "你" : "AI"}
+                {msg.role === "user" ? AGENT_UI_TEXT.ROLE_USER : AGENT_UI_TEXT.ROLE_AI}
               </div>
               <div className={styles.messageText}>
                 {msg.content || (
                   <div className={styles.toolCallPlaceholder}>
-                    <ToolOutlined /> 正在处理...
+                    <ToolOutlined /> {AGENT_UI_TEXT.PROCESSING}
                   </div>
                 )}
               </div>
@@ -422,7 +429,7 @@ export function AiAgentPanel() {
           <div className={styles.errorBanner}>
             <Text type="danger">{error.message}</Text>
             <Button size="small" onClick={() => handleSendMessage()}>
-              重试
+              {AGENT_UI_TEXT.RETRY}
             </Button>
           </div>
         )}
@@ -435,7 +442,7 @@ export function AiAgentPanel() {
         <Input.TextArea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="输入消息..."
+          placeholder={`${AGENT_UI_TEXT.SEND}...`}
           autoSize={{ minRows: 1, maxRows: 4 }}
           disabled={isLoading}
           onPressEnter={(e) => {
@@ -453,7 +460,7 @@ export function AiAgentPanel() {
               icon={<StopOutlined />}
               onClick={stop}
             >
-              停止
+              {AGENT_UI_TEXT.STOP}
             </Button>
           ) : (
             <Button
@@ -462,7 +469,7 @@ export function AiAgentPanel() {
               onClick={handleSendMessage}
               disabled={!inputText.trim()}
             >
-              发送
+              {AGENT_UI_TEXT.SEND}
             </Button>
           )}
         </Space>
@@ -483,15 +490,15 @@ function ToolResultDisplay({ result }: { result: any }) {
     return (
       <div className={styles.evaluationResult}>
         <div className={styles.evaluationScore}>
-          <Text strong>评分: </Text>
-          <Tag color={score >= 80 ? "green" : score >= 60 ? "orange" : "red"}>
+          <Text strong>{AGENT_UI_TEXT.SCORE_LABEL} </Text>
+          <Tag color={score >= SCORE_THRESHOLD_EXCELLENT ? "green" : score >= SCORE_THRESHOLD_GOOD ? "orange" : "red"}>
             {score}/100
           </Tag>
         </div>
         <Paragraph>{summary}</Paragraph>
         {highlights?.length > 0 && (
           <div>
-            <Text type="success">亮点:</Text>
+            <Text type="success">{AGENT_UI_TEXT.HIGHLIGHTS_LABEL}</Text>
             <ul>
               {highlights.map((h: string, i: number) => (
                 <li key={i}>{h}</li>
@@ -501,7 +508,7 @@ function ToolResultDisplay({ result }: { result: any }) {
         )}
         {concerns?.length > 0 && (
           <div>
-            <Text type="warning">关注点:</Text>
+            <Text type="warning">{AGENT_UI_TEXT.CONCERNS_LABEL}</Text>
             <ul>
               {concerns.map((c: string, i: number) => (
                 <li key={i}>{c}</li>
@@ -517,7 +524,7 @@ function ToolResultDisplay({ result }: { result: any }) {
     return (
       <div className={styles.proposeUpdate}>
         <div className={styles.proposeUpdateHeader}>
-          <Text strong>建议修改: {result.field}</Text>
+          <Text strong>{AGENT_UI_TEXT.SUGGEST_MODIFY} {result.field}</Text>
           <Tag>{result.targetType}</Tag>
         </div>
         <Paragraph type="secondary">{result.reason}</Paragraph>
@@ -526,9 +533,9 @@ function ToolResultDisplay({ result }: { result: any }) {
         </div>
         <Space>
           <Button type="primary" size="small">
-            采纳
+            {AGENT_UI_TEXT.ADOPT}
           </Button>
-          <Button size="small">拒绝</Button>
+          <Button size="small">{AGENT_UI_TEXT.REJECT}</Button>
         </Space>
       </div>
     );
@@ -538,19 +545,9 @@ function ToolResultDisplay({ result }: { result: any }) {
     return (
       <div className={styles.suggestion}>
         <Tag
-          color={
-            result.priority === "high"
-              ? "red"
-              : result.priority === "medium"
-              ? "orange"
-              : "blue"
-          }
+          color={PRIORITY_COLORS[result.priority] ?? PRIORITY_COLORS.medium}
         >
-          {result.priority === "high"
-            ? "高优先级"
-            : result.priority === "medium"
-            ? "中优先级"
-            : "低优先级"}
+          {PRIORITY_LABELS[result.priority] ?? PRIORITY_LABELS.medium}
         </Tag>
         <Paragraph>{result.suggestion}</Paragraph>
       </div>

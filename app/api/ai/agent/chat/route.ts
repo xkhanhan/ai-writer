@@ -11,6 +11,11 @@ import { buildContext, type AiFunctionKey } from "@/server/ai/context-builder";
 import { getScene } from "@/server/ai/agent/scene-registry";
 import { getToolsForScene } from "@/server/ai/agent/tools";
 import {
+  MAX_HISTORY_MESSAGES,
+  CONVERSATION_TITLE_MAX_LENGTH,
+  TITLE_TRUNCATE_SUFFIX,
+} from "@/server/ai/agent/constants";
+import {
   createConversation,
   getRecentMessages,
   saveMessage,
@@ -97,7 +102,7 @@ export async function POST(request: Request) {
     });
 
     // 6. Load conversation history
-    const historyMessages = await getRecentMessages(currentConversationId, 50);
+    const historyMessages = await getRecentMessages(currentConversationId, MAX_HISTORY_MESSAGES);
 
     // 7. Format messages for AI
     const formattedMessages = formatMessages(historyMessages, messages);
@@ -132,7 +137,9 @@ ${context.userPrompt}`,
 
         // Update conversation title if it's a new conversation
         if (!conversationId && text) {
-          const title = text.slice(0, 50) + (text.length > 50 ? "..." : "");
+          const title = text.length > CONVERSATION_TITLE_MAX_LENGTH
+            ? text.slice(0, CONVERSATION_TITLE_MAX_LENGTH) + TITLE_TRUNCATE_SUFFIX
+            : text;
           await updateConversation(currentConversationId!, { title });
         }
       },

@@ -7,6 +7,7 @@
 import { tool } from "ai";
 import { zodSchema } from "ai";
 import { z } from "zod";
+import { OUTLINE_FIELD_LABELS, VOLUME_FIELD_LABELS } from "./constants";
 
 // ---------------------------------------------------------------------------
 // Tool Definitions (Vercel AI SDK v7 format with inputSchema)
@@ -158,21 +159,11 @@ export const agentTools = {
 // ---------------------------------------------------------------------------
 
 function getFieldLabel(field: string): string {
-  const labels: Record<string, string> = {
-    direction: "整体方向",
-    stages: "阶段划分",
-    sellingPoints: "核心卖点",
-  };
-  return labels[field] ?? field;
+  return OUTLINE_FIELD_LABELS[field] ?? field;
 }
 
 function getVolumeFieldLabel(field: string): string {
-  const labels: Record<string, string> = {
-    coreConflict: "核心冲突",
-    developmentArc: "发展弧线",
-    highlights: "看点",
-  };
-  return labels[field] ?? field;
+  return VOLUME_FIELD_LABELS[field] ?? field;
 }
 
 // ---------------------------------------------------------------------------
