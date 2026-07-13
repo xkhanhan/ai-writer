@@ -5,7 +5,7 @@ import { Input, Button } from "antd";
 import { StarOutlined } from "@ant-design/icons";
 import { showError, showSuccess } from "@/app/utils/error-handler";
 import type { CreationZoneState } from "@/app/pages/books/hooks/use-creation-zone";
-import type { BookOutline, ChapterOutline } from "@/app/types";
+import type { BookOutline, ChapterOutline, VolumeOutline } from "@/app/types";
 import styles from "./index.module.css";
 
 const { TextArea } = Input;
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function CenterContent({ bookId, zone }: Props) {
-  const { view, outline, volumes, chaptersMap, saveChapter, saveOutline } = zone;
+  const { view, outline, volumes, chaptersMap, saveChapter, saveOutline, setView } = zone;
 
   // Section collapse state
   const [chapterSectionOpen, setChapterSectionOpen] = useState(true);
@@ -67,6 +67,32 @@ export function CenterContent({ bookId, zone }: Props) {
             <OutlineFormView
               outline={outline}
               onSave={saveOutline}
+            />
+          </div>
+        </>
+      )}
+
+      {/* ─── Volume Form View ─── */}
+      {view.type === "volume-form" && (
+        <>
+          <div className={styles.toolbar}>
+            <div className={styles.toolbarLeft}>
+              <span className={styles.breadcrumb}>
+                <span className={styles.breadcrumbCurrent}>
+                  {view.volumeId ? (volumes.find((v) => v.id === view.volumeId)?.title ?? "编辑卷纲") : "新建卷"}
+                </span>
+              </span>
+            </div>
+          </div>
+          <div className={styles.body}>
+            <VolumeFormView
+              volumeId={view.volumeId}
+              volumes={volumes}
+              outline={outline}
+              onSave={zone.saveVolume}
+              onCreated={(newVol) => {
+                setView({ type: "volume-form", volumeId: newVol.id });
+              }}
             />
           </div>
         </>
@@ -156,7 +182,7 @@ export function CenterContent({ bookId, zone }: Props) {
             </div>
           </div>
         </>
-      ) : view.type === "empty" || view.type === "outline" ? null : (
+      ) : view.type === "empty" || view.type === "outline" || view.type === "volume-form" ? null : (
         <EmptyView />
       )}
     </div>
@@ -277,6 +303,172 @@ function OutlineFormView({
             />
             <div className={styles.outlineSectionFooter}>
               <span className={styles.outlineSectionHint}>用逗号分隔，2-5 个卖点</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Save Status */}
+      <div className={styles.outlineSaveBar}>
+        <span className={`${styles.outlineSaveStatus} ${styles[`outlineSaveStatus_${saveStatus}`]}`}>
+          {saveStatus === "saving" && "保存中..."}
+          {saveStatus === "saved" && "已保存"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Volume Form View (卷纲编辑 — 可折叠 + 吸顶) ─── */
+function VolumeFormView({
+  volumeId,
+  volumes,
+  outline,
+  onSave,
+  onCreated,
+}: {
+  volumeId?: string;
+  volumes: VolumeOutline[];
+  outline: BookOutline | null;
+  onSave: (data: { id?: string; title: string; coreConflict?: string; developmentArc?: string; highlights?: string }) => Promise<VolumeOutline | null>;
+  onCreated?: (vol: VolumeOutline) => void;
+}) {
+  const volume = volumeId ? volumes.find((v) => v.id === volumeId) : undefined;
+
+  const [title, setTitle] = useState(volume?.title ?? "");
+  const [coreConflict, setCoreConflict] = useState(volume?.coreConflict ?? "");
+  const [developmentArc, setDevelopmentArc] = useState(volume?.developmentArc ?? "");
+  const [highlights, setHighlights] = useState(volume?.highlights ?? "");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(["title", "coreConflict", "developmentArc", "highlights"]));
+
+  const toggle = useCallback((key: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!title.trim()) return;
+    setSaveStatus("saving");
+    try {
+      const result = await onSave({ id: volume?.id, title, coreConflict, developmentArc, highlights });
+      if (result) {
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+        if (!volume && onCreated) onCreated(result);
+      } else {
+        setSaveStatus("idle");
+      }
+    } catch {
+      setSaveStatus("idle");
+    }
+  }, [volume, title, coreConflict, developmentArc, highlights, onSave, onCreated]);
+
+  return (
+    <div className={styles.outlineContainer}>
+      {/* Hint */}
+      <div className={styles.outlineHintCard}>
+        <span className={styles.outlineHintIcon}>💡</span>
+        <span className={styles.outlineHintText}>
+          卷纲定义本卷的核心矛盾和发展方向。AI 可根据总纲自动生成。
+        </span>
+      </div>
+
+      {/* Title */}
+      <div className={styles.outlineSection}>
+        <button className={styles.outlineSectionHeader} onClick={() => toggle("title")}>
+          <span className={styles.outlineSectionNum}>01</span>
+          <span className={styles.outlineSectionTitle}>卷标题</span>
+          <span className={styles.outlineSectionMeta}>{title.length} 字</span>
+          <span className={`${styles.outlineSectionArrow} ${openSections.has("title") ? styles.outlineSectionArrowOpen : ""}`}>▾</span>
+        </button>
+        {openSections.has("title") && (
+          <div className={styles.outlineSectionBody}>
+            <input
+              className={styles.outlineSectionInput}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleSave}
+              placeholder="第一卷 · 标题"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Core Conflict */}
+      <div className={styles.outlineSection}>
+        <button className={styles.outlineSectionHeader} onClick={() => toggle("coreConflict")}>
+          <span className={styles.outlineSectionNum}>02</span>
+          <span className={styles.outlineSectionTitle}>核心冲突</span>
+          <span className={styles.outlineSectionMeta}>{coreConflict.length} 字</span>
+          <span className={`${styles.outlineSectionArrow} ${openSections.has("coreConflict") ? styles.outlineSectionArrowOpen : ""}`}>▾</span>
+        </button>
+        {openSections.has("coreConflict") && (
+          <div className={styles.outlineSectionBody}>
+            <textarea
+              className={styles.outlineSectionTextarea}
+              value={coreConflict}
+              onChange={(e) => setCoreConflict(e.target.value)}
+              onBlur={handleSave}
+              rows={4}
+              placeholder="本卷的核心矛盾是什么？主角面临什么挑战？"
+            />
+            <div className={styles.outlineSectionFooter}>
+              <span className={styles.outlineSectionHint}>推动本卷情节发展的核心动力</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Development Arc */}
+      <div className={styles.outlineSection}>
+        <button className={styles.outlineSectionHeader} onClick={() => toggle("developmentArc")}>
+          <span className={styles.outlineSectionNum}>03</span>
+          <span className={styles.outlineSectionTitle}>发展弧线</span>
+          <span className={styles.outlineSectionMeta}>{developmentArc.length} 字</span>
+          <span className={`${styles.outlineSectionArrow} ${openSections.has("developmentArc") ? styles.outlineSectionArrowOpen : ""}`}>▾</span>
+        </button>
+        {openSections.has("developmentArc") && (
+          <div className={styles.outlineSectionBody}>
+            <textarea
+              className={styles.outlineSectionTextarea}
+              value={developmentArc}
+              onChange={(e) => setDevelopmentArc(e.target.value)}
+              onBlur={handleSave}
+              rows={4}
+              placeholder="情节发展走向"
+            />
+            <div className={styles.outlineSectionFooter}>
+              <span className={styles.outlineSectionHint}>从开始到结束的情绪和节奏变化</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Highlights */}
+      <div className={styles.outlineSection}>
+        <button className={styles.outlineSectionHeader} onClick={() => toggle("highlights")}>
+          <span className={styles.outlineSectionNum}>04</span>
+          <span className={styles.outlineSectionTitle}>预计看点</span>
+          <span className={styles.outlineSectionMeta}>{highlights.length} 字</span>
+          <span className={`${styles.outlineSectionArrow} ${openSections.has("highlights") ? styles.outlineSectionArrowOpen : ""}`}>▾</span>
+        </button>
+        {openSections.has("highlights") && (
+          <div className={styles.outlineSectionBody}>
+            <textarea
+              className={styles.outlineSectionTextarea}
+              value={highlights}
+              onChange={(e) => setHighlights(e.target.value)}
+              onBlur={handleSave}
+              rows={3}
+              placeholder="吸引读者继续阅读的钩子"
+            />
+            <div className={styles.outlineSectionFooter}>
+              <span className={styles.outlineSectionHint}>本卷最让读者期待的部分</span>
             </div>
           </div>
         )}

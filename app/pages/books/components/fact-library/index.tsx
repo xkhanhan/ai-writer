@@ -16,8 +16,7 @@ import {
   Divider,
 } from "@/shared/ui/panel-container";
 import BaseModal from "@/shared/ui/base-modal";
-import { AiSceneModal } from "@/shared/ui/ai-scene-modal";
-import { getFactLibraryScenes } from "../../config/ai-scenes";
+import { useRegisterAiActions, useAiContext } from "../../context/ai-context";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type { Book, StoryFact } from "@/app/types";
@@ -58,8 +57,18 @@ export default function FactLibrary({ book }: FactLibraryProps) {
   const [editingFact, setEditingFact] = useState<StoryFact | null>(null);
   const [form] = Form.useForm();
 
-  // AI 检查弹窗
-  const [aiOpen, setAiOpen] = useState(false);
+  const { toggleVisible: toggleAi } = useAiContext();
+
+  // 注册 AI 操作
+  useRegisterAiActions([{
+    id: "fact-library.consistency",
+    title: "AI 事实一致性检查",
+    description: "检查所有事实记录的一致性",
+    functionKey: "fact_consistency",
+    inputLabel: "描述要检查的范围或关注点",
+    inputPlaceholder: "例如：检查第3章到第5章的设定是否一致...",
+    resultMode: "text",
+  }]);
 
   // 加载数据
   const loadFacts = useCallback(async () => {
@@ -217,7 +226,7 @@ export default function FactLibrary({ book }: FactLibraryProps) {
                 type="primary"
                 size="small"
                 icon={<ThunderboltOutlined />}
-                onClick={() => setAiOpen(true)}
+                onClick={toggleAi}
               >
                 AI 检查
               </Button>
@@ -364,16 +373,6 @@ export default function FactLibrary({ book }: FactLibraryProps) {
           </Panel>
         </PanelGroup>
       </PanelContainer>
-
-      {/* AI 事实一致性检查弹窗 */}
-      <AiSceneModal
-        open={aiOpen}
-        scene={getFactLibraryScenes()}
-        bookId={book.id}
-        onClose={() => setAiOpen(false)}
-        onSaved={() => setAiOpen(false)}
-        onSave={async () => {}}
-      />
 
       <BaseModal
         title={editingFact ? "编辑事实" : "新建事实"}

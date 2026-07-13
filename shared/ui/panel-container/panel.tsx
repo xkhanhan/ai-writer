@@ -10,6 +10,8 @@ interface PanelProps {
   defaultSize?: number;
   minSize?: number;
   maxSize?: number;
+  /** When true, this panel fills remaining space (flex: 1) instead of using defaultSize */
+  flexible?: boolean;
   collapsible?: boolean;
   collapsed?: boolean;
   onToggleCollapse?: () => void;

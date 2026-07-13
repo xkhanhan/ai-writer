@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Form } from "antd";
 import type {
   SettingEntity,
@@ -78,6 +78,10 @@ export function useSettingsLibrary(
   const [editing, setEditing] = useState<SettingEntity | null>(null);
   const [form] = Form.useForm();
 
+  // Stabilize onActiveChange reference to prevent useEffect infinite loops
+  const onActiveChangeRef = useRef(onActiveChange);
+  onActiveChangeRef.current = onActiveChange;
+
   const activeEntity = useMemo(
     () => entities.find((e) => e.id === activeId) ?? null,
     [entities, activeId]
@@ -113,14 +117,14 @@ export function useSettingsLibrary(
             const id = activeId && result.data.some((e) => e.id === activeId)
               ? activeId
               : result.data[0].id;
-            onActiveChange?.(id);
+            onActiveChangeRef.current?.(id);
           }
         }
         setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [bookId, activeId, onActiveChange]);
+  }, [bookId]);
 
   const toggleGroup = useCallback((cat: SettingCategory) => {
     setOpenGroups((prev) => ({ ...prev, [cat]: !prev[cat] }));
@@ -227,13 +231,13 @@ export function useSettingsLibrary(
         return;
       }
       setEntities((prev) => [...prev, result.data]);
-      onActiveChange?.(result.data.id);
+      onActiveChangeRef.current?.(result.data.id);
       setOpenGroups((prev) => ({ ...prev, [modalCat]: true }));
     }
 
     showSuccess(editing ? "保存成功" : "创建成功");
     setModalOpen(false);
-  }, [form, modalCat, editing, bookId, onActiveChange]);
+  }, [form, modalCat, editing, bookId]);
 
   const handleDelete = useCallback(
     (entity: SettingEntity) => {

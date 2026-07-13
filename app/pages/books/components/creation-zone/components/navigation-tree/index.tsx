@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import {
-  PlusOutlined,
   DownOutlined,
   FileTextOutlined,
   DeleteOutlined,
@@ -16,13 +15,10 @@ import styles from "./index.module.css";
 
 interface Props {
   zone: CreationZoneState;
-  onOpenVolume: (volId?: string) => void;
 }
 
-export function NavigationTree({ zone, onOpenVolume }: Props) {
+export function NavigationTree({ zone }: Props) {
   const { volumes, chaptersMap, expandedVolumes, view, setView, toggleVolume, removeVolume, removeChapter } = zone;
-
-  const [addMenuOpen, setAddMenuOpen] = useState(false);
 
   const handleDeleteVolume = useCallback(
     (volId: string, volTitle: string) => {
@@ -51,111 +47,72 @@ export function NavigationTree({ zone, onOpenVolume }: Props) {
   );
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <span className={styles.title}>大纲</span>
-        <div className={styles.addWrapper}>
-          <button
-            className={styles.addBtn}
-            onClick={() => setAddMenuOpen(!addMenuOpen)}
-          >
-            <PlusOutlined />
-          </button>
-          {addMenuOpen && (
-            <div className={styles.addMenu}>
-              <div
-                className={styles.addMenuItem}
-                onClick={() => {
-                  setAddMenuOpen(false);
-                  onOpenVolume();
+    <div className={styles.body}>
+      {/* 总纲 */}
+      <div
+        className={`${styles.navItem} ${view.type === "outline" ? styles.navItemActive : ""}`}
+        onClick={() => setView({ type: "outline" })}
+      >
+        <FileTextOutlined className={styles.navItemIcon} />
+        <span className={styles.navItemLabel}>总纲</span>
+      </div>
+
+      {/* 卷列表 */}
+      {volumes.map((vol) => {
+        const chapters = chaptersMap[vol.id] || [];
+        const expanded = expandedVolumes.has(vol.id);
+
+        return (
+          <div key={vol.id} className={styles.volumeGroup}>
+            <div
+              className={styles.volumeHeader}
+              onClick={() => toggleVolume(vol.id)}
+            >
+              <span className={`${styles.volumeArrow} ${expanded ? "" : styles.volumeArrowCollapsed}`}>
+                <DownOutlined />
+              </span>
+              <span className={styles.volumeTitle}>{vol.title}</span>
+              <span className={styles.volumeBadge}>{chapters.length}</span>
+              <EditOutlined
+                className={styles.editBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setView({ type: "volume-form", volumeId: vol.id });
                 }}
-              >
-                新建卷
-              </div>
-              {volumes.length > 0 && (
+              />
+              <DeleteOutlined
+                className={styles.deleteBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteVolume(vol.id, vol.title);
+                }}
+              />
+            </div>
+            {expanded && (
+              <div className={styles.chapterList}>
+                {chapters.map((ch) => (
+                  <ChapterItem
+                    key={ch.id}
+                    chapter={ch}
+                    isActive={
+                      (view.type === "content-editor" || view.type === "chapter-form") &&
+                      view.chapterId === ch.id
+                    }
+                    onClick={() => setView({ type: "content-editor", volumeId: vol.id, chapterId: ch.id })}
+                    onDelete={() => handleDeleteChapter(vol.id, ch.id, ch.title)}
+                  />
+                ))}
                 <div
-                  className={styles.addMenuItem}
-                  onClick={() => {
-                    setAddMenuOpen(false);
-                    const volId = volumes[volumes.length - 1].id;
-                    setView({ type: "chapter-form", volumeId: volId });
-                  }}
+                  className={styles.addChapter}
+                  onClick={() => setView({ type: "chapter-form", volumeId: vol.id })}
                 >
-                  新建章
+                  + 添加章纲
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className={styles.body}>
-        {/* 总纲 */}
-        <div
-          className={`${styles.navItem} ${view.type === "outline" ? styles.navItemActive : ""}`}
-          onClick={() => setView({ type: "outline" })}
-        >
-          <FileTextOutlined className={styles.navItemIcon} />
-          <span className={styles.navItemLabel}>总纲</span>
-        </div>
-
-        {/* 卷列表 */}
-        {volumes.map((vol) => {
-          const chapters = chaptersMap[vol.id] || [];
-          const expanded = expandedVolumes.has(vol.id);
-
-          return (
-            <div key={vol.id} className={styles.volumeGroup}>
-              <div
-                className={styles.volumeHeader}
-                onClick={() => toggleVolume(vol.id)}
-              >
-                <span className={`${styles.volumeArrow} ${expanded ? "" : styles.volumeArrowCollapsed}`}>
-                  <DownOutlined />
-                </span>
-                <span className={styles.volumeTitle}>{vol.title}</span>
-                <span className={styles.volumeBadge}>{chapters.length}</span>
-                <EditOutlined
-                  className={styles.editBtn}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenVolume(vol.id);
-                  }}
-                />
-                <DeleteOutlined
-                  className={styles.deleteBtn}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteVolume(vol.id, vol.title);
-                  }}
-                />
               </div>
-              {expanded && (
-                <div className={styles.chapterList}>
-                  {chapters.map((ch) => (
-                    <ChapterItem
-                      key={ch.id}
-                      chapter={ch}
-                      isActive={
-                        (view.type === "content-editor" || view.type === "chapter-form") &&
-                        view.chapterId === ch.id
-                      }
-                      onClick={() => setView({ type: "content-editor", volumeId: vol.id, chapterId: ch.id })}
-                      onDelete={() => handleDeleteChapter(vol.id, ch.id, ch.title)}
-                    />
-                  ))}
-                  <div
-                    className={styles.addChapter}
-                    onClick={() => setView({ type: "chapter-form", volumeId: vol.id })}
-                  >
-                    <PlusOutlined /> 添加章纲
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

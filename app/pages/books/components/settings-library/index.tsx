@@ -10,8 +10,7 @@ import {
   Divider,
 } from "@/shared/ui/panel-container";
 import BaseModal from "@/shared/ui/base-modal";
-import { AiSceneModal } from "@/shared/ui/ai-scene-modal";
-import { getSettingsLibraryScenes } from "../../config/ai-scenes";
+import { useRegisterAiActions, useAiContext } from "../../context/ai-context";
 import type { Book } from "@/app/types";
 import { CAT_META, LEVEL_MAP } from "@/app/constants/settings";
 import { useSettingsLibrary } from "./hooks/use-settings-library";
@@ -34,8 +33,19 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
     handleDelete, handleToggleDeprecated, setModalOpen,
   } = useSettingsLibrary(book.id, activeId, onActiveChange);
 
-  const [aiOpen, setAiOpen] = useState(false);
+  const { toggleVisible: toggleAi } = useAiContext();
   const catLabel = CAT_META[modalCat]?.label ?? "设定";
+
+  // 注册 AI 操作
+  useRegisterAiActions([{
+    id: "settings.character_audit",
+    title: "角色一致性检查",
+    description: "检查角色设定的前后一致性",
+    functionKey: "character_audit",
+    inputLabel: "描述要检查的角色或关注点",
+    inputPlaceholder: "例如：检查主角的能力设定是否前后一致...",
+    resultMode: "text",
+  }]);
 
   return (
     <>
@@ -58,7 +68,7 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
               onToggleGroup={toggleGroup}
               onSelectEntity={(id) => onActiveChange?.(id)}
               onOpenCreate={openCreate}
-              onOpenAi={() => setAiOpen(true)}
+              onOpenAi={toggleAi}
             />
           </Panel>
 
@@ -110,14 +120,6 @@ export default function SettingsLibrary({ book, activeId, onActiveChange }: Sett
         <SettingsEntityForm form={form} modalCat={modalCat} bookId={book.id} />
       </BaseModal>
 
-      <AiSceneModal
-        open={aiOpen}
-        scene={getSettingsLibraryScenes()}
-        bookId={book.id}
-        onClose={() => setAiOpen(false)}
-        onSaved={() => setAiOpen(false)}
-        onSave={async () => {}}
-      />
     </>
   );
 }

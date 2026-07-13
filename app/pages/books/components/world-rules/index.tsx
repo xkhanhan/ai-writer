@@ -10,8 +10,7 @@ import {
   Divider,
 } from "@/shared/ui/panel-container";
 import BaseModal from "@/shared/ui/base-modal";
-import { AiSceneModal } from "@/shared/ui/ai-scene-modal";
-import { getWorldRuleScenes } from "../../config/ai-scenes";
+import { useRegisterAiActions, useAiContext } from "../../context/ai-context";
 import { confirmDelete } from "@/shared/ui/confirm-delete";
 import type {
   Book,
@@ -59,7 +58,21 @@ export default function WorldRules({
   const [formName, setFormName] = useState("");
   const [formContent, setFormContent] = useState("");
 
-  const [aiOpen, setAiOpen] = useState(false);
+  const { toggleVisible: toggleAi } = useAiContext();
+
+  // 注册 AI 操作
+  useRegisterAiActions([{
+    id: "world-rules.suggest",
+    title: "AI 生成世界规则",
+    description: "根据世界观设定自动生成规则",
+    functionKey: "world_rule_suggest",
+    inputLabel: "描述你的世界观设定",
+    inputPlaceholder: "例如：修仙世界，分为凡人界和仙界，修炼体系为炼气-筑基-金丹-元婴-化神...",
+    resultMode: "json",
+    onAdopt: async (result) => {
+      await handleAiSave(result as Record<string, { name: string; content: string }[]>);
+    },
+  }]);
 
   const activeRule = rules.find((r) => r.id === activeId) ?? null;
   const totalRules = rules.length;
@@ -219,7 +232,7 @@ export default function WorldRules({
               }
               onSelectRule={handleSelectRule}
               onOpenCreate={openCreate}
-              onOpenAi={() => setAiOpen(true)}
+              onOpenAi={toggleAi}
             />
           </Panel>
 
@@ -289,17 +302,6 @@ export default function WorldRules({
         />
       </BaseModal>
 
-      <AiSceneModal
-        open={aiOpen}
-        scene={getWorldRuleScenes(book.id, handleAiSave)}
-        bookId={book.id}
-        onClose={() => setAiOpen(false)}
-        onSaved={async () => {
-          setAiOpen(false);
-          await loadRules();
-        }}
-        onSave={getWorldRuleScenes(book.id, handleAiSave).onSave}
-      />
     </>
   );
 }

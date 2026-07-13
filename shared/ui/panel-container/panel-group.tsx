@@ -29,31 +29,35 @@ export const PanelGroup = memo(function PanelGroup({
     [children]
   );
 
-  // Initialize sizes from Panel defaultSize props
-  const [sizes, setSizes] = useState<number[]>(() => {
-    return childArray.map((child) => {
-      if (child.type === Divider) return 4; // divider default size
-      const props = child.props as Record<string, unknown>;
-      return (props.defaultSize as number) ?? 280;
-    });
-  });
+  // Extract only panel children (non-Divider)
+  const panels = useMemo(
+    () => childArray.filter((c) => isValidElement(c) && c.type !== Divider),
+    [childArray]
+  );
 
-  const handleResize = useCallback((index: number, newSize: number) => {
-    setSizes((prev) => {
+  // Initialize panel sizes from defaultSize props (panel-only indices)
+  const [panelSizes, setPanelSizes] = useState<number[]>(() =>
+    panels.map((p) => ((p.props as Record<string, unknown>).defaultSize as number) ?? 280)
+  );
+
+  const handlePanelResize = useCallback((panelIdx: number, newSize: number) => {
+    setPanelSizes((prev) => {
       const next = [...prev];
-      next[index] = newSize;
+      next[panelIdx] = newSize;
       return next;
     });
   }, []);
 
-  // Count total panels (non-Divider children)
-  const totalPanels = useMemo(
+  // Check if any panel has explicit flexible prop
+  const hasFlexiblePanel = useMemo(
     () =>
-      childArray.filter(
-        (c) => isValidElement(c) && c.type !== Divider
-      ).length,
-    [childArray]
+      panels.some(
+        (p) => (p.props as Record<string, unknown>).flexible === true
+      ),
+    [panels]
   );
+
+  const totalPanels = panels.length;
 
   // Build panel elements with sizes and dividers
   const elements: ReactElement[] = useMemo(() => {
@@ -63,9 +67,7 @@ export const PanelGroup = memo(function PanelGroup({
     childArray.forEach((child, i) => {
       if (child.type === Divider) {
         const prevPanelIdx = panelIndex - 1;
-        const prevPanel = childArray
-          .filter((c) => c !== child && isValidElement(c) && c.type !== Divider)
-          [prevPanelIdx];
+        const prevPanel = panels[prevPanelIdx];
         const prevProps = prevPanel?.props as Record<string, unknown> | undefined;
         const minSize = (prevProps?.minSize as number) ?? 100;
         const maxSize = (prevProps?.maxSize as number) ?? 800;
@@ -74,21 +76,29 @@ export const PanelGroup = memo(function PanelGroup({
           <Divider
             key={`divider-${i}`}
             direction={direction}
-            size={sizes[prevPanelIdx] ?? 280}
+            size={panelSizes[prevPanelIdx] ?? 280}
             minSize={minSize}
             maxSize={maxSize}
-            onResize={(newSize) => handleResize(prevPanelIdx, newSize)}
+            onResize={(newSize) => handlePanelResize(prevPanelIdx, newSize)}
           />
         );
       } else {
         const idx = panelIndex;
-        const panelSize = sizes[idx] ?? 280;
+        const panelSize = panelSizes[idx] ?? 280;
         const isHorizontal = direction === "horizontal";
         const isLastPanel = panelIndex === totalPanels - 1;
+        const isFlexible =
+          ((child.props as Record<string, unknown>).flexible as boolean) ??
+          false;
 
-        // Last panel in horizontal mode uses flex:1 to fill remaining space
+        // When explicit flexible panels exist, only those get flex:1;
+        // otherwise fall back to last-panel behavior for backward compatibility
+        const shouldBeFlexible = hasFlexiblePanel
+          ? isFlexible
+          : isLastPanel;
+
         const style = isHorizontal
-          ? isLastPanel
+          ? shouldBeFlexible
             ? { flex: 1, minWidth: 0 }
             : { width: panelSize, minWidth: panelSize, flexShrink: 0 }
           : { height: panelSize, minHeight: panelSize };
@@ -103,7 +113,7 @@ export const PanelGroup = memo(function PanelGroup({
     });
 
     return result;
-  }, [childArray, direction, sizes, totalPanels, handleResize]);
+  }, [childArray, panels, direction, panelSizes, totalPanels, handlePanelResize, hasFlexiblePanel]);
 
   return (
     <div className={`${styles.panelGroup} ${styles[direction]}`}>
