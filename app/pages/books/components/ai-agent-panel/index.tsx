@@ -25,6 +25,15 @@ import {
   RobotOutlined,
   UserOutlined,
   ToolOutlined,
+  FileTextOutlined,
+  BookOutlined,
+  EditOutlined,
+  HighlightOutlined,
+  ClearOutlined,
+  ReadOutlined,
+  SearchOutlined,
+  BulbOutlined,
+  FormOutlined,
 } from "@ant-design/icons";
 import { useAiContext } from "../../context/ai-context";
 import {
@@ -37,6 +46,27 @@ import {
 import styles from "./index.module.css";
 
 const { Text, Paragraph } = Typography;
+
+// ---------------------------------------------------------------------------
+// Icon Map
+// ---------------------------------------------------------------------------
+
+const ICON_MAP: Record<string, React.ReactNode> = {
+  FileTextOutlined: <FileTextOutlined />,
+  BookOutlined: <BookOutlined />,
+  EditOutlined: <EditOutlined />,
+  HighlightOutlined: <HighlightOutlined />,
+  ClearOutlined: <ClearOutlined />,
+  ReadOutlined: <ReadOutlined />,
+  ThunderboltOutlined: <ThunderboltOutlined />,
+  SearchOutlined: <SearchOutlined />,
+  BulbOutlined: <BulbOutlined />,
+  FormOutlined: <FormOutlined />,
+};
+
+function getIcon(iconName: string): React.ReactNode {
+  return ICON_MAP[iconName] || <ThunderboltOutlined />;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -266,7 +296,12 @@ export function AiAgentPanel() {
           onChange={handleSceneChange}
           className={styles.sceneSelect}
           options={scenes.map((s) => ({
-            label: `${s.icon} ${s.name}`,
+            label: (
+              <Space>
+                {getIcon(s.icon)}
+                <span>{s.name}</span>
+              </Space>
+            ),
             value: s.id,
           }))}
         />
@@ -295,7 +330,7 @@ export function AiAgentPanel() {
             <Button
               key={action.id}
               size="small"
-              icon={<ThunderboltOutlined />}
+              icon={getIcon(action.icon)}
               onClick={() => handleQuickAction(action)}
               disabled={isLoading}
             >
@@ -358,7 +393,7 @@ export function AiAgentPanel() {
           <div className={styles.welcomeMessage}>
             <RobotOutlined className={styles.welcomeIcon} />
             <div className={styles.welcomeTitle}>
-              {activeScene?.icon} {activeScene?.name}
+              {activeScene && getIcon(activeScene.icon)} {activeScene?.name}
             </div>
             <div className={styles.welcomeDesc}>
               {activeScene?.description}

@@ -162,6 +162,17 @@
       color: var(--text-primary);
     }
 
+    /* ── SVG 图标 ── */
+    .icon-svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     /* ── Quick Actions ── */
     .quick-actions {
       display: flex;
@@ -194,7 +205,8 @@
     }
 
     .quick-btn .icon {
-      font-size: 14px;
+      display: flex;
+      align-items: center;
     }
 
     /* ── Messages ── */
@@ -292,6 +304,12 @@
       font-size: 13px;
       font-weight: 500;
       color: var(--text-secondary);
+    }
+
+    .tool-card-header .icon {
+      display: flex;
+      align-items: center;
+      color: var(--text-tertiary);
     }
 
     .tool-card-body {
@@ -439,6 +457,9 @@
       cursor: pointer;
       transition: all 0.2s;
       border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .btn-primary {
@@ -520,7 +541,9 @@
     }
 
     .welcome-icon {
-      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: var(--text-tertiary);
       opacity: 0.4;
     }
 
@@ -617,6 +640,8 @@
       cursor: pointer;
       color: var(--text-light);
       padding: 2px;
+      display: flex;
+      align-items: center;
     }
 
     .history-item-meta .delete-btn:hover {
@@ -638,6 +663,9 @@
     .error-text {
       font-size: 13px;
       color: var(--color-error);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     /* ── 加载状态 ── */
@@ -706,36 +734,40 @@
         <!-- Header -->
         <div class="panel-header">
           <div class="scene-selector">
-            <span>📋</span>
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             <span>总纲优化</span>
-            <span class="arrow">▼</span>
+            <span class="arrow">&#9662;</span>
           </div>
           <div class="header-actions">
-            <button class="icon-btn" title="历史对话">📜</button>
-            <button class="icon-btn" title="新对话">🔄</button>
+            <button class="icon-btn" title="历史对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
+            <button class="icon-btn" title="新对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
           </div>
         </div>
 
         <!-- Quick Actions -->
         <div class="quick-actions">
           <button class="quick-btn">
-            <span class="icon">✨</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
             <span>全面优化</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">🔍</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <span>一致性检查</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">💡</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
             <span>给出建议</span>
           </button>
         </div>
 
         <!-- Welcome State -->
         <div class="welcome">
-          <div class="welcome-icon">🤖</div>
-          <div class="welcome-title">📋 总纲优化</div>
+          <svg class="welcome-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div class="welcome-title">总纲优化</div>
           <div class="welcome-desc">优化故事总纲的方向、阶段划分和核心卖点</div>
           <div class="welcome-hint">请描述你的需求，或点击上方快捷按钮开始</div>
         </div>
@@ -744,7 +776,10 @@
         <div class="input-area">
           <textarea class="input-box" placeholder="输入消息..." rows="2"></textarea>
           <div class="input-actions">
-            <button class="btn btn-primary">📤 发送</button>
+            <button class="btn btn-primary">
+              <svg class="icon-svg" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              发送
+            </button>
           </div>
         </div>
       </div>
@@ -767,28 +802,32 @@
         <!-- Header -->
         <div class="panel-header">
           <div class="scene-selector">
-            <span>📋</span>
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             <span>总纲优化</span>
-            <span class="arrow">▼</span>
+            <span class="arrow">&#9662;</span>
           </div>
           <div class="header-actions">
-            <button class="icon-btn" title="历史对话">📜</button>
-            <button class="icon-btn" title="新对话">🔄</button>
+            <button class="icon-btn" title="历史对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
+            <button class="icon-btn" title="新对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
           </div>
         </div>
 
         <!-- Quick Actions -->
         <div class="quick-actions">
           <button class="quick-btn">
-            <span class="icon">✨</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
             <span>全面优化</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">🔍</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <span>一致性检查</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">💡</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
             <span>给出建议</span>
           </button>
         </div>
@@ -797,7 +836,9 @@
         <div class="messages">
           <!-- User Message -->
           <div class="message user">
-            <div class="avatar">👤</div>
+            <div class="avatar">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
             <div class="message-body">
               <div class="message-role">你</div>
               <div class="message-content">请全面分析并优化这个总纲</div>
@@ -806,7 +847,9 @@
 
           <!-- Assistant Message with Tool Call -->
           <div class="message assistant">
-            <div class="avatar">🤖</div>
+            <div class="avatar">
+              <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
             <div class="message-body">
               <div class="message-role">AI</div>
               <div class="message-content">我来分析一下这个总纲，整体方向清晰，阶段划分合理。让我给你展示评估结果：</div>
@@ -814,7 +857,7 @@
               <!-- Tool Call: show_evaluation -->
               <div class="tool-card">
                 <div class="tool-card-header">
-                  <span>🔧</span>
+                  <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
                   <span>show_evaluation</span>
                 </div>
                 <div class="tool-card-body">
@@ -847,7 +890,10 @@
         <div class="input-area">
           <textarea class="input-box" placeholder="输入消息..." rows="2"></textarea>
           <div class="input-actions">
-            <button class="btn btn-primary">📤 发送</button>
+            <button class="btn btn-primary">
+              <svg class="icon-svg" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              发送
+            </button>
           </div>
         </div>
       </div>
@@ -870,28 +916,32 @@
         <!-- Header -->
         <div class="panel-header">
           <div class="scene-selector">
-            <span>📋</span>
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             <span>总纲优化</span>
-            <span class="arrow">▼</span>
+            <span class="arrow">&#9662;</span>
           </div>
           <div class="header-actions">
-            <button class="icon-btn" title="历史对话">📜</button>
-            <button class="icon-btn" title="新对话">🔄</button>
+            <button class="icon-btn" title="历史对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
+            <button class="icon-btn" title="新对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
           </div>
         </div>
 
         <!-- Quick Actions -->
         <div class="quick-actions">
           <button class="quick-btn">
-            <span class="icon">✨</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
             <span>全面优化</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">🔍</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <span>一致性检查</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">💡</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
             <span>给出建议</span>
           </button>
         </div>
@@ -900,7 +950,9 @@
         <div class="messages">
           <!-- Assistant Message with Propose Update -->
           <div class="message assistant">
-            <div class="avatar">🤖</div>
+            <div class="avatar">
+              <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
             <div class="message-body">
               <div class="message-role">AI</div>
               <div class="message-content">我发现整体方向可以进一步优化，以下是修改建议：</div>
@@ -908,7 +960,7 @@
               <!-- Tool Call: propose_outline_update -->
               <div class="tool-card">
                 <div class="tool-card-header">
-                  <span>🔧</span>
+                  <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
                   <span>propose_outline_update</span>
                 </div>
                 <div class="tool-card-body">
@@ -931,7 +983,9 @@
 
           <!-- Assistant Message with Suggestion -->
           <div class="message assistant">
-            <div class="avatar">🤖</div>
+            <div class="avatar">
+              <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
             <div class="message-body">
               <div class="message-role">AI</div>
               <div class="message-content">另外，我还有一些建议供你参考：</div>
@@ -939,7 +993,7 @@
               <!-- Tool Call: add_suggestion -->
               <div class="tool-card">
                 <div class="tool-card-header">
-                  <span>🔧</span>
+                  <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
                   <span>add_suggestion</span>
                 </div>
                 <div class="tool-card-body">
@@ -959,7 +1013,10 @@
         <div class="input-area">
           <textarea class="input-box" placeholder="输入消息..." rows="2"></textarea>
           <div class="input-actions">
-            <button class="btn btn-primary">📤 发送</button>
+            <button class="btn btn-primary">
+              <svg class="icon-svg" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              发送
+            </button>
           </div>
         </div>
       </div>
@@ -982,28 +1039,32 @@
         <!-- Header -->
         <div class="panel-header">
           <div class="scene-selector">
-            <span>📋</span>
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             <span>总纲优化</span>
-            <span class="arrow">▼</span>
+            <span class="arrow">&#9662;</span>
           </div>
           <div class="header-actions">
-            <button class="icon-btn" title="历史对话">📜</button>
-            <button class="icon-btn" title="新对话">🔄</button>
+            <button class="icon-btn" title="历史对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
+            <button class="icon-btn" title="新对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
           </div>
         </div>
 
         <!-- Quick Actions -->
         <div class="quick-actions">
           <button class="quick-btn">
-            <span class="icon">✨</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
             <span>全面优化</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">🔍</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <span>一致性检查</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">💡</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
             <span>给出建议</span>
           </button>
         </div>
@@ -1019,28 +1080,36 @@
               <div class="history-item-title">全面优化总纲</div>
               <div class="history-item-meta">
                 <span>2024/1/15</span>
-                <button class="delete-btn">🗑️</button>
+                <button class="delete-btn">
+                  <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
               </div>
             </div>
             <div class="history-item">
               <div class="history-item-title">检查一致性问题</div>
               <div class="history-item-meta">
                 <span>2024/1/14</span>
-                <button class="delete-btn">🗑️</button>
+                <button class="delete-btn">
+                  <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
               </div>
             </div>
             <div class="history-item">
               <div class="history-item-title">优化核心卖点</div>
               <div class="history-item-meta">
                 <span>2024/1/12</span>
-                <button class="delete-btn">🗑️</button>
+                <button class="delete-btn">
+                  <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
               </div>
             </div>
             <div class="history-item">
               <div class="history-item-title">第一轮总纲分析</div>
               <div class="history-item-meta">
                 <span>2024/1/10</span>
-                <button class="delete-btn">🗑️</button>
+                <button class="delete-btn">
+                  <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
               </div>
             </div>
           </div>
@@ -1049,7 +1118,9 @@
         <!-- Messages (hidden by history) -->
         <div class="messages" style="visibility: hidden;">
           <div class="message user">
-            <div class="avatar">👤</div>
+            <div class="avatar">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
             <div class="message-body">
               <div class="message-role">你</div>
               <div class="message-content">请全面分析并优化这个总纲</div>
@@ -1061,7 +1132,10 @@
         <div class="input-area">
           <textarea class="input-box" placeholder="输入消息..." rows="2"></textarea>
           <div class="input-actions">
-            <button class="btn btn-primary">📤 发送</button>
+            <button class="btn btn-primary">
+              <svg class="icon-svg" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              发送
+            </button>
           </div>
         </div>
       </div>
@@ -1084,28 +1158,32 @@
         <!-- Header -->
         <div class="panel-header">
           <div class="scene-selector">
-            <span>📋</span>
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             <span>总纲优化</span>
-            <span class="arrow">▼</span>
+            <span class="arrow">&#9662;</span>
           </div>
           <div class="header-actions">
-            <button class="icon-btn" title="历史对话">📜</button>
-            <button class="icon-btn" title="新对话">🔄</button>
+            <button class="icon-btn" title="历史对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
+            <button class="icon-btn" title="新对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
           </div>
         </div>
 
         <!-- Quick Actions -->
         <div class="quick-actions">
           <button class="quick-btn">
-            <span class="icon">✨</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
             <span>全面优化</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">🔍</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <span>一致性检查</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">💡</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
             <span>给出建议</span>
           </button>
         </div>
@@ -1114,7 +1192,9 @@
         <div class="messages">
           <!-- User Message -->
           <div class="message user">
-            <div class="avatar">👤</div>
+            <div class="avatar">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
             <div class="message-body">
               <div class="message-role">你</div>
               <div class="message-content">请全面分析并优化这个总纲</div>
@@ -1123,7 +1203,9 @@
 
           <!-- Loading State -->
           <div class="message assistant">
-            <div class="avatar">🤖</div>
+            <div class="avatar">
+              <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
             <div class="message-body">
               <div class="message-role">AI</div>
               <div class="loading-indicator">
@@ -1142,7 +1224,10 @@
         <div class="input-area">
           <textarea class="input-box" placeholder="输入消息..." rows="2" disabled></textarea>
           <div class="input-actions">
-            <button class="btn btn-danger">⏹ 停止</button>
+            <button class="btn btn-danger">
+              <svg class="icon-svg" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"/></svg>
+              停止
+            </button>
           </div>
         </div>
       </div>
@@ -1165,28 +1250,32 @@
         <!-- Header -->
         <div class="panel-header">
           <div class="scene-selector">
-            <span>📋</span>
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             <span>总纲优化</span>
-            <span class="arrow">▼</span>
+            <span class="arrow">&#9662;</span>
           </div>
           <div class="header-actions">
-            <button class="icon-btn" title="历史对话">📜</button>
-            <button class="icon-btn" title="新对话">🔄</button>
+            <button class="icon-btn" title="历史对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
+            <button class="icon-btn" title="新对话">
+              <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
           </div>
         </div>
 
         <!-- Quick Actions -->
         <div class="quick-actions">
           <button class="quick-btn">
-            <span class="icon">✨</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
             <span>全面优化</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">🔍</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <span>一致性检查</span>
           </button>
           <button class="quick-btn">
-            <span class="icon">💡</span>
+            <span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
             <span>给出建议</span>
           </button>
         </div>
@@ -1195,7 +1284,9 @@
         <div class="messages">
           <!-- User Message -->
           <div class="message user">
-            <div class="avatar">👤</div>
+            <div class="avatar">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
             <div class="message-body">
               <div class="message-role">你</div>
               <div class="message-content">请全面分析并优化这个总纲</div>
@@ -1204,7 +1295,10 @@
 
           <!-- Error Banner -->
           <div class="error-banner">
-            <span class="error-text">❌ API 调用失败，请检查网络连接</span>
+            <span class="error-text">
+              <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              API 调用失败，请检查网络连接
+            </span>
             <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;">重试</button>
           </div>
         </div>
@@ -1213,7 +1307,10 @@
         <div class="input-area">
           <textarea class="input-box" placeholder="输入消息..." rows="2"></textarea>
           <div class="input-actions">
-            <button class="btn btn-primary">📤 发送</button>
+            <button class="btn btn-primary">
+              <svg class="icon-svg" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              发送
+            </button>
           </div>
         </div>
       </div>
