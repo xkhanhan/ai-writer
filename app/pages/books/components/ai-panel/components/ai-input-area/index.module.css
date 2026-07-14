@@ -1,0 +1,49 @@
+.container {
+  border-top: 1px solid var(--color-border-secondary);
+  padding: 12px 16px;
+  background: var(--color-bg-container);
+}
+
+.inputWrapper {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.textArea {
+  flex: 1;
+  resize: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.textArea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.hint {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hintIcon {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.hintText {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

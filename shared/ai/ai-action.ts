@@ -18,6 +18,13 @@ export type AiFunctionKey =
   | "outline_optimize"
   | "volume_generate";
 
+/** 采纳模式 */
+export type AdoptMode =
+  | "REPLACE_ALL"
+  | "REPLACE_SELECTION"
+  | "APPEND"
+  | "CUSTOM";
+
 /** 单个 AI 操作定义 */
 export interface AiAction {
   /** 操作唯一标识（格式："{page}.{功能}"，如 "settings.character_audit"） */
@@ -38,6 +45,8 @@ export interface AiAction {
   resultMode?: "text" | "json";
   /** 采纳回调，接收 AI 返回的原始文本或解析后的 JSON */
   onAdopt?: (result: string | unknown) => void | Promise<void>;
+  /** 采纳模式 */
+  adoptMode?: AdoptMode;
 }
 
 /** /api/ai/chat 请求体 */

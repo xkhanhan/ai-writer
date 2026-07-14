@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
+import { generateText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { jsonError } from "@/app/api/utils";
 import { buildContext } from "@/server/ai/context-builder";
-import { generateAiText } from "@/server/ai/generate-ai-text";
+import { loadInternalConfig } from "@/server/ai/ai-config-store";
 import {
   createGenerationSession,
   updateGenerationSession,
 } from "@/server/storage/ai-generation-store";
 import { parseAiJson } from "@/shared/utils/parse-ai-json";
+import { defaultAiSystemPrompt } from "@/shared/ai/contracts";
 
 // ============================================================================
 // Types
@@ -107,25 +110,49 @@ export async function POST(request: Request) {
   try {
     const startTime = Date.now();
 
-    // 1. Build review context
+    // 1. Load AI config and create provider
+    const aiConfig = await loadInternalConfig();
+
+    if (!aiConfig.apiKey) {
+      return jsonError("请先在设置中配置 AI API Key", 400);
+    }
+
+    const openai = createOpenAI({
+      apiKey: aiConfig.apiKey,
+      baseURL: aiConfig.baseUrl,
+      ...(aiConfig.advanced?.headers
+        ? { headers: aiConfig.advanced.headers }
+        : {}),
+    });
+
+    // 2. Build review context
     const builtContext = await buildContext({
       bookId,
       chapterId,
       functionKey: "review_extract",
     });
 
-    // 2. Call AI
-    const content = await generateAiText({
-      prompt: builtContext.userPrompt,
-      systemPrompt: builtContext.systemPrompt,
+    // 3. Call AI with Vercel AI SDK
+    const result = await generateText({
+      model: openai(aiConfig.model),
+      system: builtContext.systemPrompt || defaultAiSystemPrompt,
+      messages: [{ role: "user", content: builtContext.userPrompt }],
+      temperature: aiConfig.temperature,
+      ...(aiConfig.advanced?.topP !== undefined
+        ? { topP: aiConfig.advanced.topP }
+        : {}),
+      ...(aiConfig.advanced?.maxTokens
+        ? { maxTokens: aiConfig.advanced.maxTokens }
+        : {}),
     });
 
+    const content = result.text;
     const latencyMs = Date.now() - startTime;
 
-    // 3. Parse AI response as structured JSON
+    // 4. Parse AI response as structured JSON
     const parseResult = parseAiJson<ReviewExtractedData>(content);
 
-    // 4. Record the generation session (best-effort)
+    // 5. Record the generation session (best-effort)
     try {
       sessionCreated = await createGenerationSession({
         bookId,
@@ -138,13 +165,13 @@ export async function POST(request: Request) {
       // session recording is best-effort
     }
 
-    // 5. Build and return response
+    // 6. Build and return response
     if (parseResult.ok) {
       const response: ReviewSuccessResponse = {
         success: true,
         data: parseResult.data,
         metadata: {
-          model: "unknown",
+          model: aiConfig.model,
           tokensInput: builtContext.estimatedTokens,
           tokensOutput: 0,
           latencyMs,

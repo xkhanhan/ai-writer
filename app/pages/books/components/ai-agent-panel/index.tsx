@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import {
   Button,
   Input,
@@ -98,6 +99,25 @@ interface Conversation {
 }
 
 // ---------------------------------------------------------------------------
+// Message Part Helpers (AI SDK v7 parts-based messages)
+// ---------------------------------------------------------------------------
+
+function getMessageText(msg: any): string {
+  if (!msg.parts) return "";
+  return msg.parts
+    .filter((p: any) => p.type === "text")
+    .map((p: any) => p.text)
+    .join("");
+}
+
+function getMessageToolInvocations(msg: any): any[] {
+  if (!msg.parts) return [];
+  return msg.parts.filter(
+    (p: any) => p.type?.startsWith("tool-") || p.type === "dynamic-tool"
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -111,17 +131,15 @@ export function AiAgentPanel() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]);
 
-  // Use Vercel AI SDK's useChat
+  // Use Vercel AI SDK's useChat with correct API endpoint
   const chatHelpers = useChat({
     id: conversationId ?? "default",
-    onFinish: (event: any) => {
+    transport: new DefaultChatTransport({
+      api: "/api/ai/agent/chat",
+    }),
+    onFinish: () => {
       setIsLoading(false);
-      // Add assistant message to local state
-      if (event.message) {
-        setMessages((prev) => [...prev, event.message]);
-      }
     },
     onError: (err: Error) => {
       setIsLoading(false);
@@ -132,6 +150,7 @@ export function AiAgentPanel() {
   const sendMessage = chatHelpers.sendMessage;
   const stop = chatHelpers.stop;
   const error = chatHelpers.error;
+  const messages = chatHelpers.messages;
 
   // Load scenes on mount
   useEffect(() => {
@@ -181,20 +200,13 @@ export function AiAgentPanel() {
     if (scene) {
       setActiveScene(scene);
       setConversationId(null);
-      setMessages([]);
+      chatHelpers.setMessages([]);
     }
   };
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
 
-    const userMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: inputText,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
     setInputText("");
     setIsLoading(true);
 
@@ -211,12 +223,6 @@ export function AiAgentPanel() {
   };
 
   const handleQuickAction = (action: QuickAction) => {
-    const userMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: action.prompt,
-    };
-    setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
     sendMessage(
@@ -233,7 +239,7 @@ export function AiAgentPanel() {
 
   const handleNewConversation = () => {
     setConversationId(null);
-    setMessages([]);
+    chatHelpers.clearError();
   };
 
   const handleSelectConversation = async (conv: Conversation) => {
@@ -247,7 +253,7 @@ export function AiAgentPanel() {
       );
       const data = await response.json();
       if (data.messages) {
-        setMessages(
+        chatHelpers.setMessages(
           data.messages.map((m: any) => ({
             id: m.id,
             role: m.role,
@@ -267,7 +273,7 @@ export function AiAgentPanel() {
       });
       if (conversationId === convId) {
         setConversationId(null);
-        setMessages([]);
+        chatHelpers.setMessages([]);
       }
       loadConversations();
       message.success(AGENT_UI_TEXT.CONVERSATION_DELETED);
@@ -404,50 +410,54 @@ export function AiAgentPanel() {
           </div>
         )}
 
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`${styles.message} ${
-              msg.role === "user" ? styles.messageUser : styles.messageAssistant
-            }`}
-          >
-            <div className={styles.messageAvatar}>
-              {msg.role === "user" ? <UserOutlined /> : <RobotOutlined />}
-            </div>
-            <div className={styles.messageContent}>
-              <div className={styles.messageRole}>
-                {msg.role === "user" ? AGENT_UI_TEXT.ROLE_USER : AGENT_UI_TEXT.ROLE_AI}
+        {messages.map((msg) => {
+          const text = getMessageText(msg);
+          const toolInvocations = getMessageToolInvocations(msg);
+          return (
+            <div
+              key={msg.id}
+              className={`${styles.message} ${
+                msg.role === "user" ? styles.messageUser : styles.messageAssistant
+              }`}
+            >
+              <div className={styles.messageAvatar}>
+                {msg.role === "user" ? <UserOutlined /> : <RobotOutlined />}
               </div>
-              <div className={styles.messageText}>
-                {msg.content || (
-                  <div className={styles.toolCallPlaceholder}>
-                    <ToolOutlined /> {AGENT_UI_TEXT.PROCESSING}
-                  </div>
-                )}
-              </div>
-              {/* Render tool calls if present */}
-              {msg.toolInvocations?.map((tool: any, index: number) => (
-                <Card
-                  key={index}
-                  size="small"
-                  className={styles.toolCallCard}
-                  title={
-                    <Space>
-                      <ToolOutlined />
-                      <span>{tool.toolName}</span>
-                    </Space>
-                  }
-                >
-                  {tool.state === "result" ? (
-                    <ToolResultDisplay result={tool.result} />
-                  ) : (
-                    <Spin size="small" />
+              <div className={styles.messageContent}>
+                <div className={styles.messageRole}>
+                  {msg.role === "user" ? AGENT_UI_TEXT.ROLE_USER : AGENT_UI_TEXT.ROLE_AI}
+                </div>
+                <div className={styles.messageText}>
+                  {text || (
+                    <div className={styles.toolCallPlaceholder}>
+                      <ToolOutlined /> {AGENT_UI_TEXT.PROCESSING}
+                    </div>
                   )}
-                </Card>
-              ))}
+                </div>
+                {/* Render tool calls if present */}
+                {toolInvocations.map((tool: any, index: number) => (
+                  <Card
+                    key={index}
+                    size="small"
+                    className={styles.toolCallCard}
+                    title={
+                      <Space>
+                        <ToolOutlined />
+                        <span>{tool.toolName}</span>
+                      </Space>
+                    }
+                  >
+                    {tool.state === "result" ? (
+                      <ToolResultDisplay result={tool.result} />
+                    ) : (
+                      <Spin size="small" />
+                    )}
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {isLoading && messages[messages.length - 1]?.role === "user" && (
           <div className={`${styles.message} ${styles.messageAssistant}`}>

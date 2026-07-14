@@ -4,7 +4,7 @@
  * Uses Vercel AI SDK for streaming and tool execution.
  */
 
-import { streamText } from "ai";
+import { streamText, toUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { loadInternalConfig } from "@/server/ai/ai-config-store";
 import { buildContext, type AiFunctionKey } from "@/server/ai/context-builder";
@@ -146,7 +146,13 @@ ${context.userPrompt}`,
     });
 
     // 11. Return streaming response with conversation ID in header
-    return result.toTextStreamResponse({
+    const uiMessageStream = toUIMessageStream({
+      stream: result.stream,
+      tools,
+    });
+
+    return createUIMessageStreamResponse({
+      stream: uiMessageStream,
       headers: {
         "X-Conversation-Id": currentConversationId,
       },

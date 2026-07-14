@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @deprecated This component is deprecated. Use the unified AiPanel component instead.
+ * @see app/pages/books/components/ai-panel
+ */
+
 import { useState, useCallback, useMemo } from "react";
 import { Spin, Button, message } from "antd";
 import { ThunderboltOutlined } from "@ant-design/icons";

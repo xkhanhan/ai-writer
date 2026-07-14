@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @deprecated This component is deprecated. Use the unified AiPanel component instead.
+ * @see app/pages/books/components/ai-panel
+ */
+
 import { useEffect, useCallback, useRef, useState } from "react";
 import { Button, Spin } from "antd";
 import {

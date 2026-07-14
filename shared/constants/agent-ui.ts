@@ -93,4 +93,15 @@ export const AGENT_UI_TEXT = {
 
   // Default panel title
   PANEL_TITLE: "AI 写作助手",
+
+  // Unified panel text
+  QUICK_MODE: "快速操作",
+  CHAT_MODE: "对话模式",
+  SCENE_SELECT: "选择场景",
+  GENERATING: "正在生成...",
+  ADOPT_SUCCESS: "内容已采纳",
+  ADOPT_FAILED: "采纳失败",
+  GENERATION_FAILED: "生成失败",
+  RESET_SUCCESS: "已重置",
+  STOP_SUCCESS: "已停止生成",
 } as const;

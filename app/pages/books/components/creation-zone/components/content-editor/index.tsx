@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button, Input, Tag } from "antd";
 import { showError, showSuccess } from "@/app/utils/error-handler";
 import { CheckCircleOutlined } from "@ant-design/icons";
@@ -9,6 +9,7 @@ import { AiDropdown } from "@/shared/ui/ai-dropdown";
 import { AiResultPanel, type AiFunctionKey } from "../ai-result-panel";
 import { ReviewResultPanel, type ReviewConfirmData } from "@/app/pages/books/components/review-result-panel";
 import type { CreationZoneState } from "@/app/pages/books/hooks/use-creation-zone";
+import { useEditorContext } from "@/app/pages/books/hooks/use-editor-context";
 import styles from "./index.module.css";
 
 const { TextArea } = Input;
@@ -36,6 +37,33 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
 
   const wordCount = useMemo(() => content.replace(/\s/g, "").length, [content]);
 
+  // Initialize editor context hook
+  const { getSelectedText } = useEditorContext({
+    content,
+    chapterId,
+    bookId,
+    chapterTitle: chapter?.title || null,
+    bookTitle: null, // Will be passed from parent if available
+  });
+
+  // Listen for AI adopt events from unified panel
+  useEffect(() => {
+    const handleAdoptResult = (event: CustomEvent) => {
+      const { content: adoptedContent, mode } = event.detail;
+      if (mode === "QUICK") {
+        // For quick mode, replace content
+        setContent(adoptedContent);
+        setDirty(true);
+        showSuccess("内容已采纳");
+      }
+    };
+
+    window.addEventListener("ai-adopt-result", handleAdoptResult as EventListener);
+    return () => {
+      window.removeEventListener("ai-adopt-result", handleAdoptResult as EventListener);
+    };
+  }, []);
+
   const handleSave = async (status?: "planned" | "writing" | "done") => {
     setSaving(true);
     try {
@@ -62,20 +90,16 @@ export function ContentEditor({ bookId, volumeId, chapterId, zone }: Props) {
     }
   };
 
-  const getSelectedText = useCallback((): string | undefined => {
-    const el = document.querySelector<HTMLTextAreaElement>("[data-ai-editor] textarea");
-    if (!el) return undefined;
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    if (start === end || start == null || end == null) return undefined;
-    return content.slice(start, end);
-  }, [content]);
+  const getSelectedTextFromEditor = useCallback((): string | undefined => {
+    const selected = getSelectedText();
+    return selected || undefined;
+  }, [getSelectedText]);
 
   const openAiPanel = useCallback((key: AiFunctionKey) => {
     setAiFunctionKey(key);
-    setAiSelectedText(key === "content_generate" ? undefined : getSelectedText() || content);
+    setAiSelectedText(key === "content_generate" ? undefined : getSelectedTextFromEditor() || content);
     setAiPanelVisible(true);
-  }, [getSelectedText, content]);
+  }, [getSelectedTextFromEditor, content]);
 
   const handleAiAdopt = useCallback((generated: string) => {
     if (aiFunctionKey === "content_generate") {

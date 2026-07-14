@@ -1,19 +1,51 @@
 import { NextResponse } from "next/server";
+import { generateText, streamText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { jsonError } from "@/app/api/utils";
-import type { AiTextTaskInput } from "@/shared/ai/contracts";
-import { generateAiText } from "@/server/ai/generate-ai-text";
-import { generateAiTextStream } from "@/server/ai/generate-ai-text-stream";
 import { buildContext, type AiFunctionKey } from "@/server/ai/context-builder";
+import { loadInternalConfig } from "@/server/ai/ai-config-store";
 import {
   createGenerationSession,
   updateGenerationSession,
 } from "@/server/storage/ai-generation-store";
 import { logAiOp, logger } from "@/server/logger";
+import { defaultAiSystemPrompt } from "@/shared/ai/contracts";
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 /** Helper to extract a string from the parsed body. */
 function str(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
+
+/** Load AI config and create a ready-to-use OpenAI provider. */
+async function createProvider() {
+  const aiConfig = await loadInternalConfig();
+
+  if (!aiConfig.apiKey) {
+    throw new Error("请先在设置中配置 AI API Key");
+  }
+
+  const openai = createOpenAI({
+    apiKey: aiConfig.apiKey,
+    baseURL: aiConfig.baseUrl,
+    ...(aiConfig.advanced?.headers ? { headers: aiConfig.advanced.headers } : {}),
+  });
+
+  return {
+    openai,
+    model: aiConfig.model,
+    temperature: aiConfig.temperature,
+    topP: aiConfig.advanced?.topP ?? 1,
+    maxTokens: aiConfig.advanced?.maxTokens ?? null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// POST Handler
+// ---------------------------------------------------------------------------
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -76,33 +108,34 @@ export async function POST(request: Request) {
             : undefined,
       });
 
-      logAiOp("AI 调用开始", { functionKey, bookId, stream: payload.stream === true });
+      logAiOp("AI 调用开始", {
+        functionKey,
+        bookId,
+        stream: payload.stream === true,
+      });
 
-      // 2. Call AI — streaming or non-streaming
-      const input: AiTextTaskInput = {
-        prompt: builtContext.userPrompt,
-        systemPrompt: builtContext.systemPrompt,
-        temperature:
-          typeof payload.temperature === "number"
-            ? payload.temperature
-            : undefined,
-        model: str(payload.model),
-      };
-
-      const wantStream = payload.stream === true;
+      // 2. Resolve AI config and create provider
+      const provider = await createProvider();
+      const systemPrompt = builtContext.systemPrompt || defaultAiSystemPrompt;
+      const userPrompt = builtContext.userPrompt;
+      const temperature =
+        typeof payload.temperature === "number"
+          ? payload.temperature
+          : provider.temperature;
+      const model = str(payload.model) ?? provider.model;
 
       logAiOp("AI 上下文构建完成", {
         functionKey,
-        stream: wantStream,
+        stream: payload.stream === true,
         systemPromptLen: builtContext.systemPrompt.length,
         userPromptLen: builtContext.userPrompt.length,
         estimatedTokens: builtContext.estimatedTokens,
       });
 
-      if (wantStream) {
-        // --- Streaming mode: pipe upstream SSE through to the client ---
-        const upstream = await generateAiTextStream(input);
+      const wantStream = payload.stream === true;
 
+      if (wantStream) {
+        // --- Streaming mode: pipe text chunks as SSE to the client ---
         // Create session first so we have an ID to update later
         let sessionId = "";
         try {
@@ -111,7 +144,7 @@ export async function POST(request: Request) {
             functionKey,
             chapterId: str(payload.chapterId),
             inputContext: builtContext.systemPrompt,
-            model: input.model ?? "",
+            model,
             userInput: builtContext.userPrompt,
           });
           sessionId = session.id;
@@ -121,77 +154,46 @@ export async function POST(request: Request) {
           });
         }
 
+        const result = streamText({
+          model: provider.openai(model),
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+          temperature,
+          topP: provider.topP,
+          ...(provider.maxTokens ? { maxTokens: provider.maxTokens } : {}),
+        });
+
         const encoder = new TextEncoder();
         let accumulatedOutput = "";
-        let streamFinished = false;
 
-        const stream = new TransformStream({
-          transform(chunk: Uint8Array, controller) {
-            const text = new TextDecoder().decode(chunk, { stream: true });
-            const lines = text.split("\n");
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed || !trimmed.startsWith("data: ")) continue;
-              const data = trimmed.slice(6);
-              if (data === "[DONE]") {
-                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-                continue;
+        const stream = new ReadableStream({
+          async start(controller) {
+            try {
+              for await (const chunk of result.textStream) {
+                accumulatedOutput += chunk;
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ content: chunk })}\n\n`,
+                  ),
+                );
               }
-              try {
-                const parsed = JSON.parse(data) as {
-                  choices?: Array<{
-                    delta?: { content?: string };
-                  }>;
-                };
-                const content = parsed.choices?.[0]?.delta?.content;
-                if (content) {
-                  accumulatedOutput += content;
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ content })}\n\n`),
-                  );
-                }
-              } catch {
-                // skip unparseable lines
+              controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+              controller.close();
+
+              // Update session after stream completes
+              if (sessionId && accumulatedOutput) {
+                void updateGenerationSession(sessionId, {
+                  rawOutput: accumulatedOutput,
+                  latencyMs: Date.now() - startTime,
+                }).catch(() => {});
               }
+            } catch (err) {
+              controller.error(err);
             }
-          },
-          flush() {
-            streamFinished = true;
           },
         });
 
-        const transformed = upstream.body?.pipeThrough(stream);
-        if (!transformed) {
-          return new Response("No upstream body", { status: 500 });
-        }
-
-        // Tee the stream: one for client, one for logging
-        const [clientStream, logStream] = transformed.tee();
-
-        // Fire-and-forget: consume logStream to update session after completion
-        if (sessionId) {
-          const reader = logStream.getReader();
-          const consumeForLog = async () => {
-            try {
-              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-              while (true) {
-                const { done } = await reader.read();
-                if (done) break;
-              }
-            } catch {
-              // client disconnected — still update
-            }
-            if (streamFinished && accumulatedOutput) {
-              void updateGenerationSession(sessionId, {
-                rawOutput: accumulatedOutput,
-                latencyMs: Date.now() - startTime,
-              }).catch(() => {});
-            }
-          };
-          void consumeForLog();
-        }
-
-        return new Response(clientStream, {
+        return new Response(stream, {
           status: 200,
           headers: {
             "Content-Type": "text/event-stream",
@@ -202,7 +204,16 @@ export async function POST(request: Request) {
       }
 
       // --- Non-streaming mode ---
-      const content = await generateAiText(input);
+      const result = await generateText({
+        model: provider.openai(model),
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+        temperature,
+        topP: provider.topP,
+        ...(provider.maxTokens ? { maxTokens: provider.maxTokens } : {}),
+      });
+
+      const content = result.text;
       const latencyMs = Date.now() - startTime;
 
       // 3. Record the generation session (fire-and-forget; don't fail the
@@ -213,7 +224,7 @@ export async function POST(request: Request) {
           functionKey,
           chapterId: str(payload.chapterId),
           inputContext: builtContext.systemPrompt,
-          model: input.model ?? "",
+          model,
           userInput: builtContext.userPrompt,
           rawOutput: content,
           latencyMs,
@@ -250,27 +261,36 @@ export async function POST(request: Request) {
   // ------------------------------------------------------------------
   // Mode 1: Legacy direct-prompt flow
   // ------------------------------------------------------------------
-  const input: AiTextTaskInput = {
-    prompt: typeof payload.prompt === "string" ? payload.prompt.trim() : "",
-    systemPrompt:
-      typeof payload.systemPrompt === "string" ? payload.systemPrompt : undefined,
-    temperature:
-      typeof payload.temperature === "number" ? payload.temperature : undefined,
-    model: typeof payload.model === "string" ? payload.model : undefined,
-  };
+  const prompt =
+    typeof payload.prompt === "string" ? payload.prompt.trim() : "";
+  const systemPrompt =
+    typeof payload.systemPrompt === "string" ? payload.systemPrompt : undefined;
+  const reqTemperature =
+    typeof payload.temperature === "number" ? payload.temperature : undefined;
+  const reqModel =
+    typeof payload.model === "string" ? payload.model : undefined;
 
-  if (!input.prompt) {
+  if (!prompt) {
     return jsonError("prompt 不能为空。");
   }
 
   try {
-    const content = await generateAiText(input);
-    return NextResponse.json({ success: true, content });
+    const provider = await createProvider();
+
+    const result = await generateText({
+      model: provider.openai(reqModel ?? provider.model),
+      system: systemPrompt ?? defaultAiSystemPrompt,
+      messages: [{ role: "user", content: prompt }],
+      temperature: reqTemperature ?? provider.temperature,
+      topP: provider.topP,
+      ...(provider.maxTokens ? { maxTokens: provider.maxTokens } : {}),
+    });
+
+    return NextResponse.json({ success: true, content: result.text });
   } catch (error) {
     if (error instanceof Error) {
       return jsonError(error.message, 502);
     }
-
     return jsonError("AI 调用失败。", 502);
   }
 }

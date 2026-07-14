@@ -5,7 +5,7 @@ import type { Book } from "@/app/types";
 import { workspacePanels } from "./config/workspace-panels";
 import { useWorkspacePersist } from "./hooks/use-workspace-persist";
 import { AiProvider, useAiContext } from "./context/ai-context";
-import { AiAgentPanel } from "./components/ai-agent-panel";
+import { AiPanel } from "./components/ai-panel";
 import {
   PanelContainer,
   PanelGroup,
@@ -111,7 +111,7 @@ function BookWorkspaceInner({ book, onBack }: BookWorkspaceProps) {
             collapsed={!aiVisible}
             onToggleCollapse={toggleAi}
           >
-            <AiAgentPanel />
+            <AiPanel bookId={book.id} />
           </Panel>
         </PanelGroup>
       </PanelContainer>

@@ -11,6 +11,40 @@ import {
 } from "react";
 import type { AiAction } from "@/shared/ai/ai-action";
 
+/** 面板模式 */
+export type PanelMode = "QUICK" | "CHAT";
+
+/** 编辑器上下文 */
+export interface EditorContext {
+  content: string;
+  selectedText: string | null;
+  chapterId: string | null;
+  chapterTitle: string | null;
+  bookTitle: string | null;
+  bookId: string | null;
+  wordCount: number;
+  cursorPosition: number | null;
+}
+
+/** 场景定义 */
+export interface Scene {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  functionKey: string;
+  quickActions: QuickAction[];
+}
+
+/** 快速操作定义 */
+export interface QuickAction {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  prompt: string;
+}
+
 /** AI Context 值 */
 interface AiContextValue {
   /** 当前页面注册的 AI 操作列表 */
@@ -21,6 +55,18 @@ interface AiContextValue {
   toggleVisible: () => void;
   /** bookId */
   bookId: string;
+  /** 面板模式 */
+  panelMode: PanelMode;
+  /** 设置面板模式 */
+  setPanelMode: (mode: PanelMode) => void;
+  /** 编辑器上下文 */
+  editorContext: EditorContext;
+  /** 更新编辑器上下文 */
+  updateEditorContext: (ctx: Partial<EditorContext>) => void;
+  /** 当前活跃场景 */
+  activeScene: Scene | null;
+  /** 设置活跃场景 */
+  setActiveScene: (scene: Scene | null) => void;
 }
 
 const AiContext = createContext<AiContextValue | null>(null);
@@ -40,7 +86,11 @@ export function useRegisterAiActions(actions: AiAction[]) {
 
   // 用 ref 存最新 actions，避免 useEffect 依赖频繁变化
   const actionsRef = useRef(actions);
-  actionsRef.current = actions;
+
+  // Update ref in effect to avoid accessing during render
+  useEffect(() => {
+    actionsRef.current = actions;
+  }, [actions]);
 
   useEffect(() => {
     setRegistration(key, { actions: actionsRef.current });
@@ -75,11 +125,30 @@ export function AiProvider({
   children: ReactNode;
 }) {
   const [visible, setVisible] = useState(false);
+  const [panelMode, setPanelMode] = useState<PanelMode>("QUICK");
   const [registrations, setRegistrations] = useState<
     Record<string, Registration>
   >({});
+  const [editorContext, setEditorContext] = useState<EditorContext>({
+    content: "",
+    selectedText: null,
+    chapterId: null,
+    chapterTitle: null,
+    bookTitle: null,
+    bookId: null,
+    wordCount: 0,
+    cursorPosition: null,
+  });
+  const [activeScene, setActiveScene] = useState<Scene | null>(null);
 
   const toggleVisible = useCallback(() => setVisible((v) => !v), []);
+
+  const updateEditorContext = useCallback(
+    (ctx: Partial<EditorContext>) => {
+      setEditorContext((prev) => ({ ...prev, ...ctx }));
+    },
+    []
+  );
 
   const setRegistration = useCallback(
     (key: string, reg: Registration | null) => {
@@ -99,7 +168,18 @@ export function AiProvider({
   return (
     <AiRegistrationContext.Provider value={{ setRegistration }}>
       <AiContext.Provider
-        value={{ actions: allActions, visible, toggleVisible, bookId }}
+        value={{
+          actions: allActions,
+          visible,
+          toggleVisible,
+          bookId,
+          panelMode,
+          setPanelMode,
+          editorContext,
+          updateEditorContext,
+          activeScene,
+          setActiveScene,
+        }}
       >
         {children}
       </AiContext.Provider>

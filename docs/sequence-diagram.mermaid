@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant BW as BookWorkspace
+    participant AP as AiProvider
+    participant AIP as AiPanel
+    participant HUP as useAiPanel
+    participant CEC as ContentEditor
+    participant API as /api/ai/chat
+    participant AgentAPI as /api/ai/agent/chat
+
+    BW->>AP: AiProvider(bookId)
+    AP->>AP: 初始化 Context（actions, visible, mode, editorContext）
+
+    BW->>AIP: render AiPanel
+    AIP->>HUP: useAiPanel(bookId)
+    HUP->>HUP: 加载 scenes（fetch /api/ai/agent/scenes）
+
+    Note over CEC: 用户编辑内容
+    CEC->>AP: updateEditorContext({content, selectedText, chapterId...})
+    AP->>AP: 更新 Context.editorContext
+
+    Note over AIP: 用户切换到快速操作模式
+    AIP->>AIP: setMode(QUICK)
+    AIP->>AIP: 展示 actions 列表
+
+    Note over AIP: 用户点击快速操作
+    AIP->>HUP: sendQuickAction(action)
+    HUP->>API: POST /api/ai/chat (stream: true, with editorContext)
+    API-->>HUP: SSE stream chunks
+    HUP->>AIP: 更新 StreamResult（实时渲染）
+
+    Note over AIP: 用户点击采纳
+    AIP->>HUP: adoptResult()
+    HUP->>BW: dispatch CustomEvent("ai-adopt-result")
+    BW->>CEC: 监听事件，写入编辑器内容

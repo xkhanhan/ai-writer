@@ -1,0 +1,105 @@
+classDiagram
+    class AiContextValue {
+        +actions: AiAction[]
+        +visible: boolean
+        +toggleVisible(): void
+        +bookId: string
+        +panelMode: PanelMode
+        +setPanelMode(mode: PanelMode): void
+        +editorContext: EditorContext
+        +updateEditorContext(ctx: Partial~EditorContext~): void
+        +activeScene: Scene | null
+        +setActiveScene(scene: Scene | null): void
+    }
+
+    class PanelMode {
+        <<enumeration>>
+        QUICK
+        CHAT
+    }
+
+    class EditorContext {
+        +content: string
+        +selectedText: string | null
+        +chapterId: string | null
+        +chapterTitle: string | null
+        +bookTitle: string | null
+        +wordCount: number
+        +cursorPosition: number | null
+    }
+
+    class Scene {
+        +id: string
+        +name: string
+        +description: string
+        +icon: string
+        +functionKey: string
+        +quickActions: QuickAction[]
+    }
+
+    class QuickAction {
+        +id: string
+        +name: string
+        +description: string
+        +icon: string
+        +prompt: string
+    }
+
+    class AiAction {
+        +id: string
+        +title: string
+        +description: string
+        +functionKey: AiFunctionKey
+        +extraParams: Record~string, unknown~
+        +inputLabel: string
+        +inputPlaceholder: string
+        +resultMode: "text" | "json"
+        +onAdopt(result: string | unknown): void | Promise~void~
+        +adoptMode: AdoptMode
+    }
+
+    class AdoptMode {
+        <<enumeration>>
+        REPLACE_ALL
+        REPLACE_SELECTION
+        APPEND
+        CUSTOM
+    }
+
+    class UseAiPanelReturn {
+        +mode: PanelMode
+        +setMode(mode: PanelMode): void
+        +scenes: Scene[]
+        +activeScene: Scene | null
+        +selectScene(scene: Scene): void
+        +streamResult: StreamResult
+        +sendMessage(text: string): void
+        +sendQuickAction(action: QuickAction): void
+        +adoptResult(): void
+        +resetResult(): void
+        +stopGeneration(): void
+        +isGenerating: boolean
+        +error: Error | null
+    }
+
+    class StreamResult {
+        +text: string
+        +isComplete: boolean
+        +isStreaming: boolean
+        +error: Error | null
+    }
+
+    class AiPanel {
+        +bookId: string
+        +onAdopt(content: string): void
+    }
+
+    AiContextValue --> PanelMode
+    AiContextValue --> EditorContext
+    AiContextValue --> Scene
+    Scene --> QuickAction
+    AiAction --> AdoptMode
+    UseAiPanelReturn --> PanelMode
+    UseAiPanelReturn --> Scene
+    UseAiPanelReturn --> StreamResult
+    AiPanel --> UseAiPanelReturn
